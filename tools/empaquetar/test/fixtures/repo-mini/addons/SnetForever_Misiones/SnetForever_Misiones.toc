@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: SnetForever - Misiones
+## Version: 2026.11.11.1
+## X-License: GPL-3.0
+## X-SNF-App: object_1.lua, es_object_1.lua
+
+nucleo.lua
+quest_1.lua

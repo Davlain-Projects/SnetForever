@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: SnetForever Comercio
+## Notes: Addon de comercio de prueba de repo-mini (Task 8)
+## Version: 0.5.3
+## Dependencies: SnetForever
+
+ui\comercio.lua

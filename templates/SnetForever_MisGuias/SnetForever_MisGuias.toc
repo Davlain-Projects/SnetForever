@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: SnetForever - Mis guías
+## Notes: Tus propias guías para SnetForever (solo en tu PC; las instrucciones están en LEEME.txt)
+## Version: 1
+## Author: tú
+## IconTexture: Interface\AddOns\SnetForever\recursos\icono
+
+mis-guias.lua

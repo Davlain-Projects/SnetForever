@@ -1,0 +1,161 @@
+MIS GUÍAS DE SNETFOREVER
+========================
+
+Esta carpeta es tuya. Aquí escribes tus propias guías y SnetForever las enseña en su ventana,
+en el grupo «Mis guías», como las demás.
+
+- Solo vive en tu PC. La app de SnetForever no la instala encima ni la toca al actualizar.
+- Lo que pongas aquí es responsabilidad tuya. SnetForever solo lee lo que escribas.
+- Tus guías se escriben en el archivo mis-guias.lua. Ábrelo con el Bloc de notas o con cualquier
+  editor de texto.
+- Después de cambiar el archivo, escribe /reload en el juego.
+
+
+CÓMO ES UNA GUÍA
+----------------
+
+  {
+    nombre = "Mi ruta del valle",
+    niveles = {2, 3},
+    faccion = "Horda",
+    siguiente = "Mi otra ruta",
+    pasos = {
+      {aceptar = 788, ir = {1411, 42.1, 68.3}, texto = "Habla con Gornek"},
+      {completar = 788},
+      {entregar = 788},
+    },
+  },
+
+- nombre: el nombre que sale en la ventana. No puede haber dos guías con el mismo nombre.
+- niveles: {mínimo, máximo}, del 1 al 60. Si no lo pones, se toman los de sus misiones.
+- faccion: "Horda" o "Alianza". Si no lo pones, la guía sale para las dos.
+- siguiente: el nombre de otra guía tuya, que se abre al acabar esta. Es opcional.
+- pasos: la lista de pasos, en orden.
+
+(788 es la misión «Cutting Teeth» de Gornek, en el Valle de los Retos; 1411 es el mapa de Durotar.)
+
+
+QUÉ PUEDE LLEVAR UN PASO
+------------------------
+
+Cada paso va entre { y } y puede llevar una o varias de estas cosas:
+
+- aceptar = 1234             aceptar la misión 1234
+- completar = 1234           hacer los objetivos de la misión 1234
+- completar = 1234, objetivo = 2   solo el objetivo 2 de esa misión
+- entregar = 1234            entregar la misión 1234
+- aceptar = {1234, 1235}     varias misiones a la vez (vale igual con completar y entregar)
+- ir = {1411, 43.3, 68.5}    un sitio: el número del mapa y las coordenadas x e y
+- texto = "lo que quieras"   una nota para ti
+
+Cómo funciona cada paso:
+- Con misiones, el paso se marca solo cuando las aceptas, completas o entregas en el juego.
+- Si además lleva «ir», la flecha te lleva a ese sitio.
+- Un paso con solo «ir» se marca solo al llegar.
+- Un paso con solo «texto» lo marcas tú con su casilla.
+
+
+PASOS SOLO PARA UNA CLASE, UNA RAZA O UNA FACCIÓN
+-------------------------------------------------
+
+Un paso puede llevar además a quién le sale. Si no lleva nada de esto, sale a todos.
+
+- clase = "Mago"             solo a los magos
+- clase = {"Mago", "Brujo"}  a los magos o a los brujos (una lista es «o»)
+- raza = "Trol"              solo a los trols
+- faccion = "Horda"          solo a la Horda ("Horda" o "Alianza")
+- sin_clase = "Guerrero"     a todos menos a los guerreros
+- sin_raza = {"Humano", "Enano"}   a todos menos a los humanos y a los enanos
+
+Si pones varias, tienen que cumplirse todas: clase = "Guerrero", raza = "Humano" es solo para
+humanos guerreros.
+
+Los nombres valen en español o en inglés, con o sin tildes y mayúsculas:
+- Clases: Guerrero, Paladín, Cazador, Pícaro, Sacerdote, Chamán, Mago, Brujo, Druida
+  (o Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock, Druid).
+- Razas: Humano, Enano, Elfo de la noche, Gnomo, Orco, No-muerto, Tauren, Trol, Goblin, Skyborne
+  (o Human, Dwarf, Night Elf, Gnome, Orc, Undead, Tauren, Troll, Goblin, Skyborne).
+- Facciones: Horda, Alianza (o Horde, Alliance).
+
+Ejemplo, un paso solo para magos:
+
+      {aceptar = 1234, ir = {1411, 43.3, 68.5}, clase = "Mago", texto = "Habla con el instructor de magos"},
+
+Ejemplo con negación, un paso para todos menos los guerreros y los pícaros:
+
+      {texto = "Compra vendas para el camino", sin_clase = {"Guerrero", "Pícaro"}},
+
+Un paso con un nombre que no se entiende (por ejemplo clase = "Magoo") no sale a nadie: así no le
+sale a todas las clases por error.
+
+Lo mismo vale para la guía entera: con clase, raza, sin_clase o sin_raza junto a su nombre, la guía
+solo sale en la ventana a quien los cumple. Ejemplo, una guía solo para cazadores de la Alianza:
+
+  {
+    nombre = "Mi ruta de cazador",
+    faccion = "Alianza",
+    clase = "Cazador",
+    pasos = {
+      {aceptar = 1234, texto = "Habla con el instructor de cazadores"},
+    },
+  },
+
+Si la guía lleva un nombre que no se entiende, no se usa y SnetForever lo dice en el chat.
+
+
+EL ID DE UN PASO (OPCIONAL)
+---------------------------
+
+SnetForever recuerda por dónde vas en cada guía. Si metes pasos nuevos en medio de una guía que ya
+estabas siguiendo, ponles a los pasos un id (un nombre corto, distinto en cada paso de la guía):
+
+      {id = "gornek", aceptar = 788, texto = "Habla con Gornek"},
+
+Así lo que llevabas hecho sigue en su paso aunque cambie de sitio. Sin id, cada paso se conoce por su
+número (el primero «m1», el segundo «m2»…).
+
+
+SI LE CAMBIAS EL NOMBRE A UNA GUÍA (OPCIONAL)
+---------------------------------------------
+
+SnetForever también recuerda por dónde vas por el nombre de la guía. Si le cambias el nombre, pon el
+de antes en nombre_antes y lo que llevabas hecho pasa al nombre nuevo la próxima vez que entres:
+
+  {
+    nombre = "[A] Mi ruta de cazador",
+    nombre_antes = "Mi ruta de cazador",
+    ...
+  },
+
+Puedes dejar nombre_antes ahí para siempre: solo se usa si el nombre nuevo aún no tiene nada guardado.
+
+
+DE DÓNDE SACO LOS NÚMEROS
+-------------------------
+
+- El número de una misión: búscala en la web de Wowhead Classic. El número es el que va
+  detrás de «quest=» en la dirección de la página.
+- El sitio: ve hasta allí en el juego y escribe /snet aqui. SnetForever te escribe en el chat
+  algo como  ir = {1411, 43.3, 68.5}  listo para copiarlo en el paso.
+
+
+SI ALGO ESTÁ MAL
+----------------
+
+- Al entrar al juego, SnetForever dice en el chat cuántas guías cargó.
+- Si algo no se entiende, avisa de qué guía y qué paso es. Por ejemplo, una misión que no está
+  en la base o una coordenada fuera de 0-100. Lo que está mal no se usa; lo demás sí.
+- Si dice «tu archivo mis-guias.lua tiene un error de escritura», casi siempre falta una coma
+  entre dos pasos o dos guías, o falta cerrar una { con su }. El juego también enseña la línea
+  del error.
+
+
+EJEMPLO
+-------
+
+El archivo mis-guias.lua trae una guía de ejemplo, «Ejemplo: Valle de los Retos», hecha con
+datos reales de la base de misiones. Puedes cambiarla, copiarla para empezar otra o borrarla.
+Si borras todas las guías, deja al menos esto:
+
+  SnetForeverMisGuias = {
+  }

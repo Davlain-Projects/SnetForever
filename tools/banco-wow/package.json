@@ -1,0 +1,15 @@
+{
+  "name": "snetforever-banco-wow",
+  "version": "0.1.0",
+  "description": "Banco de pruebas del addon SnetForever: imitación de la API de WoW ejecutada en fengari",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test --test-concurrency=4",
+    "test:nucleo": "node solo-nucleo.mjs"
+  },
+  "dependencies": {
+    "fengari": "^0.1.4"
+  }
+}

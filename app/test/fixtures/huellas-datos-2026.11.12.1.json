@@ -1,0 +1,594 @@
+{
+  "nota": "Medido con cargarBase sobre los datos 2026.11.11.6 (las misiones de otras temporadas sin prueba del juego, fuera; por lo demás como la 2026.11.11.2). Cambian 62 de las 376 rutas: en todas sale alguna misión de 60000-89999 y, como las rutas llenas tienen el tope de 60 misiones y los objetos con más de 3 misiones de la raza cuentan como buzón, en su sitio entran otras. Mismos 94 mapas y 4 personajes; ítems iguales. (Nota de la 2026.11.11.2: (lote H, ronda 1: QuestieDB 1.0.14 con su lista negra para el Forever, RXPGuides 4.11.35, OpenMap 0.8.3). rutas[uiMap] = huellas (sha1, 16 cifras) de construirRutaZona en inglés para los 4 personajes de datos-reales-lote-b.test.js, en los mismos 94 mapas que huellas-datos-2026.11.10.6.json y la 2026.11.11.1. Si cambia QuestieDB, hay que rehacerlo. 12-nov: fuera de las rutas de zona las submisiones (parentQuest) y las repetibles (specialFlags bit 1): cambian 52 rutas, todas por eso (sin esos dos campos salen las de la 2026.11.11.6).",
+  "version": "2026.11.11.6",
+  "items": {
+    "total": 23858,
+    "conClase": 21829,
+    "porClase": {
+      "0": 2029,
+      "1": 108,
+      "2": 2814,
+      "3": 1,
+      "4": 10719,
+      "5": 76,
+      "6": 27,
+      "7": 565,
+      "9": 1971,
+      "11": 23,
+      "12": 3693,
+      "13": 26,
+      "15": 1806
+    },
+    "startQuest": 398,
+    "npcDrops": 5771,
+    "objectDrops": 3357,
+    "vendors": 3734,
+    "itemDrops": 2433
+  },
+  "rutas": {
+    "166": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "213": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "219": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "220": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "221": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "222": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "225": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "226": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "227": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "229": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "230": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "232": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "233": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "234": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "235": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "236": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "237": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "238": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "239": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "240": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "242": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "243": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "247": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "248": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "253": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "255": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "279": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "280": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "281": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "287": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "291": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "300": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "301": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "302": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "306": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "307": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "308": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "310": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "317": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "320": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "947": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "1411": [
+      "a4a705b0905a164e",
+      "d6b098f63b3e3c34",
+      "84c261425cb407a1",
+      "d6b098f63b3e3c34"
+    ],
+    "1412": [
+      "4a0fe0090056a164",
+      "e861a66df221a6b2",
+      "406e5e86869f2a86",
+      "e861a66df221a6b2"
+    ],
+    "1413": [
+      "34896444d76d581b",
+      "c56417d37aabec55",
+      "b374b6e30cb8a6b1",
+      "99a67a9b5e72c300"
+    ],
+    "1414": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "1415": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "1416": [
+      "e861a66df221a6b2",
+      "464c2cb8d4032db0",
+      "c9e9619d2df8d87f",
+      "bb8614ee81be8388"
+    ],
+    "1417": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "348f798162dc10d9",
+      "39d8cf541db09543"
+    ],
+    "1418": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "33d7726a44c6be55",
+      "87a396becd9a3b0e"
+    ],
+    "1419": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "51e7527ad6d973f9"
+    ],
+    "1420": [
+      "28f4f23b9f4495e4",
+      "d186e0c9b1453653",
+      "336ce8c9070bc830",
+      "d186e0c9b1453653"
+    ],
+    "1421": [
+      "c7277737e5c1d138",
+      "52ab7e6d0d4302b5",
+      "0b34aaa9f105507e",
+      "d3039b4fab11ca9c"
+    ],
+    "1422": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "472529bfb1b506e3"
+    ],
+    "1423": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "1424": [
+      "e861a66df221a6b2",
+      "451e8a5d59ab091c",
+      "0a1f8991e43840be",
+      "4abe4e4759df60f8"
+    ],
+    "1425": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "ff942681e879f60e",
+      "410f4922796fab0b"
+    ],
+    "1426": [
+      "e861a66df221a6b2",
+      "9c602534d6a1e401",
+      "6cdb471e481df3aa",
+      "3223a7fc20510aab"
+    ],
+    "1427": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "940cc1073851388a"
+    ],
+    "1428": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "b0ee20917549a0d2"
+    ],
+    "1429": [
+      "e861a66df221a6b2",
+      "6fb87f01892035f4",
+      "e861a66df221a6b2",
+      "e54dc5cbbc992d26"
+    ],
+    "1430": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "1431": [
+      "e861a66df221a6b2",
+      "020c0b1945c14cd3",
+      "e861a66df221a6b2",
+      "84184f2e22a39da1"
+    ],
+    "1432": [
+      "e861a66df221a6b2",
+      "918ba1eaea9b3b8f",
+      "62553171467ba2f4",
+      "af8a09e6f02b6e9e"
+    ],
+    "1433": [
+      "29d090c5643358a2",
+      "0c4b62e980d4bffa",
+      "9128af34ceb15b54",
+      "0c4b62e980d4bffa"
+    ],
+    "1434": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "7d12a73637e29270",
+      "854fdfb24773f88e"
+    ],
+    "1435": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "914427c571153f60",
+      "7583cf719a4c4b0b"
+    ],
+    "1436": [
+      "e861a66df221a6b2",
+      "07ffce47560fd0ac",
+      "20fd48ad48f16ac6",
+      "6b00a6aeaa870844"
+    ],
+    "1437": [
+      "e861a66df221a6b2",
+      "3a78663a156a3f8b",
+      "e861a66df221a6b2",
+      "3770caae4fb6760c"
+    ],
+    "1438": [
+      "e861a66df221a6b2",
+      "83da86ad66bdf3f2",
+      "e861a66df221a6b2",
+      "a3198f0105c2e129"
+    ],
+    "1439": [
+      "e861a66df221a6b2",
+      "a93e3334e79dcff8",
+      "e861a66df221a6b2",
+      "28e5f5d8a213c677"
+    ],
+    "1440": [
+      "e861a66df221a6b2",
+      "6e51a08c2306d989",
+      "869ba80b0f857bdd",
+      "8f220345883bc37c"
+    ],
+    "1441": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "0f52bb3721429606",
+      "853823fa108440a5"
+    ],
+    "1442": [
+      "e861a66df221a6b2",
+      "ec1e8278800e1440",
+      "281a722f5d918691",
+      "49e66c0ef4de54e9"
+    ],
+    "1443": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "aab07a714fb50d89",
+      "c2033cd9ce88d119"
+    ],
+    "1444": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "cf9261a2331d197b"
+    ],
+    "1445": [
+      "e861a66df221a6b2",
+      "2c3266c20f06f7cf",
+      "e061bbea826fd8b9",
+      "19c05bcdef3cc3e6"
+    ],
+    "1446": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "2b70aee556abbe34"
+    ],
+    "1447": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "1245f520bac1e643"
+    ],
+    "1448": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "7cd013794d74ca6b"
+    ],
+    "1449": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e9039bac0b62b131"
+    ],
+    "1450": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "387b4928678d7226"
+    ],
+    "1451": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "1452": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "89ada50633ce7ddf"
+    ],
+    "1453": [
+      "e861a66df221a6b2",
+      "41a5dbd656ef7fb1",
+      "e861a66df221a6b2",
+      "2c754bc5e53e58d8"
+    ],
+    "1454": [
+      "9379b648fbf36b45",
+      "e861a66df221a6b2",
+      "15c2b674b0882816",
+      "e861a66df221a6b2"
+    ],
+    "1455": [
+      "e861a66df221a6b2",
+      "960675edd1af3d13",
+      "e861a66df221a6b2",
+      "ea41626e01b20d7c"
+    ],
+    "1456": [
+      "ae2f749bca1ae164",
+      "e861a66df221a6b2",
+      "c1177abf48a2b8da",
+      "e861a66df221a6b2"
+    ],
+    "1457": [
+      "e861a66df221a6b2",
+      "6306b78e05c9c2ac",
+      "e861a66df221a6b2",
+      "4c8f332da3b81b8b"
+    ],
+    "1458": [
+      "795cf53416e4b68c",
+      "e861a66df221a6b2",
+      "086f2cdb3aa8a74d",
+      "e861a66df221a6b2"
+    ],
+    "1459": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "1460": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "1461": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "2482": [
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2",
+      "e861a66df221a6b2"
+    ],
+    "2521": [
+      "c8bcd2a9e10e0a33",
+      "470604d20be8ac28",
+      "8a8cd03c5dcb3cf0",
+      "0300555a81d08e24"
+    ]
+  }
+}

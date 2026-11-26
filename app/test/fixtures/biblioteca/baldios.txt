@@ -1,0 +1,4 @@
+Guía Horda 1-12 Los Baldíos
+1. Habla con la herrera del puesto y acepta "Lomo de jabalí" (50.2, 60.4)
+2. Mata jabalíes hasta tener las piezas.
+3. Entrega "Lomo de jabalí".

@@ -1,0 +1,8 @@
+## Interface: 16001
+## X-Contract-Version: 4
+## Titulo: con: dos puntos  
+Archivo.lua
+## X-Quest-IDS: ~3~
+## X-Quest-IDS-1: eJxr5hK
+## X-Quest-IDS-2: RkAMAA0
+## X-Quest-IDS-3: YA2A==

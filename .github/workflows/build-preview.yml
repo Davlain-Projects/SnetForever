@@ -1,0 +1,39 @@
+name: Build Windows preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  installer:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Locate the Node license
+        shell: pwsh
+        run: |
+          $license = Join-Path (Split-Path (Get-Command node).Source) 'LICENSE'
+          if (-not (Test-Path -LiteralPath $license)) {
+            $version = node --version
+            $license = Join-Path $env:RUNNER_TEMP 'node-LICENSE'
+            Invoke-WebRequest "https://raw.githubusercontent.com/nodejs/node/$version/LICENSE" -OutFile $license
+          }
+          "SNF_NODE_LICENSE=$license" >> $env:GITHUB_ENV
+      - run: npm run build:preview
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: snetforever-windows-preview
+          path: |
+            artifacts/preview/*.exe
+            artifacts/preview/SHA256SUMS.txt
+            artifacts/preview/build-info.json
+          if-no-files-found: error

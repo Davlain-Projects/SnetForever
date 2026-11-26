@@ -1,0 +1,19 @@
+<Bindings>
+  <Binding name="CLICK SnetForeverObjetivo1:LeftButton" header="SNETFOREVER_GUIAS" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo2:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo3:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo4:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo5:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo6:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo7:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo8:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo9:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo10:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo11:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivo12:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetivosTodos:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetoActivo1:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetoActivo2:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetoActivo3:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+  <Binding name="CLICK SnetForeverObjetoActivo4:LeftButton" category="BINDING_HEADER_SNETFOREVER_GUIAS" />
+</Bindings>

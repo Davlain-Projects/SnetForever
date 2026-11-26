@@ -1,0 +1,12 @@
+node_modules/
+.superpowers/
+*.log
+tools/empaquetar/dist/
+referencias/
+/artifacts/
+/addons/SnetForever_MisGuias/
+/addons/SnetForever_P[0-9][0-9]/
+/addons/SnetForever_R[0-9][0-9][0-9]/
+.env
+.env.*
+!.env.example

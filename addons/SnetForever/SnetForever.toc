@@ -1,0 +1,75 @@
+## Interface: 16001
+## Title: SnetForever
+## IconTexture: Interface\AddOns\SnetForever\recursos\icono
+## Notes: Guía de leveo 1-60 propia, en español e inglés
+## Version: 0.7.0
+## Dependencies: SnetForever_Rutas, SnetForever_Misiones
+## OptionalDeps: OpenMap, SnetForever_MisGuias, SnetForever_RutasRXP
+## SavedVariables: SnetForeverCuenta
+## SavedVariablesPerCharacter: SnetForeverPJ
+## Author: SnetForever
+## X-License: LicenseRef-SnetForever-Collaboration (see LICENSE for exceptions)
+## X-SNF-EsquemaDatos: 1
+
+nucleo\espacio.lua
+nucleo\eventos.lua
+nucleo\filtros.lua
+nucleo\idioma.lua
+textos\es.lua
+textos\en.lua
+nucleo\guardado.lua
+nucleo\personaje.lua
+nucleo\datos.lua
+nucleo\misiones.lua
+motor\misguias.lua
+motor\importar-rxp.lua
+motor\elementos.lua
+motor\elementos-misiones.lua
+motor\elementos-mundo.lua
+motor\elementos-servicios.lua
+motor\dificultad.lua
+motor\pasos.lua
+motor\requisitos.lua
+motor\guias.lua
+motor\dialogos.lua
+motor\avisos.lua
+motor\continente.lua
+motor\viaje.lua
+motor\rutapie.lua
+mapa\coordenadas.lua
+mapa\capa.lua
+mapa\navegacion.lua
+ui\texto.lua
+ui\estilo.lua
+ui\window-sizing.lua
+ui\controles.lua
+ui\fallo.lua
+ui\importar-rxp.lua
+ui\ventana.lua
+ui\flecha.lua
+ui\objetivos.lua
+ui\objetos-activos.lua
+ui\field-guide.lua
+mapa\marcador.lua
+mapa\pines-mundo.lua
+mapa\dibujos.lua
+mapa\pines-minimapa.lua
+mapa\cercanos.lua
+mapa\openmap.lua
+ia\json.lua
+ia\codec.lua
+ia\franja.lua
+ia\timbres.lua
+ia\buzon.lua
+ia\contexto.lua
+ia\inventario.lua
+ia\diario.lua
+ia\subasta.lua
+ia\envio.lua
+ia\latido.lua
+ia\ruta.lua
+ia\marcas.lua
+ui\chat.lua
+ui\panel.lua
+ui\boton-minimapa.lua
+arranque.lua

@@ -1,0 +1,59 @@
+## Interface: 16001
+## Title: SnetForever Comercio
+## IconTexture: Interface\AddOns\SnetForever\recursos\icono
+## Notes: Comercio en la subasta para SnetForever (grupos, precios y compras). Se activa o desactiva en la lista de addons.
+## Notes-enUS: Auction house trading for SnetForever (groups, prices and purchases). Enable or disable it in the AddOns list.
+## Notes-enGB: Auction house trading for SnetForever (groups, prices and purchases). Enable or disable it in the AddOns list.
+## Version: 0.7.0
+## Dependencies: SnetForever
+## Author: SnetForever
+## X-License: LicenseRef-SnetForever-Collaboration (see LICENSE for exceptions)
+
+comercio\comercio.lua
+comercio\precios.lua
+comercio\estado.lua
+comercio\merchant-prices.lua
+comercio\disenchant-samples.lua
+comercio\recipe-costs.lua
+comercio\formulas.lua
+comercio\arbol.lua
+comercio\grupos.lua
+comercio\operaciones.lua
+comercio\texto-grupos.lua
+comercio\importar-tsm.lua
+comercio\reglas.lua
+comercio\propuesta.lua
+comercio\escaneo.lua
+comercio\inventario.lua
+comercio\compra.lua
+comercio\sniper.lua
+comercio\busqueda.lua
+comercio\vender.lua
+comercio\mis-subastas.lua
+comercio\auction-orders.lua
+comercio\group-shopping.lua
+comercio\ledger.lua
+ui\tema.lua
+ui\piezas\botones.lua
+ui\piezas\campos.lua
+ui\piezas\contenedores.lua
+ui\piezas\arbol.lua
+ui\piezas\tabla.lua
+ui\piezas\muestrario.lua
+ui\comercio_tabla.lua
+ui\comercio_cantidad.lua
+ui\subasta\ventana.lua
+ui\subasta\navegar.lua
+ui\subasta\resultados.lua
+ui\subasta\sniper.lua
+ui\subasta\auction-orders.lua
+ui\comercio.lua
+ui\tooltip.lua
+ui\principal.lua
+ui\principal\dashboard.lua
+ui\principal\contabilidad.lua
+ui\principal\grupos.lua
+ui\principal\editor-operacion.lua
+ui\principal\editor-formula.lua
+ui\principal\operaciones.lua
+ui\principal\ajustes.lua

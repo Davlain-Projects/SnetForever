@@ -1,0 +1,69 @@
+SnetForever: licencias y créditos
+=================================
+
+SnetForever es gratuito y no pide contraseñas, claves ni pagos. Lleva varias piezas, cada una con su licencia:
+
+1. El código propio de la app y de los addons principales se distribuye bajo los términos de colaboración de SnetForever. Consulta el LICENSE de cada componente para los permisos y las excepciones.
+
+2. Las rutas (el addon SnetForever_Rutas): Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional
+   (CC BY-NC-SA 4.0), la misma que las guías de origen, de RestedXP Guides (RestedXP, sus autores y traductores).
+   No se pueden usar con fines comerciales y las obras derivadas deben mantener esta licencia. SnetForever no está
+   respaldado por RestedXP.
+
+3. Las misiones (el addon SnetForever_Misiones): GNU General Public License versión 3 (GPLv3). Sus datos se han
+   generado a partir de QuestieDB, © colaboradores de Questie/QuestieDB. SnetForever no tiene ninguna relación con
+   Questie ni con sus autores, ni está respaldado por ellos.
+
+4. Los niveles de zonas y mazmorras de las rutas y de las misiones proceden de OpenMap: licencia MIT, © OpenMap
+   contributors (copia en LICENSE-OpenMap.txt de cada addon de datos).
+
+5. Las letras del addon de comercio (SnetForever_Comercio\recursos\letras): Montserrat, © 2024 The Montserrat.Git Project
+   Authors, y Roboto, © 2011 The Roboto Project Authors, con la licencia SIL Open Font License, versión 1.1 (OFL 1.1).
+   Se pueden usar, copiar y repartir con el programa, pero no venderlas por separado. El texto completo de cada licencia
+   está junto a sus letras (Montserrat-OFL.txt y Roboto-OFL.txt).
+
+6. Node.js v24.14.0 (node\node.exe, sin cambios): licencia MIT, © Node.js contributors. Lleva bibliotecas de terceros
+   (V8, ICU, OpenSSL, libuv y otras) con sus propias licencias: el aviso está en node\LICENSE y node\AVISO.txt.
+
+7. El programa de instalación y el desinstalador (unins000.exe) son de Inno Setup, © Jordan Russell y Martijn Laan,
+   con su propia licencia (Inno Setup License).
+
+Cada addon lleva dentro su LICENSE. Las rutas y las misiones llevan además su CREDITOS.md y LICENSE-OpenMap.txt, y el
+comercio las licencias de sus letras (recursos\letras\*-OFL.txt), con los detalles. No se borra nada al desinstalar:
+lo quitado va a una carpeta de cuarentena.
+
+------------------------------------------------------------------------------------------------------------------------
+
+SnetForever: licenses and credits
+=================================
+
+SnetForever is free and never asks for passwords, keys or payments. It includes several parts, each with its license:
+
+1. Original desktop app and core and commerce addon code is distributed under the SnetForever collaboration terms. See each component LICENSE for permissions and exceptions.
+
+2. The routes (the SnetForever_Rutas addon): Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+   (CC BY-NC-SA 4.0), the same as the original guides, from RestedXP Guides (RestedXP, its authors and translators).
+   They cannot be used for commercial purposes and derived works must keep this license. SnetForever is not endorsed
+   by RestedXP.
+
+3. The quests (the SnetForever_Misiones addon): GNU General Public License version 3 (GPLv3). Its data was generated
+   from QuestieDB, © Questie/QuestieDB contributors. SnetForever has no relationship with Questie or its authors and
+   is not endorsed by them.
+
+4. The zone and dungeon levels of the routes and the quests come from OpenMap: MIT license, © OpenMap contributors
+   (copy in LICENSE-OpenMap.txt of each data addon).
+
+5. The fonts of the trading addon (SnetForever_Comercio\recursos\letras): Montserrat, © 2024 The Montserrat.Git Project
+   Authors, and Roboto, © 2011 The Roboto Project Authors, under the SIL Open Font License, Version 1.1 (OFL 1.1). They
+   can be used, copied and distributed with the program, but not sold by themselves. The full text of each license is
+   next to its fonts (Montserrat-OFL.txt and Roboto-OFL.txt).
+
+6. Node.js v24.14.0 (node\node.exe, unmodified): MIT license, © Node.js contributors. It includes third-party
+   libraries (V8, ICU, OpenSSL, libuv and others) under their own licenses: see node\LICENSE and node\AVISO.txt.
+
+7. The setup program and the uninstaller (unins000.exe) are made with Inno Setup, © Jordan Russell and Martijn Laan,
+   under its own license (Inno Setup License).
+
+Each addon contains its LICENSE. The routes and the quests also have their CREDITOS.md and LICENSE-OpenMap.txt, and the
+trading addon the licenses of its fonts (recursos\letras\*-OFL.txt), with the details. Nothing is deleted when
+uninstalling: what is removed goes to a quarantine folder.

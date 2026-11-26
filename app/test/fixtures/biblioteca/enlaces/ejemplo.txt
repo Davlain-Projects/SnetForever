@@ -1,0 +1,5 @@
+# Dirección: https://guias.ejemplo.test/baldios
+# Bajada: 2026-11-15
+Guía Alianza 5-10 Los Baldíos
+1. Acepta "Colmillos del norte" en (40.5, 30.5)
+2. Entrega "Colmillos del norte"

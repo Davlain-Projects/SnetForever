@@ -1,0 +1,33 @@
+Node.js portátil de SnetForever (node\node.exe)
+===============================================
+
+El instalador de SnetForever lleva una copia sin cambios del node.exe oficial de Node.js v24.14.0 para Windows x64,
+para que la app funcione sin instalar nada más. Node.js es MIT (© Node.js contributors; el aviso está en LICENSE, junto
+a este archivo).
+
+Node.js lleva dentro bibliotecas de terceros con sus propias licencias. Las principales son:
+
+- V8 (el motor de JavaScript): BSD de 3 cláusulas;
+- ICU (Unicode e idiomas): licencia de Unicode (ICU);
+- OpenSSL: Apache 2.0;
+- libuv: MIT;
+- llhttp, c-ares, nghttp2, nghttp3, ngtcp2, undici, acorn, cjs-module-lexer, uvwasi y brotli: MIT;
+- ada, simdutf y simdjson: MIT o Apache 2.0;
+- zlib: licencia de zlib; zstd: BSD;
+- SQLite: dominio público.
+
+Esta lista es solo un resumen. La lista completa y el texto de cada licencia (la referencia que vale) están en el
+archivo LICENSE de Node.js v24.14.0:
+
+https://github.com/nodejs/node/blob/v24.14.0/LICENSE
+
+El instalador no descarga nada: el enlace es solo para leerlo.
+
+------------------------------------------------------------------------------------------------------------------------
+
+Portable Node.js in SnetForever (node\node.exe)
+
+The SnetForever installer ships an unmodified copy of the official Node.js v24.14.0 node.exe for Windows x64. Node.js is
+MIT licensed (the notice is in LICENSE, next to this file). It includes third-party libraries (V8, ICU, OpenSSL, libuv
+and others) under their own licenses; the complete list and texts are in the LICENSE file of Node.js v24.14.0 (link
+above). The installer does not download anything.

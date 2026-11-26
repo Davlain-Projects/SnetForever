@@ -1,0 +1,14 @@
+{
+  "name": "snetforever-app",
+  "version": "0.7.0",
+  "description": "App de Windows de SnetForever: lee la franja de colores del juego y trae las respuestas de la IA al addon",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --import ./test/aislar.mjs --test \"test/**/*.test.js\""
+  }
+}

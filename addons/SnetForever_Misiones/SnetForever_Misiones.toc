@@ -1,0 +1,32 @@
+## Interface: 16001
+## Title: SnetForever - Misiones
+## Notes: Base de misiones del Forever (datos de QuestieDB, GPLv3)
+## Version: 2026.11.13.1
+## Author: SnetForever
+## X-License: GPL-3.0
+## IconTexture: Interface\AddOns\SnetForever\recursos\icono
+## X-SNF-App: object_1.lua, object_2.lua, object_3.lua, item_1.lua, item_2.lua, item_3.lua, item_4.lua, item_5.lua, item_6.lua, item_7.lua, es_object_1.lua, es_item_1.lua, es_item_2.lua
+
+nucleo.lua
+quest_1.lua
+quest_2.lua
+quest_3.lua
+quest_4.lua
+npc_1.lua
+npc_2.lua
+npc_3.lua
+npc_4.lua
+npc_5.lua
+npc_6.lua
+npc_7.lua
+npc_8.lua
+npc_9.lua
+juego_object_1.lua
+juego_item_1.lua
+es_quest_1.lua
+es_quest_2.lua
+es_npc_1.lua
+juego_es_object_1.lua
+juego_es_item_1.lua
+guias_1.lua
+mazmorras_1.lua

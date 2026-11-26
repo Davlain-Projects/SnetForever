@@ -1,0 +1,10 @@
+*.tga binary
+*.ttf binary
+*.ico binary
+*.png binary
+*.webp binary
+*.wav binary
+*.zip binary
+*.snfpaq binary
+app/src/**/*.mjs linguist-generated=true
+app/arranque/*.mjs linguist-generated=true

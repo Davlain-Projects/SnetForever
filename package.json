@@ -1,0 +1,24 @@
+{
+  "name": "snetforever-workspace",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "bootstrap": "npm ci --ignore-scripts && npm --prefix tools/banco-wow ci --ignore-scripts && npm --prefix tools/conversor ci --ignore-scripts",
+    "verify": "node scripts/verify.mjs",
+    "check": "node scripts/check.mjs smoke",
+    "test": "node scripts/check.mjs smoke",
+    "test:addons": "node scripts/check.mjs addons",
+    "test:app": "node scripts/check.mjs app",
+    "test:packaging": "node scripts/check.mjs packaging",
+    "test:converters": "node scripts/check.mjs converters",
+    "importar:rxp": "node tools/conversor/src/importar-rxp.js",
+    "build:preview": "node scripts/build-preview.mjs",
+    "build:app": "tsc -p app/typescript/tsconfig.strict.json && tsc -p app/typescript/tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}

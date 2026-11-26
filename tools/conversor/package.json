@@ -1,0 +1,16 @@
+{
+  "name": "snetforever-conversor",
+  "version": "0.1.0",
+  "description": "Conversor que genera los addons de datos de SnetForever en Lua 5.1",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test",
+    "convertir": "node src/cli.js",
+    "cadenas": "node src/cadenas/listar.js"
+  },
+  "dependencies": {
+    "fengari": "^0.1.4"
+  }
+}

@@ -1,0 +1,3041 @@
+{
+ "version": "2026-11-13",
+ "nota": "Guías de profesiones 1-300 sacadas de internet (wow-professions.com y method.gg para WoW Forever; Classic Era donde no hay de Forever). Cada profesión trae sus fuentes. Herboristería, Minería y Desuello tienen guía propia en el addon.",
+ "profesiones": {
+  "129": {
+   "nombre": "First Aid",
+   "es": "Primeros auxilios",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": null,
+     "aprender": "Cualquier instructor de primeros auxilios (Shaina Fuller en Stormwind, Arnok en Orgrimmar, etc.)"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": null,
+     "aprender": "Instructor de primeros auxilios, visitarlo antes de pasar de 75"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 225,
+     "nivelPersonaje": null,
+     "aprender": "Libro Expert First Aid - Under Wraps (ademas Manual: Heavy Silk Bandage y Manual: Mageweave Bandage): Deneb Walker (Alianza, Arathi Highlands) o Balai Lok'Wein (Horda, Dustwallow Marsh); mas rapido en la casa de subastas. Aprender antes la receta Silk Bandage con el instructor"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "Doctor Gustaf VanHowzen (Alianza, Theramore, Dustwallow Marsh) o Doctor Gregory Victor (Horda, Hammerfall, Arathi Highlands); mision opcional Triage (cadenas Alliance Trauma / Horde Trauma, con First Aid 225)"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 40,
+     "fabricar": "Linen Bandage",
+     "veces": 50,
+     "materiales": [
+      {
+       "objeto": "Linen Cloth",
+       "cantidad": 50
+      }
+     ]
+    },
+    {
+     "desde": 40,
+     "hasta": 75,
+     "fabricar": "Heavy Linen Bandage",
+     "veces": 45,
+     "materiales": [
+      {
+       "objeto": "Linen Cloth",
+       "cantidad": 90
+      }
+     ]
+    },
+    {
+     "desde": 75,
+     "hasta": 80,
+     "fabricar": "Heavy Linen Bandage",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Linen Cloth",
+       "cantidad": 30
+      }
+     ]
+    },
+    {
+     "desde": 80,
+     "hasta": 115,
+     "fabricar": "Wool Bandage",
+     "veces": 60,
+     "materiales": [
+      {
+       "objeto": "Wool Cloth",
+       "cantidad": 60
+      }
+     ]
+    },
+    {
+     "desde": 115,
+     "hasta": 150,
+     "fabricar": "Heavy Wool Bandage",
+     "veces": 60,
+     "materiales": [
+      {
+       "objeto": "Wool Cloth",
+       "cantidad": 120
+      }
+     ]
+    },
+    {
+     "desde": 150,
+     "hasta": 180,
+     "fabricar": "Silk Bandage",
+     "veces": 50,
+     "materiales": [
+      {
+       "objeto": "Silk Cloth",
+       "cantidad": 50
+      }
+     ]
+    },
+    {
+     "desde": 180,
+     "hasta": 210,
+     "fabricar": "Heavy Silk Bandage",
+     "veces": 50,
+     "materiales": [
+      {
+       "objeto": "Silk Cloth",
+       "cantidad": 100
+      }
+     ]
+    },
+    {
+     "desde": 210,
+     "hasta": 225,
+     "fabricar": "Mageweave Bandage",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Mageweave Cloth",
+       "cantidad": 30
+      }
+     ]
+    },
+    {
+     "desde": 225,
+     "hasta": 240,
+     "fabricar": "Mageweave Bandage",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Mageweave Cloth",
+       "cantidad": 30
+      }
+     ]
+    },
+    {
+     "desde": 240,
+     "hasta": 260,
+     "fabricar": "Heavy Mageweave Bandage",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Mageweave Cloth",
+       "cantidad": 60
+      }
+     ],
+     "notas": "Receta del doctor; visitarlo en cada rango"
+    },
+    {
+     "desde": 260,
+     "hasta": 290,
+     "fabricar": "Runecloth Bandage",
+     "veces": 50,
+     "materiales": [
+      {
+       "objeto": "Runecloth",
+       "cantidad": 50
+      }
+     ],
+     "notas": "Receta del doctor"
+    },
+    {
+     "desde": 290,
+     "hasta": 300,
+     "fabricar": "Heavy Runecloth Bandage",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Runecloth",
+       "cantidad": 30
+      }
+     ],
+     "notas": "Receta del doctor"
+    }
+   ],
+   "totales": [
+    {
+     "objeto": "Linen Cloth",
+     "cantidad": 170
+    },
+    {
+     "objeto": "Wool Cloth",
+     "cantidad": 180
+    },
+    {
+     "objeto": "Silk Cloth",
+     "cantidad": 150
+    },
+    {
+     "objeto": "Mageweave Cloth",
+     "cantidad": 120
+    },
+    {
+     "objeto": "Runecloth",
+     "cantidad": 80
+    }
+   ],
+   "recogida": "",
+   "notas": "485 crafts en total, 700 de tela. Para el 225-300 lleva unos 100 Mageweave Cloth y 70 Runecloth. Mision Triage: cura primero al no-muerto, luego al troll, luego al orco; entrega al salvar 15 pacientes.",
+   "fuentes": [
+    "https://www.wow-professions.com/classic/first-aid-leveling-guide-classic-wow"
+   ]
+  },
+  "164": {
+   "nombre": "Blacksmithing",
+   "es": "Herrería",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": 5,
+     "aprender": "cualquier instructor de herreria: Ug'thok (Orgrimmar), Basil Frye (Undercity), Thrag Stonehoof (Thunder Bluff), Dane Lindgren (Stormwind), Groum Stonebeard (Ironforge); zonas iniciales: Dwukk (Razor Hill), Smith Argus (Goldshire), Tognus Flintfire (Kharanos), Angus Hammerhand (Bandarion Keep)"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": 10,
+     "aprender": "requiere Blacksmithing 50. Horda: Snarl (Orgrimmar), James Van Brunt (Undercity), Karn Stonehoof (Thunder Bluff), Angus Hammerhand (Bandarion Keep); Alianza: Therum Deepforge (Stormwind), Rotgath Stonebeard (Ironforge)"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 215,
+     "nivelPersonaje": 20,
+     "aprender": "requiere Blacksmithing 125, cuesta 50 plata. Horda: Saru Steelfury (Orgrimmar); Alianza: Bengus Deepforge (Ironforge)"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "requiere Blacksmithing 200. Ambas facciones: Brikk Keencraft en Booty Bay (Stranglethorn Vale). Especializaciones (opcional) piden Blacksmithing 200 y nivel 40"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 25,
+     "fabricar": "Rough Sharpening Stone",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Rough Stone",
+       "cantidad": 30
+      }
+     ]
+    },
+    {
+     "desde": 25,
+     "hasta": 50,
+     "fabricar": "Rough Grinding Stone",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Rough Stone",
+       "cantidad": 60
+      }
+     ],
+     "notas": "guardar 20 (10 para guanteletes, 10 para Silver Rods a 75)"
+    },
+    {
+     "desde": 50,
+     "hasta": 70,
+     "fabricar": "Coarse Grinding Stone",
+     "veces": 36,
+     "materiales": [
+      {
+       "objeto": "Coarse Stone",
+       "cantidad": 72
+      }
+     ],
+     "notas": "hacer las 36 (se usan en brazales a 95 y 112)"
+    },
+    {
+     "desde": 70,
+     "hasta": 75,
+     "fabricar": "Runed Copper Gauntlets",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Copper Bar",
+       "cantidad": 40
+      },
+      {
+       "objeto": "Rough Grinding Stone",
+       "cantidad": 10
+      }
+     ],
+     "notas": "requiere Blacksmith Hammer (se compra a los vendedores de herreria)"
+    },
+    {
+     "desde": 75,
+     "hasta": 95,
+     "fabricar": "Runed Copper Belt",
+     "veces": 23,
+     "materiales": [
+      {
+       "objeto": "Copper Bar",
+       "cantidad": 230
+      }
+     ],
+     "notas": "5 + 18 fabricaciones; alternativa 75-80: 5 Silver Rod (1 Silver Bar y 2 Rough Grinding Stone cada una)"
+    },
+    {
+     "desde": 95,
+     "hasta": 100,
+     "fabricar": "Patterned Bronze Bracers",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Bronze Bar",
+       "cantidad": 25
+      },
+      {
+       "objeto": "Coarse Grinding Stone",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 100,
+     "hasta": 112,
+     "fabricar": "Heavy Grinding Stone",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Heavy Stone",
+       "cantidad": 60
+      }
+     ],
+     "notas": "guardar las 20 para Golden Scale Bracers a 180"
+    },
+    {
+     "desde": 112,
+     "hasta": 125,
+     "fabricar": "Patterned Bronze Bracers",
+     "veces": 13,
+     "materiales": [
+      {
+       "objeto": "Bronze Bar",
+       "cantidad": 65
+      },
+      {
+       "objeto": "Coarse Grinding Stone",
+       "cantidad": 26
+      }
+     ]
+    },
+    {
+     "desde": 125,
+     "hasta": 140,
+     "fabricar": "Bronze Shortsword",
+     "veces": 24,
+     "materiales": [
+      {
+       "objeto": "Bronze Bar",
+       "cantidad": 120
+      },
+      {
+       "objeto": "Weak Flux",
+       "cantidad": 96
+      },
+      {
+       "objeto": "Medium Leather",
+       "cantidad": 48
+      }
+     ],
+     "notas": "recomendada porque se vende por mas del doble; alternativa: 24 Patterned Bronze Bracers (120 Bronze Bar, 48 Coarse Grinding Stone)"
+    },
+    {
+     "desde": 140,
+     "hasta": 150,
+     "fabricar": "Bronze Warhammer",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Bronze Bar",
+       "cantidad": 80
+      },
+      {
+       "objeto": "Strong Flux",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Medium Leather",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 150,
+     "hasta": 175,
+     "fabricar": "Green Iron Bracers",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Iron Bar",
+       "cantidad": 180
+      },
+      {
+       "objeto": "Green Dye",
+       "cantidad": 30
+      }
+     ],
+     "notas": "Green Dye: Tamar (Orgrimmar) o Bombus Finespindle (Ironforge)"
+    },
+    {
+     "desde": 175,
+     "hasta": 180,
+     "fabricar": "Solid Grinding Stone",
+     "veces": 8,
+     "materiales": [
+      {
+       "objeto": "Solid Stone",
+       "cantidad": 32
+      }
+     ],
+     "notas": "guardar 6 para Heavy Mithril Axe a 210"
+    },
+    {
+     "desde": 180,
+     "hasta": 195,
+     "fabricar": "Golden Scale Bracers",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Steel Bar",
+       "cantidad": 100
+      },
+      {
+       "objeto": "Heavy Grinding Stone",
+       "cantidad": 40
+      }
+     ],
+     "notas": "usar las 20 piedras hechas a 100 y hacer 20 mas con 60 Heavy Stone. Steel Bar: Iron Bar + Coal con Mining 165"
+    },
+    {
+     "desde": 195,
+     "hasta": 210,
+     "fabricar": "Mithril Plate Pants",
+     "veces": 17,
+     "materiales": [
+      {
+       "objeto": "Mithril Bar",
+       "cantidad": 204
+      }
+     ]
+    },
+    {
+     "desde": 210,
+     "hasta": 215,
+     "fabricar": "Heavy Mithril Axe",
+     "veces": 6,
+     "materiales": [
+      {
+       "objeto": "Mithril Bar",
+       "cantidad": 72
+      },
+      {
+       "objeto": "Citrine",
+       "cantidad": 12
+      },
+      {
+       "objeto": "Solid Grinding Stone",
+       "cantidad": 6
+      },
+      {
+       "objeto": "Heavy Leather",
+       "cantidad": 24
+      }
+     ]
+    },
+    {
+     "desde": 215,
+     "hasta": 225,
+     "fabricar": "Heavy Mithril Breastplate",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Mithril Bar",
+       "cantidad": 160
+      }
+     ],
+     "notas": "alternativa: 10 Mithril Spurs (40 Mithril Bar, 30 Solid Grinding Stone) con Plans: Mithril Spurs (drop de mundo)"
+    },
+    {
+     "desde": 225,
+     "hasta": 230,
+     "fabricar": "Dense Sharpening Stone",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Dense Stone",
+       "cantidad": 5
+      }
+     ]
+    },
+    {
+     "desde": 230,
+     "hasta": 240,
+     "fabricar": "Heavy Mithril Boots",
+     "veces": 16,
+     "materiales": [
+      {
+       "objeto": "Mithril Bar",
+       "cantidad": 224
+      },
+      {
+       "objeto": "Thick Leather",
+       "cantidad": 64
+      }
+     ]
+    },
+    {
+     "desde": 240,
+     "hasta": 245,
+     "fabricar": "Imperial Plate Belt",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Thorium Bar",
+       "cantidad": 110
+      },
+      {
+       "objeto": "Rugged Leather",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Aquamarine",
+       "cantidad": 5
+      }
+     ],
+     "notas": "receta por mision en Tanaris: Derotain Mudsipper (nivel 50, 20 Thorium Bar)"
+    },
+    {
+     "desde": 245,
+     "hasta": 270,
+     "fabricar": "Imperial Plate Bracers",
+     "veces": 27,
+     "materiales": [
+      {
+       "objeto": "Thorium Bar",
+       "cantidad": 540
+      },
+      {
+       "objeto": "Star Ruby",
+       "cantidad": 27
+      }
+     ],
+     "notas": "receta por mision (20 Thorium Bar). Ver notas por alternativas"
+    },
+    {
+     "desde": 270,
+     "hasta": 290,
+     "fabricar": "Imperial Plate Boots",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Thorium Bar",
+       "cantidad": 680
+      },
+      {
+       "objeto": "Star Ruby",
+       "cantidad": 20
+      },
+      {
+       "objeto": "Aquamarine",
+       "cantidad": 20
+      }
+     ],
+     "notas": "receta por mision (40 Thorium Bar); no probado en la beta"
+    },
+    {
+     "desde": 290,
+     "hasta": 300,
+     "fabricar": "Imperial Plate Leggings",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Thorium Bar",
+       "cantidad": 440
+      },
+      {
+       "objeto": "Star Ruby",
+       "cantidad": 20
+      }
+     ],
+     "notas": "receta por mision (60 Thorium Bar); no probado en la beta"
+    }
+   ],
+   "totales": [
+    {
+     "objeto": "Rough Stone",
+     "cantidad": 90
+    },
+    {
+     "objeto": "Copper Bar",
+     "cantidad": 270
+    },
+    {
+     "objeto": "Coarse Stone",
+     "cantidad": 72
+    },
+    {
+     "objeto": "Bronze Bar",
+     "cantidad": 290
+    },
+    {
+     "objeto": "Heavy Stone",
+     "cantidad": 120
+    },
+    {
+     "objeto": "Medium Leather",
+     "cantidad": 58
+    },
+    {
+     "objeto": "Weak Flux",
+     "cantidad": 96
+    },
+    {
+     "objeto": "Strong Flux",
+     "cantidad": 10
+    },
+    {
+     "objeto": "Iron Bar",
+     "cantidad": 180
+    },
+    {
+     "objeto": "Green Dye",
+     "cantidad": 30
+    },
+    {
+     "objeto": "Solid Stone",
+     "cantidad": 32
+    },
+    {
+     "objeto": "Steel Bar",
+     "cantidad": 100
+    },
+    {
+     "objeto": "Mithril Bar",
+     "cantidad": 660
+    },
+    {
+     "objeto": "Heavy Leather",
+     "cantidad": 24
+    },
+    {
+     "objeto": "Citrine",
+     "cantidad": 12
+    },
+    {
+     "objeto": "Dense Stone",
+     "cantidad": 5
+    },
+    {
+     "objeto": "Thick Leather",
+     "cantidad": 64
+    },
+    {
+     "objeto": "Thorium Bar",
+     "cantidad": 1910
+    },
+    {
+     "objeto": "Rugged Leather",
+     "cantidad": 30
+    },
+    {
+     "objeto": "Star Ruby",
+     "cantidad": 67
+    },
+    {
+     "objeto": "Aquamarine",
+     "cantidad": 25
+    }
+   ],
+   "recogida": "Mining",
+   "notas": "Guia de la beta de WoW Forever; del 240 en adelante se basa en datos del juego, sin probar. Hace falta Blacksmith Hammer desde el 70. Llevar 250+ Thorium Bar a Tanaris para las misiones Imperial Plate. Alternativas 240-270 (Ebon Shiv, Ornate Thorium Handaxe, Radiant Belt, Thorium Bracers) en la fuente.",
+   "fuentes": [
+    "https://www.wow-professions.com/forever/blacksmithing-leveling-guide"
+   ]
+  },
+  "165": {
+   "nombre": "Leatherworking",
+   "es": "Peletería",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": 1,
+     "aprender": "Sin requisito: Kamari (Orgrimmar), Dan Golthas (Undercity), Mak (Thunder Bluff), Randal Worth (Stormwind), Gretta Finespindle (Ironforge), Darianna (Darnassus) o entrenadores de zonas iniciales"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": 10,
+     "aprender": "Requiere Leatherworking 50 y nivel 10. Horda: Karolek (Orgrimmar), Arthur Moore (Undercity), Tarn (Thunder Bluff). Alianza: Simon Tanner (Stormwind), Fimble Finespindle (Ironforge), Faldron (Darnassus)"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 225,
+     "nivelPersonaje": 20,
+     "aprender": "Requiere Leatherworking 125, nivel 20 y 50 de plata. Una (Thunder Bluff) o Telonis (Darnassus)"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "Requiere Leatherworking 200 y nivel 35. Horda: Hahrana Ironhide (Camp Mojache, Feralas). Alianza: Drakk Stonehand (Aerie Peak, Hinterlands). Especializacion (Dragonscale/Elemental/Tribal) a 225 y nivel 40"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 30,
+     "fabricar": "Light Leather",
+     "veces": 35,
+     "materiales": [
+      {
+       "objeto": "Ruined Leather Scraps",
+       "cantidad": 105
+      }
+     ]
+    },
+    {
+     "desde": 30,
+     "hasta": 55,
+     "fabricar": "Cured Light Hide",
+     "veces": 27,
+     "materiales": [
+      {
+       "objeto": "Light Hide",
+       "cantidad": 27
+      },
+      {
+       "objeto": "Salt",
+       "cantidad": 27
+      }
+     ],
+     "notas": "Guardar 24 para las Light Leather Pants del 100"
+    },
+    {
+     "desde": 55,
+     "hasta": 75,
+     "fabricar": "Embossed Leather Gloves",
+     "veces": 21,
+     "materiales": [
+      {
+       "objeto": "Light Leather",
+       "cantidad": 63
+      },
+      {
+       "objeto": "Coarse Thread",
+       "cantidad": 42
+      }
+     ]
+    },
+    {
+     "desde": 75,
+     "hasta": 80,
+     "fabricar": "Medium Leather",
+     "veces": 8,
+     "materiales": [
+      {
+       "objeto": "Light Leather",
+       "cantidad": 32
+      }
+     ]
+    },
+    {
+     "desde": 80,
+     "hasta": 90,
+     "fabricar": "Cured Medium Hide",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Medium Hide",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Salt",
+       "cantidad": 10
+      }
+     ],
+     "notas": "Guardar los 10 para las Dark Leather Belt"
+    },
+    {
+     "desde": 90,
+     "hasta": 100,
+     "fabricar": "Fine Leather Belt",
+     "veces": 19,
+     "materiales": [
+      {
+       "objeto": "Light Leather",
+       "cantidad": 114
+      },
+      {
+       "objeto": "Coarse Thread",
+       "cantidad": 38
+      }
+     ],
+     "notas": "Guardar 10 para las Dark Leather Belt"
+    },
+    {
+     "desde": 100,
+     "hasta": 115,
+     "fabricar": "Light Leather Pants",
+     "veces": 24,
+     "materiales": [
+      {
+       "objeto": "Light Leather",
+       "cantidad": 240
+      },
+      {
+       "objeto": "Cured Light Hide",
+       "cantidad": 24
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 24
+      }
+     ]
+    },
+    {
+     "desde": 115,
+     "hasta": 125,
+     "fabricar": "Dark Leather Belt",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Fine Leather Belt",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Cured Medium Hide",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 20
+      },
+      {
+       "objeto": "Gray Dye",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 125,
+     "hasta": 130,
+     "fabricar": "Heavy Leather",
+     "veces": 7,
+     "materiales": [
+      {
+       "objeto": "Medium Leather",
+       "cantidad": 35
+      }
+     ]
+    },
+    {
+     "desde": 130,
+     "hasta": 143,
+     "fabricar": "Cured Heavy Hide",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Heavy Hide",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Salt",
+       "cantidad": 90
+      }
+     ],
+     "notas": "Guardar 15 para Barbaric Shoulders y 15 para Guardian Gloves"
+    },
+    {
+     "desde": 143,
+     "hasta": 155,
+     "fabricar": "Hillman's Leather Gloves",
+     "veces": 17,
+     "materiales": [
+      {
+       "objeto": "Medium Leather",
+       "cantidad": 238
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 68
+      }
+     ]
+    },
+    {
+     "desde": 155,
+     "hasta": 170,
+     "fabricar": "Barbaric Shoulders",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Heavy Leather",
+       "cantidad": 120
+      },
+      {
+       "objeto": "Cured Heavy Hide",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 30
+      }
+     ]
+    },
+    {
+     "desde": 170,
+     "hasta": 185,
+     "fabricar": "Guardian Gloves",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Heavy Leather",
+       "cantidad": 60
+      },
+      {
+       "objeto": "Cured Heavy Hide",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Silken Thread",
+       "cantidad": 15
+      }
+     ]
+    },
+    {
+     "desde": 185,
+     "hasta": 195,
+     "fabricar": "Barbaric Harness",
+     "veces": 16,
+     "materiales": [
+      {
+       "objeto": "Heavy Leather",
+       "cantidad": 224
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 32
+      },
+      {
+       "objeto": "Iron Buckle",
+       "cantidad": 16
+      }
+     ]
+    },
+    {
+     "desde": 195,
+     "hasta": 205,
+     "fabricar": "Nightscape Headband",
+     "veces": 12,
+     "materiales": [
+      {
+       "objeto": "Thick Leather",
+       "cantidad": 60
+      },
+      {
+       "objeto": "Silken Thread",
+       "cantidad": 24
+      }
+     ]
+    },
+    {
+     "desde": 205,
+     "hasta": 235,
+     "fabricar": "Nightscape Pants",
+     "veces": 36,
+     "materiales": [
+      {
+       "objeto": "Thick Leather",
+       "cantidad": 504
+      },
+      {
+       "objeto": "Silken Thread",
+       "cantidad": 144
+      }
+     ],
+     "notas": "Solo lo ensenan los instructores Artisan (Feralas/Hinterlands), no los de Thunder Bluff ni Darnassus"
+    },
+    {
+     "desde": 235,
+     "hasta": 250,
+     "fabricar": "Wicked Leather Gauntlets",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Rugged Leather",
+       "cantidad": 120
+      },
+      {
+       "objeto": "Black Dye",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 15
+      }
+     ],
+     "notas": "Patron: Werg Thickblade (Tirisfal Glades, Horda) o Leonard Porter (Western Plaguelands, Alianza)"
+    },
+    {
+     "desde": 250,
+     "hasta": 265,
+     "fabricar": "Wicked Leather Gauntlets",
+     "veces": 21,
+     "materiales": [
+      {
+       "objeto": "Rugged Leather",
+       "cantidad": 168
+      },
+      {
+       "objeto": "Black Dye",
+       "cantidad": 21
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 21
+      }
+     ]
+    },
+    {
+     "desde": 265,
+     "hasta": 285,
+     "fabricar": "Runic Leather Headband",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Rugged Leather",
+       "cantidad": 280
+      },
+      {
+       "objeto": "Runecloth",
+       "cantidad": 200
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 20
+      }
+     ],
+     "notas": "Patron: Jase Farlane, Light's Hope Chapel (Eastern Plaguelands)"
+    },
+    {
+     "desde": 285,
+     "hasta": 300,
+     "fabricar": "Runic Leather Headband",
+     "veces": 33,
+     "materiales": [
+      {
+       "objeto": "Rugged Leather",
+       "cantidad": 462
+      },
+      {
+       "objeto": "Runecloth",
+       "cantidad": 330
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 33
+      }
+     ],
+     "notas": "Alternativa con el patron: 15 Blue Suede Hat (240 Rugged Leather, 60 Blue Dye, 15 Rune Thread)"
+    }
+   ],
+   "totales": [
+    {
+     "objeto": "Ruined Leather Scraps",
+     "cantidad": 105
+    },
+    {
+     "objeto": "Light Leather",
+     "cantidad": 414
+    },
+    {
+     "objeto": "Light Hide",
+     "cantidad": 27
+    },
+    {
+     "objeto": "Medium Leather",
+     "cantidad": 265
+    },
+    {
+     "objeto": "Medium Hide",
+     "cantidad": 10
+    },
+    {
+     "objeto": "Heavy Leather",
+     "cantidad": 397
+    },
+    {
+     "objeto": "Heavy Hide",
+     "cantidad": 30
+    },
+    {
+     "objeto": "Iron Buckle",
+     "cantidad": 16
+    },
+    {
+     "objeto": "Thick Leather",
+     "cantidad": 564
+    },
+    {
+     "objeto": "Rugged Leather",
+     "cantidad": 1030
+    },
+    {
+     "objeto": "Runecloth",
+     "cantidad": 530
+    }
+   ],
+   "recogida": "Skinning",
+   "notas": "Guia basada en la beta de Forever; cantidades estimadas. Sal, hilos y tinte se compran al vendedor de suministros de peleteria junto al instructor.",
+   "fuentes": [
+    "https://www.wow-professions.com/forever/leatherworking-leveling-guide"
+   ]
+  },
+  "171": {
+   "nombre": "Alchemy",
+   "es": "Alquimia",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": 5,
+     "aprender": "cualquier instructor de alquimia (p.ej. Whuut en Orgrimmar, Doctor Martin Felben en Undercity, Kray en Thunder Bluff; Tel'Athir en Stormwind, Vosur Brakthel en Ironforge, Milla Fairancora en Darnassus)"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": 10,
+     "aprender": "requiere Alchemy 50. Horda: Yelmak (Orgrimmar), Doctor Marsh (Undercity), Bena Winterhoof (Thunder Bluff); Alianza: Lilyssia Nightbreeze (Stormwind), Tally Berryfizz (Ironforge), Sylvanna Forestmoon (Darnassus)"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 225,
+     "nivelPersonaje": 20,
+     "aprender": "requiere Alchemy 125, cuesta 50 plata. Horda: Doctor Herbert Halsey (Undercity); Alianza: Ainethil (Darnassus)"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "requiere Alchemy 200. Horda: Rogvar (Stonard, Swamp of Sorrows); Alianza: Kylanna Windwhisper (Feathermoon Stronghold, Feralas)"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 10,
+     "fabricar": "Minor Arcane Elixir",
+     "veces": 9,
+     "materiales": [
+      {
+       "objeto": "Peacebloom",
+       "cantidad": 9
+      },
+      {
+       "objeto": "Empty Vial",
+       "cantidad": 9
+      }
+     ],
+     "notas": "alternativa: 9 Elixir of Minor Force (9 Silverleaf, 9 Empty Vial)"
+    },
+    {
+     "desde": 10,
+     "hasta": 55,
+     "fabricar": "Elixir of Minor Defense",
+     "veces": 45,
+     "materiales": [
+      {
+       "objeto": "Silverleaf",
+       "cantidad": 45
+      },
+      {
+       "objeto": "Peacebloom",
+       "cantidad": 45
+      },
+      {
+       "objeto": "Empty Vial",
+       "cantidad": 45
+      }
+     ]
+    },
+    {
+     "desde": 55,
+     "hasta": 65,
+     "fabricar": "Minor Mana Potion",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Mageroyal",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Peacebloom",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Empty Vial",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 65,
+     "hasta": 90,
+     "fabricar": "Elixir of Minor Fortitude",
+     "veces": 27,
+     "materiales": [
+      {
+       "objeto": "Earthroot",
+       "cantidad": 54
+      },
+      {
+       "objeto": "Peacebloom",
+       "cantidad": 27
+      },
+      {
+       "objeto": "Empty Vial",
+       "cantidad": 27
+      }
+     ],
+     "notas": "se pone amarilla a 80: pocas unidades extra para los ultimos puntos"
+    },
+    {
+     "desde": 90,
+     "hasta": 120,
+     "fabricar": "Elixir of Wisdom",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Mageroyal",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Briarthorn",
+       "cantidad": 60
+      },
+      {
+       "objeto": "Empty Vial",
+       "cantidad": 30
+      }
+     ],
+     "notas": "guardarlas si tambien subes Tailoring (Gloves of Meditation)"
+    },
+    {
+     "desde": 120,
+     "hasta": 130,
+     "fabricar": "Lesser Mana Potion",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Mageroyal",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Stranglekelp",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Empty Vial",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 130,
+     "hasta": 150,
+     "fabricar": "Fire Oil",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Firefin Snapper",
+       "cantidad": 40
+      },
+      {
+       "objeto": "Empty Vial",
+       "cantidad": 20
+      }
+     ],
+     "notas": "da 2 por fabricacion; guardar 30 para el siguiente tramo. Alternativa: 20 Lesser Mana Potion (20 Mageroyal, 20 Stranglekelp, 20 Empty Vial)"
+    },
+    {
+     "desde": 150,
+     "hasta": 165,
+     "fabricar": "Elixir of Fire Power",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Fire Oil",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Kingsblood",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Leaded Vial",
+       "cantidad": 15
+      }
+     ],
+     "notas": "alternativa: 22 Lesser Mana Potion hasta 165"
+    },
+    {
+     "desde": 165,
+     "hasta": 195,
+     "fabricar": "Mana Potion",
+     "veces": 36,
+     "materiales": [
+      {
+       "objeto": "Stranglekelp",
+       "cantidad": 36
+      },
+      {
+       "objeto": "Kingsblood",
+       "cantidad": 36
+      },
+      {
+       "objeto": "Leaded Vial",
+       "cantidad": 36
+      }
+     ]
+    },
+    {
+     "desde": 195,
+     "hasta": 225,
+     "fabricar": "Nature Protection Potion",
+     "veces": 36,
+     "materiales": [
+      {
+       "objeto": "Liferoot",
+       "cantidad": 36
+      },
+      {
+       "objeto": "Stranglekelp",
+       "cantidad": 36
+      },
+      {
+       "objeto": "Leaded Vial",
+       "cantidad": 36
+      }
+     ],
+     "notas": "requiere la receta Nature Protection Potion (se liga al recogerla; comprarla con el personaje que sube alquimia): Bronk (Feralas, Horda), Logannas (Feralas, Alianza), Glyx Brewright (Stranglethorn Vale/Booty Bay), Alchemist Pestlezugg (Tanaris)"
+    },
+    {
+     "desde": 225,
+     "hasta": 235,
+     "fabricar": "Nature Protection Potion",
+     "veces": 26,
+     "materiales": [
+      {
+       "objeto": "Liferoot",
+       "cantidad": 26
+      },
+      {
+       "objeto": "Stranglekelp",
+       "cantidad": 26
+      },
+      {
+       "objeto": "Leaded Vial",
+       "cantidad": 26
+      }
+     ],
+     "notas": "se pone verde a 230: quiza unas extra"
+    },
+    {
+     "desde": 235,
+     "hasta": 265,
+     "fabricar": "Elixir of Greater Intellect",
+     "veces": 36,
+     "materiales": [
+      {
+       "objeto": "Blindweed",
+       "cantidad": 36
+      },
+      {
+       "objeto": "Khadgar's Whisker",
+       "cantidad": 36
+      },
+      {
+       "objeto": "Crystal Vial",
+       "cantidad": 36
+      }
+     ]
+    },
+    {
+     "desde": 265,
+     "hasta": 300,
+     "fabricar": "Elixir of Greater Defense",
+     "veces": 47,
+     "materiales": [
+      {
+       "objeto": "Stonescale Oil",
+       "cantidad": 94
+      },
+      {
+       "objeto": "Sungrass",
+       "cantidad": 47
+      },
+      {
+       "objeto": "Crystal Vial",
+       "cantidad": 47
+      }
+     ],
+     "notas": "Stonescale Oil: 1 Stonescale Eel + 1 Leaded Vial dan 2. Alternativa: 55 Superior Mana Potion (110 Sungrass, 110 Blindweed, 55 Crystal Vial), requiere receta (Algernon en Undercity Horda; Ulthir en Darnassus Alianza)"
+    }
+   ],
+   "totales": [
+    {
+     "objeto": "Peacebloom",
+     "cantidad": 91
+    },
+    {
+     "objeto": "Silverleaf",
+     "cantidad": 45
+    },
+    {
+     "objeto": "Mageroyal",
+     "cantidad": 50
+    },
+    {
+     "objeto": "Earthroot",
+     "cantidad": 54
+    },
+    {
+     "objeto": "Briarthorn",
+     "cantidad": 60
+    },
+    {
+     "objeto": "Stranglekelp",
+     "cantidad": 108
+    },
+    {
+     "objeto": "Firefin Snapper",
+     "cantidad": 40
+    },
+    {
+     "objeto": "Kingsblood",
+     "cantidad": 51
+    },
+    {
+     "objeto": "Liferoot",
+     "cantidad": 62
+    },
+    {
+     "objeto": "Blindweed",
+     "cantidad": 36
+    },
+    {
+     "objeto": "Khadgar's Whisker",
+     "cantidad": 36
+    },
+    {
+     "objeto": "Sungrass",
+     "cantidad": 47
+    },
+    {
+     "objeto": "Stonescale Oil",
+     "cantidad": 94
+    },
+    {
+     "objeto": "Empty Vial",
+     "cantidad": 151
+    },
+    {
+     "objeto": "Leaded Vial",
+     "cantidad": 113
+    },
+    {
+     "objeto": "Crystal Vial",
+     "cantidad": 83
+    }
+   ],
+   "recogida": "Herbalism",
+   "notas": "Guia de la beta de WoW Forever: 225-300 puede cambiar. Totales sumados de los tramos de la ruta principal (Method solo cubre 1-225). Compra unidades extra al final de cada tramo (se ponen amarillas). Vendedores de viales: Algernon (Undercity), Narret Shadowgrove (Dolanaar).",
+   "fuentes": [
+    "https://www.wow-professions.com/forever/alchemy-leveling-guide",
+    "https://www.method.gg/wow-forever/alchemy-in-wow-forever-leveling-guide-and-trainers"
+   ]
+  },
+  "185": {
+   "nombre": "Cooking",
+   "es": "Cocina",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": 5,
+     "aprender": "Cualquier instructor de cocina (p. ej. Zamja en Orgrimmar, Stephen Ryback en Stormwind)"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": 10,
+     "aprender": "Instructor de cocina con Cooking 50"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 225,
+     "nivelPersonaje": 20,
+     "aprender": "Instructor con Cooking 125; libro Expert Cookbook: Wulan (Horda, Shadowprey Village, Desolace) o Shandrina (Alianza, Ashenvale)"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "Mision Clamlette Surprise (Cooking 225): 12 Giant Egg, 10 Zesty Clam Meat, 20 Alterac Swiss; cadena To Gadgetzan You Go! (Horda, Zamja) o I Know A Guy... (Alianza, Daryl Riknussun) hasta Dirge Quikcleave en Gadgetzan"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 50,
+     "fabricar": "Charred Wolf Meat",
+     "veces": 55,
+     "materiales": [
+      {
+       "objeto": "Stringy Wolf Meat",
+       "cantidad": 55
+      }
+     ],
+     "notas": "Alternativas: Roasted Boar Meat (55 Chunk of Boar Meat), Brilliant Smallfish, Slitherskin Mackerel"
+    },
+    {
+     "desde": 50,
+     "hasta": 100,
+     "fabricar": "Smoked Bear Meat",
+     "veces": 55,
+     "materiales": [
+      {
+       "objeto": "Bear Meat",
+       "cantidad": 70
+      }
+     ],
+     "notas": "Alternativas: Boiled Clams (55 Clam Meat + 55 Refreshing Spring Water), Coyote Steak, Longjaw Mud Snapper, Rainbow Fin Albacore, Strider Stew. Receta de Smoked Bear Meat: Andrew Hilbert o Drac Roughcut"
+    },
+    {
+     "desde": 100,
+     "hasta": 130,
+     "fabricar": "Crab Cake",
+     "veces": 40,
+     "materiales": [
+      {
+       "objeto": "Crawler Meat",
+       "cantidad": 40
+      }
+     ],
+     "notas": "Alternativas: Dry Pork Ribs (35 Boar Ribs), Bristle Whisker Catfish (30), Cooked Crab Claw (35 Crawler Claw, Alianza)"
+    },
+    {
+     "desde": 130,
+     "hasta": 175,
+     "fabricar": "Curiously Tasty Omelet",
+     "veces": 50,
+     "materiales": [
+      {
+       "objeto": "Raptor Egg",
+       "cantidad": 50
+      }
+     ],
+     "notas": "Receta: Kendor Kabonka (Stormwind) o Keena (Arathi Highlands). Alternativa: Bristle Whisker Catfish, Hot Lion Chops"
+    },
+    {
+     "desde": 175,
+     "hasta": 225,
+     "fabricar": "Roast Raptor",
+     "veces": 50,
+     "materiales": [
+      {
+       "objeto": "Raptor Flesh",
+       "cantidad": 50
+      }
+     ],
+     "notas": "Receta: Hammon Karwn (Alianza) o Keena (Horda). Alternativas: Soothing Turtle Bisque, Mithril Headed Trout"
+    },
+    {
+     "desde": 225,
+     "hasta": 275,
+     "fabricar": "Spotted Yellowtail",
+     "veces": 65,
+     "materiales": [
+      {
+       "objeto": "Raw Spotted Yellowtail",
+       "cantidad": 65
+      }
+     ],
+     "notas": "Receta: Gikkix (Tanaris). Alternativas ~65: Undermine Clam Chowder (130 Zesty Clam Meat + 65 Ice Cold Milk, Jabbey), Monster Omelet (65 Giant Egg), Tender Wolf Steak (65 Tender Wolf Meat), Filet of Redgill (65 Raw Redgill); se pueden hacer hasta 285 si el material es barato"
+    },
+    {
+     "desde": 275,
+     "hasta": 300,
+     "fabricar": "Poached Sunscale Salmon",
+     "veces": 35,
+     "materiales": [
+      {
+       "objeto": "Raw Sunscale Salmon",
+       "cantidad": 35
+      }
+     ],
+     "notas": "Recetas de Gikkix (Tanaris). Alternativa: Nightfin Soup (35 Raw Nightfin Snapper); con Cooking 285: Smoked Desert Dumplings (15 Sandworm Meat, misiones Desert Recipe y Sharing the Knowledge en Silithus)"
+    }
+   ],
+   "totales": [],
+   "recogida": "Pesca (Fishing) para conseguir pescado",
+   "notas": "Compra Soothing Spices, Hot Spices y Refreshing Spring Water en vendedores de cocina, no en la casa de subastas. Compra material extra: no siempre sube 1 punto por receta. Ice Cold Milk tiene stock limitado.",
+   "fuentes": [
+    "https://www.wow-professions.com/classic/cooking-leveling-guide-classic-wow"
+   ]
+  },
+  "197": {
+   "nombre": "Tailoring",
+   "es": "Sastrería",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": 1,
+     "aprender": "Sin requisito: Snang (Orgrimmar), Victor Ward (Undercity), Vhan (Thunder Bluff), Lawrence Schneider (Stormwind), Uthrar Threx (Ironforge), Trianna (Darnassus)"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": 10,
+     "aprender": "Requiere Tailoring 50 y nivel 10. Horda: Magar (Orgrimmar), Rhiannon Davis (Undercity), Tepa (Thunder Bluff). Alianza: Sellandus (Stormwind), Jormund Stonebrow (Ironforge), Me'lynn (Darnassus)"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 225,
+     "nivelPersonaje": 20,
+     "aprender": "Requiere Tailoring 125, nivel 20 y 50 de plata. Josef Gregorian (Undercity) o Georgio Bolero (Stormwind)"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "Requiere Tailoring 200 y nivel 35. Horda: Daryl Stack (Tarren Mill, Hillsbrad). Alianza: Timothy Worthington (Theramore, Dustwallow Marsh)"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 30,
+     "fabricar": "Bolt of Linen Cloth",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Linen Cloth",
+       "cantidad": 60
+      }
+     ]
+    },
+    {
+     "desde": 30,
+     "hasta": 55,
+     "fabricar": "Linen Belt",
+     "veces": 28,
+     "materiales": [
+      {
+       "objeto": "Bolt of Linen Cloth",
+       "cantidad": 28
+      },
+      {
+       "objeto": "Coarse Thread",
+       "cantidad": 28
+      }
+     ]
+    },
+    {
+     "desde": 55,
+     "hasta": 80,
+     "fabricar": "Bolt of Woolen Cloth",
+     "veces": 45,
+     "materiales": [
+      {
+       "objeto": "Wool Cloth",
+       "cantidad": 135
+      }
+     ],
+     "notas": "Se necesitan 153 bolsas hasta 140; se pueden hacer todas ahora (459 Wool Cloth)"
+    },
+    {
+     "desde": 80,
+     "hasta": 95,
+     "fabricar": "Woolen Cape",
+     "veces": 22,
+     "materiales": [
+      {
+       "objeto": "Bolt of Woolen Cloth",
+       "cantidad": 22
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 22
+      }
+     ]
+    },
+    {
+     "desde": 95,
+     "hasta": 100,
+     "fabricar": "Double-stitched Woolen Shoulders",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Bolt of Woolen Cloth",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 100,
+     "hasta": 120,
+     "fabricar": "Bolt of Silk Cloth",
+     "veces": 54,
+     "materiales": [
+      {
+       "objeto": "Silk Cloth",
+       "cantidad": 216
+      }
+     ],
+     "notas": "Se necesitan 184 bolsas hasta 190 (736 Silk Cloth en total)"
+    },
+    {
+     "desde": 120,
+     "hasta": 125,
+     "fabricar": "Gloves of Meditation",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Bolt of Woolen Cloth",
+       "cantidad": 20
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Elixir of Wisdom",
+       "cantidad": 5
+      }
+     ]
+    },
+    {
+     "desde": 125,
+     "hasta": 140,
+     "fabricar": "Gloves of Meditation",
+     "veces": 24,
+     "materiales": [
+      {
+       "objeto": "Bolt of Woolen Cloth",
+       "cantidad": 96
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 72
+      },
+      {
+       "objeto": "Elixir of Wisdom",
+       "cantidad": 24
+      }
+     ],
+     "notas": "Se quedan amarillas; puede hacer falta mas"
+    },
+    {
+     "desde": 140,
+     "hasta": 150,
+     "fabricar": "Bolt of Mageweave",
+     "veces": 23,
+     "materiales": [
+      {
+       "objeto": "Mageweave Cloth",
+       "cantidad": 115
+      }
+     ],
+     "notas": "Se necesitan 157 bolsas hasta 225 (785 Mageweave Cloth en total)"
+    },
+    {
+     "desde": 150,
+     "hasta": 170,
+     "fabricar": "Crimson Silk Vest",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Bolt of Silk Cloth",
+       "cantidad": 80
+      },
+      {
+       "objeto": "Red Dye",
+       "cantidad": 40
+      },
+      {
+       "objeto": "Fine Thread",
+       "cantidad": 40
+      }
+     ]
+    },
+    {
+     "desde": 170,
+     "hasta": 190,
+     "fabricar": "Crimson Silk Pantaloons",
+     "veces": 26,
+     "materiales": [
+      {
+       "objeto": "Bolt of Silk Cloth",
+       "cantidad": 104
+      },
+      {
+       "objeto": "Red Dye",
+       "cantidad": 52
+      },
+      {
+       "objeto": "Silken Thread",
+       "cantidad": 52
+      }
+     ],
+     "notas": "Amarillas desde 180"
+    },
+    {
+     "desde": 190,
+     "hasta": 200,
+     "fabricar": "Black Mageweave Leggings",
+     "veces": 19,
+     "materiales": [
+      {
+       "objeto": "Bolt of Mageweave",
+       "cantidad": 38
+      },
+      {
+       "objeto": "Silken Thread",
+       "cantidad": 57
+      }
+     ],
+     "notas": "Se quedan amarillas"
+    },
+    {
+     "desde": 200,
+     "hasta": 205,
+     "fabricar": "Black Mageweave Shoulders",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Bolt of Mageweave",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Heavy Silken Thread",
+       "cantidad": 10
+      }
+     ],
+     "notas": "Solo lo ensenan los instructores Artisan"
+    },
+    {
+     "desde": 205,
+     "hasta": 215,
+     "fabricar": "Bolt of Runecloth",
+     "veces": 23,
+     "materiales": [
+      {
+       "objeto": "Runecloth",
+       "cantidad": 115
+      }
+     ],
+     "notas": "Se necesitan 244 bolsas hasta 265 (1220 Runecloth)"
+    },
+    {
+     "desde": 215,
+     "hasta": 225,
+     "fabricar": "Mageweave Bag",
+     "veces": 26,
+     "materiales": [
+      {
+       "objeto": "Bolt of Mageweave",
+       "cantidad": 104
+      },
+      {
+       "objeto": "Silken Thread",
+       "cantidad": 52
+      }
+     ],
+     "notas": "Alternativa: 10 Runecloth Belt (30 Bolt of Runecloth, 10 Rune Thread)"
+    },
+    {
+     "desde": 225,
+     "hasta": 240,
+     "fabricar": "Runecloth Belt",
+     "veces": 24,
+     "materiales": [
+      {
+       "objeto": "Bolt of Runecloth",
+       "cantidad": 72
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 24
+      }
+     ]
+    },
+    {
+     "desde": 240,
+     "hasta": 265,
+     "fabricar": "Runecloth Gloves",
+     "veces": 43,
+     "materiales": [
+      {
+       "objeto": "Bolt of Runecloth",
+       "cantidad": 172
+      },
+      {
+       "objeto": "Rugged Leather",
+       "cantidad": 172
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 43
+      }
+     ],
+     "notas": "Patron: Qia, Everlook (Winterspring)"
+    },
+    {
+     "desde": 265,
+     "hasta": 280,
+     "fabricar": "Runecloth Belt",
+     "veces": 19,
+     "materiales": [
+      {
+       "objeto": "Bolt of Runecloth",
+       "cantidad": 57
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 19
+      }
+     ],
+     "notas": "ESTIMADO con la guia Classic Era (Belt hasta 280); la guia Forever no cubre 265-300"
+    },
+    {
+     "desde": 280,
+     "hasta": 290,
+     "fabricar": "Runecloth Bag",
+     "veces": 18,
+     "materiales": [
+      {
+       "objeto": "Bolt of Runecloth",
+       "cantidad": 90
+      },
+      {
+       "objeto": "Rugged Leather",
+       "cantidad": 36
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 18
+      }
+     ],
+     "notas": "De la guia Classic Era. Patron: Qia, Everlook. Sin patron: 8 Runecloth Belt hasta 285"
+    },
+    {
+     "desde": 290,
+     "hasta": 300,
+     "fabricar": "Runecloth Gloves",
+     "veces": 18,
+     "materiales": [
+      {
+       "objeto": "Bolt of Runecloth",
+       "cantidad": 72
+      },
+      {
+       "objeto": "Rugged Leather",
+       "cantidad": 72
+      },
+      {
+       "objeto": "Rune Thread",
+       "cantidad": 18
+      }
+     ],
+     "notas": "De la guia Classic Era. Alternativas (patrones en la subasta): Brightcloth Cloak, Runecloth Pants, Brightcloth Gloves/Robe"
+    }
+   ],
+   "recogida": "Ninguna obligatoria; la guia sugiere Enchanting para desencantar lo fabricado",
+   "notas": "Forever (beta) llega hasta 265; 265-300 completado con la guia Classic Era (estimado). No dejar fabricando AFK antes de 75, 150 y 225 sin aprender el siguiente rango.",
+   "fuentes": [
+    "https://www.wow-professions.com/forever/tailoring-leveling-guide",
+    "https://www.wow-professions.com/classic/tailoring-leveling-guide-classic-wow"
+   ],
+   "totales": [
+    {
+     "objeto": "Linen Cloth",
+     "cantidad": 60
+    },
+    {
+     "objeto": "Coarse Thread",
+     "cantidad": 28
+    },
+    {
+     "objeto": "Fine Thread",
+     "cantidad": 159
+    },
+    {
+     "objeto": "Elixir of Wisdom",
+     "cantidad": 29
+    },
+    {
+     "objeto": "Red Dye",
+     "cantidad": 92
+    },
+    {
+     "objeto": "Silken Thread",
+     "cantidad": 161
+    },
+    {
+     "objeto": "Heavy Silken Thread",
+     "cantidad": 10
+    },
+    {
+     "objeto": "Rune Thread",
+     "cantidad": 122
+    },
+    {
+     "objeto": "Rugged Leather",
+     "cantidad": 280
+    },
+    {
+     "objeto": "Wool Cloth",
+     "cantidad": 459
+    },
+    {
+     "objeto": "Silk Cloth",
+     "cantidad": 736
+    },
+    {
+     "objeto": "Mageweave Cloth",
+     "cantidad": 785
+    },
+    {
+     "objeto": "Runecloth",
+     "cantidad": 2315
+    }
+   ]
+  },
+  "202": {
+   "nombre": "Engineering",
+   "es": "Ingeniería",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": 1,
+     "aprender": "Sin requisito de nivel: Thund (Orgrimmar), Graham Van Talen (Undercity), Sprite Jumpsprocket (Stormwind) o Jemma Quikswitch (Ironforge); también Mukdrak (Razor Hill), Bronk Guzzlegear (Dun Morogh), Jenna Lemkenilli (Darkshore)"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": 10,
+     "aprender": "Requiere Engineering 50 y nivel 10. Horda: Nogg (Orgrimmar), Franklin Lloyd (Undercity). Alianza: Lilliam Sparkspindle (Stormwind), Trixie Quikswitch (Ironforge), Finbus Geargrind (Duskwood)"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 225,
+     "nivelPersonaje": 20,
+     "aprender": "Requiere Engineering 125, nivel 20 y 50 de plata. Roxxik (Orgrimmar) o Springspindle Fizzlegear (Ironforge)"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "Requiere Engineering 200 y nivel 35. Buzzek Bracketswing en Gadgetzan (Tanaris), tambien ensena las recetas de mas de 200. Especializacion Gnomish/Goblin a 200 y nivel 30"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 30,
+     "fabricar": "Rough Blasting Powder",
+     "veces": 60,
+     "materiales": [
+      {
+       "objeto": "Rough Stone",
+       "cantidad": 60
+      }
+     ],
+     "notas": "Guardar el polvo para las bombas del 51"
+    },
+    {
+     "desde": 30,
+     "hasta": 50,
+     "fabricar": "Handful of Copper Bolts",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Copper Bar",
+       "cantidad": 30
+      }
+     ],
+     "notas": "Guardar los tornillos para las bombas del 51"
+    },
+    {
+     "desde": 50,
+     "hasta": 51,
+     "fabricar": "Arclight Spanner",
+     "veces": 1,
+     "materiales": [
+      {
+       "objeto": "Copper Bar",
+       "cantidad": 6
+      }
+     ],
+     "notas": "Guardarla para recetas posteriores"
+    },
+    {
+     "desde": 51,
+     "hasta": 75,
+     "fabricar": "Rough Copper Bomb",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Copper Bar",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Handful of Copper Bolts",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Rough Blasting Powder",
+       "cantidad": 60
+      },
+      {
+       "objeto": "Linen Cloth",
+       "cantidad": 30
+      }
+     ],
+     "notas": "Se ponen amarillas hacia 60; aprender Journeyman antes de pasar de 75"
+    },
+    {
+     "desde": 75,
+     "hasta": 90,
+     "fabricar": "Coarse Blasting Powder",
+     "veces": 60,
+     "materiales": [
+      {
+       "objeto": "Coarse Stone",
+       "cantidad": 60
+      }
+     ]
+    },
+    {
+     "desde": 90,
+     "hasta": 100,
+     "fabricar": "Coarse Dynamite",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Coarse Blasting Powder",
+       "cantidad": 60
+      },
+      {
+       "objeto": "Linen Cloth",
+       "cantidad": 20
+      }
+     ]
+    },
+    {
+     "desde": 100,
+     "hasta": 105,
+     "fabricar": "Silver Contact",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Silver Bar",
+       "cantidad": 5
+      }
+     ],
+     "notas": "Alternativa: 5 Flying Tiger Goggles (30 Light Leather, 10 Tigerseye)"
+    },
+    {
+     "desde": 105,
+     "hasta": 125,
+     "fabricar": "Bronze Tube",
+     "veces": 25,
+     "materiales": [
+      {
+       "objeto": "Bronze Bar",
+       "cantidad": 50
+      },
+      {
+       "objeto": "Weak Flux",
+       "cantidad": 25
+      }
+     ],
+     "notas": "Weak Flux se vende en el vendedor de ingenieria. Guardar 10 tubos para el 125"
+    },
+    {
+     "desde": 125,
+     "hasta": 135,
+     "fabricar": "Standard Scope",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Bronze Tube",
+       "cantidad": 10
+      },
+      {
+       "objeto": "Moss Agate",
+       "cantidad": 10
+      }
+     ],
+     "notas": "Alternativa sin Moss Agate: hacer Heavy Blasting Powder"
+    },
+    {
+     "desde": 135,
+     "hasta": 150,
+     "fabricar": "Heavy Blasting Powder (30) y Whirring Bronze Gizmo (15)",
+     "veces": 45,
+     "materiales": [
+      {
+       "objeto": "Heavy Stone",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Bronze Bar",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Wool Cloth",
+       "cantidad": 15
+      }
+     ],
+     "notas": "Ambos se usan en las Explosive Sheep del 160"
+    },
+    {
+     "desde": 150,
+     "hasta": 160,
+     "fabricar": "Bronze Framework",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Bronze Bar",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Medium Leather",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Wool Cloth",
+       "cantidad": 15
+      }
+     ],
+     "notas": "Guardar los 15"
+    },
+    {
+     "desde": 160,
+     "hasta": 175,
+     "fabricar": "Explosive Sheep",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Heavy Blasting Powder",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Whirring Bronze Gizmo",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Bronze Framework",
+       "cantidad": 15
+      },
+      {
+       "objeto": "Wool Cloth",
+       "cantidad": 30
+      }
+     ],
+     "notas": "Guardar 5 por si eliges Goblin a 200"
+    },
+    {
+     "desde": 175,
+     "hasta": 194,
+     "fabricar": "Solid Blasting Powder",
+     "veces": 60,
+     "materiales": [
+      {
+       "objeto": "Solid Stone",
+       "cantidad": 120
+      }
+     ],
+     "notas": "Guardar el polvo"
+    },
+    {
+     "desde": 194,
+     "hasta": 195,
+     "fabricar": "Gyromatic Micro-Adjustor",
+     "veces": 1,
+     "materiales": [
+      {
+       "objeto": "Steel Bar",
+       "cantidad": 4
+      }
+     ],
+     "notas": "Si falta skill, hacer Iron Grenades u otra receta"
+    },
+    {
+     "desde": 195,
+     "hasta": 200,
+     "fabricar": "Mithril Tube",
+     "veces": 6,
+     "materiales": [
+      {
+       "objeto": "Mithril Bar",
+       "cantidad": 18
+      }
+     ],
+     "notas": "Guardar los 6 por si eliges Gnomish"
+    },
+    {
+     "desde": 200,
+     "hasta": 215,
+     "fabricar": "Unstable Trigger",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Mithril Bar",
+       "cantidad": 20
+      },
+      {
+       "objeto": "Mageweave Cloth",
+       "cantidad": 20
+      },
+      {
+       "objeto": "Solid Blasting Powder",
+       "cantidad": 20
+      }
+     ],
+     "notas": "Guardar para las bombas del 238"
+    },
+    {
+     "desde": 215,
+     "hasta": 238,
+     "fabricar": "Mithril Casing",
+     "veces": 40,
+     "materiales": [
+      {
+       "objeto": "Mithril Bar",
+       "cantidad": 120
+      }
+     ],
+     "notas": "Guardar las 40 para las bombas"
+    },
+    {
+     "desde": 238,
+     "hasta": 250,
+     "fabricar": "Hi-Explosive Bomb",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Mithril Casing",
+       "cantidad": 40
+      },
+      {
+       "objeto": "Unstable Trigger",
+       "cantidad": 20
+      },
+      {
+       "objeto": "Solid Blasting Powder",
+       "cantidad": 40
+      }
+     ]
+    },
+    {
+     "desde": 250,
+     "hasta": 260,
+     "fabricar": "Dense Blasting Powder",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Dense Stone",
+       "cantidad": 60
+      }
+     ],
+     "notas": "Se pone amarillo a 250: puede hacer falta mas de 30"
+    },
+    {
+     "desde": 260,
+     "hasta": 285,
+     "fabricar": "Thorium Widget",
+     "veces": 35,
+     "materiales": [
+      {
+       "objeto": "Thorium Bar",
+       "cantidad": 105
+      },
+      {
+       "objeto": "Runecloth",
+       "cantidad": 35
+      }
+     ],
+     "notas": "Receta en Sovik (Orgrimmar) o Gearcutter Cogspinner (Ironforge)"
+    },
+    {
+     "desde": 285,
+     "hasta": 300,
+     "fabricar": "Thorium Tube",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Thorium Bar",
+       "cantidad": 120
+      }
+     ],
+     "notas": "Esquema en Xizzer Fizzbolt, Everlook (Winterspring); es BoP en Forever, comprarlo con el personaje que sube Engineering"
+    }
+   ],
+   "totales": [
+    {
+     "objeto": "Rough Stone",
+     "cantidad": 60
+    },
+    {
+     "objeto": "Copper Bar",
+     "cantidad": 66
+    },
+    {
+     "objeto": "Linen Cloth",
+     "cantidad": 50
+    },
+    {
+     "objeto": "Coarse Stone",
+     "cantidad": 60
+    },
+    {
+     "objeto": "Silver Bar",
+     "cantidad": 5
+    },
+    {
+     "objeto": "Bronze Bar",
+     "cantidad": 110
+    },
+    {
+     "objeto": "Weak Flux",
+     "cantidad": 25
+    },
+    {
+     "objeto": "Moss Agate",
+     "cantidad": 10
+    },
+    {
+     "objeto": "Heavy Stone",
+     "cantidad": 30
+    },
+    {
+     "objeto": "Wool Cloth",
+     "cantidad": 60
+    },
+    {
+     "objeto": "Medium Leather",
+     "cantidad": 15
+    },
+    {
+     "objeto": "Steel Bar",
+     "cantidad": 4
+    },
+    {
+     "objeto": "Solid Stone",
+     "cantidad": 120
+    },
+    {
+     "objeto": "Mithril Bar",
+     "cantidad": 158
+    },
+    {
+     "objeto": "Mageweave Cloth",
+     "cantidad": 20
+    },
+    {
+     "objeto": "Dense Stone",
+     "cantidad": 60
+    },
+    {
+     "objeto": "Thorium Bar",
+     "cantidad": 225
+    },
+    {
+     "objeto": "Runecloth",
+     "cantidad": 35
+    }
+   ],
+   "recogida": "Mining (la mayoria de recetas usan piedra y barras)",
+   "notas": "Guia basada en la beta de Forever; cantidades estimadas porque algunas recetas se ponen amarillas. Los gnomos ya no tienen +15 de skill en Forever.",
+   "fuentes": [
+    "https://www.wow-professions.com/forever/engineering-leveling-guide"
+   ]
+  },
+  "333": {
+   "nombre": "Enchanting",
+   "es": "Encantamiento",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": 5,
+     "aprender": "cualquier instructor: Horda: Jhag (Orgrimmar), Malcomb Wynn (Undercity), Mot Dawnstrider (Thunder Bluff), Pa'zula (Durotar), Vance Undergloom (Tirisfal); Alianza: Betty Quin (Stormwind), Thonys Pillarstone (Ironforge), Lalina Summermoon (Darnassus), Alanna Raveneye (Teldrassil)"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": 10,
+     "aprender": "requiere Enchanting 50. Horda: Godan (Orgrimmar), Teg Dawnstrider (Thunder Bluff), Lavinia Crowe (Undercity); Alianza: Taladan (Darnassus), Gimble Thistlefuzz (Ironforge), Lucan Cordell (Stormwind), Xylinnia Starshine (Feralas)"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 225,
+     "nivelPersonaje": 20,
+     "aprender": "requiere Enchanting 125. Horda: Hgarth (Stonetalon Mountains, en un acantilado al noreste de Sun Rock Retreat); Alianza: Kitta Firewind (Elwynn Forest)"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "requiere Enchanting 200. Ambas facciones: Annora (Uldaman; ruta rapida por la puerta trasera en Badlands oriental)"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 2,
+     "fabricar": "Runed Copper Rod",
+     "veces": 1,
+     "materiales": [
+      {
+       "objeto": "Copper Rod",
+       "cantidad": 1
+      },
+      {
+       "objeto": "Mote of Magic",
+       "cantidad": 1
+      }
+     ]
+    },
+    {
+     "desde": 2,
+     "hasta": 20,
+     "fabricar": "Enchant Bracer - Inferior Stamina",
+     "veces": 18,
+     "materiales": [
+      {
+       "objeto": "Mote of Magic",
+       "cantidad": 18
+      }
+     ]
+    },
+    {
+     "desde": 20,
+     "hasta": 75,
+     "fabricar": "Enchant Chest - Inferior Stamina",
+     "veces": 57,
+     "materiales": [
+      {
+       "objeto": "Strange Dust",
+       "cantidad": 57
+      }
+     ],
+     "notas": "cantidades aproximadas"
+    },
+    {
+     "desde": 75,
+     "hasta": 104,
+     "fabricar": "Enchant Bracer - Minor Stamina",
+     "veces": 30,
+     "materiales": [
+      {
+       "objeto": "Strange Dust",
+       "cantidad": 60
+      }
+     ],
+     "notas": "cantidades aproximadas"
+    },
+    {
+     "desde": 104,
+     "hasta": 105,
+     "fabricar": "Runed Silver Rod",
+     "veces": 1,
+     "materiales": [
+      {
+       "objeto": "Silver Rod",
+       "cantidad": 1
+      },
+      {
+       "objeto": "Strange Dust",
+       "cantidad": 3
+      },
+      {
+       "objeto": "Lesser Magic Essence",
+       "cantidad": 4
+      },
+      {
+       "objeto": "Shadowgem",
+       "cantidad": 1
+      }
+     ]
+    },
+    {
+     "desde": 105,
+     "hasta": 130,
+     "fabricar": "Enchant Shield - Minor Stamina",
+     "veces": 25,
+     "materiales": [
+      {
+       "objeto": "Lesser Astral Essence",
+       "cantidad": 25
+      },
+      {
+       "objeto": "Strange Dust",
+       "cantidad": 25
+      }
+     ]
+    },
+    {
+     "desde": 130,
+     "hasta": 155,
+     "fabricar": "Enchant Bracer - Lesser Stamina",
+     "veces": 25,
+     "materiales": [
+      {
+       "objeto": "Soul Dust",
+       "cantidad": 25
+      }
+     ]
+    },
+    {
+     "desde": 155,
+     "hasta": 156,
+     "fabricar": "Runed Golden Rod",
+     "veces": 1,
+     "materiales": [
+      {
+       "objeto": "Golden Rod",
+       "cantidad": 1
+      },
+      {
+       "objeto": "Iridescent Pearl",
+       "cantidad": 1
+      },
+      {
+       "objeto": "Greater Astral Essence",
+       "cantidad": 1
+      },
+      {
+       "objeto": "Soul Dust",
+       "cantidad": 1
+      }
+     ]
+    },
+    {
+     "desde": 156,
+     "hasta": 160,
+     "fabricar": "Enchant Shield - Lesser Stamina",
+     "veces": 4,
+     "materiales": [
+      {
+       "objeto": "Lesser Mystic Essence",
+       "cantidad": 4
+      }
+     ]
+    },
+    {
+     "desde": 160,
+     "hasta": 180,
+     "fabricar": "Enchant Boots - Lesser Agility",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Soul Dust",
+       "cantidad": 20
+      }
+     ]
+    },
+    {
+     "desde": 180,
+     "hasta": 200,
+     "fabricar": "Enchant Bracer - Strength",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Vision Dust",
+       "cantidad": 20
+      }
+     ]
+    },
+    {
+     "desde": 200,
+     "hasta": 201,
+     "fabricar": "Runed Truesilver Rod",
+     "veces": 1,
+     "materiales": [
+      {
+       "objeto": "Truesilver Rod",
+       "cantidad": 1
+      },
+      {
+       "objeto": "Black Pearl",
+       "cantidad": 1
+      },
+      {
+       "objeto": "Greater Mystic Essence",
+       "cantidad": 1
+      },
+      {
+       "objeto": "Vision Dust",
+       "cantidad": 1
+      }
+     ],
+     "notas": "la guia avisa de que 200-300 no se pudo probar en la beta"
+    },
+    {
+     "desde": 201,
+     "hasta": 205,
+     "fabricar": "Enchant Chest - Greater Intellect",
+     "veces": 4,
+     "materiales": [
+      {
+       "objeto": "Lesser Mystic Essence",
+       "cantidad": 4
+      }
+     ]
+    },
+    {
+     "desde": 205,
+     "hasta": 225,
+     "fabricar": "Enchant Cloak - Greater Defense",
+     "veces": 20,
+     "materiales": [
+      {
+       "objeto": "Vision Dust",
+       "cantidad": 20
+      }
+     ]
+    },
+    {
+     "desde": 225,
+     "hasta": 230,
+     "fabricar": "Enchant Gloves - Agility",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Vision Dust",
+       "cantidad": 5
+      }
+     ]
+    },
+    {
+     "desde": 230,
+     "hasta": 235,
+     "fabricar": "Enchant Boots - Stamina",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Vision Dust",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 235,
+     "hasta": 240,
+     "fabricar": "Enchant Chest - Superior Stamina",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Vision Dust",
+       "cantidad": 15
+      }
+     ]
+    },
+    {
+     "desde": 240,
+     "hasta": 245,
+     "fabricar": "Enchant Gloves - Strength",
+     "veces": 5,
+     "materiales": [
+      {
+       "objeto": "Lesser Nether Essence",
+       "cantidad": 5
+      },
+      {
+       "objeto": "Vision Dust",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 245,
+     "hasta": 265,
+     "fabricar": "Enchant Bracer - Greater Strength",
+     "veces": 22,
+     "materiales": [
+      {
+       "objeto": "Dream Dust",
+       "cantidad": 22
+      },
+      {
+       "objeto": "Lesser Nether Essence",
+       "cantidad": 44
+      }
+     ],
+     "notas": "cantidades aproximadas"
+    },
+    {
+     "desde": 265,
+     "hasta": 275,
+     "fabricar": "Enchant Shield - Greater Stamina",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Dream Dust",
+       "cantidad": 60
+      }
+     ]
+    },
+    {
+     "desde": 275,
+     "hasta": 285,
+     "fabricar": "Wizard Oil",
+     "veces": 10,
+     "materiales": [
+      {
+       "objeto": "Illusion Dust",
+       "cantidad": 30
+      },
+      {
+       "objeto": "Firebloom",
+       "cantidad": 20
+      },
+      {
+       "objeto": "Crystal Vial",
+       "cantidad": 10
+      }
+     ]
+    },
+    {
+     "desde": 285,
+     "hasta": 300,
+     "fabricar": "Enchant Cloak - Superior Defense",
+     "veces": 15,
+     "materiales": [
+      {
+       "objeto": "Illusion Dust",
+       "cantidad": 120
+      }
+     ]
+    }
+   ],
+   "totales": [
+    {
+     "objeto": "Copper Rod",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Silver Rod",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Golden Rod",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Truesilver Rod",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Mote of Magic",
+     "cantidad": 19
+    },
+    {
+     "objeto": "Strange Dust",
+     "cantidad": 145
+    },
+    {
+     "objeto": "Lesser Magic Essence",
+     "cantidad": 4
+    },
+    {
+     "objeto": "Shadowgem",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Lesser Astral Essence",
+     "cantidad": 25
+    },
+    {
+     "objeto": "Soul Dust",
+     "cantidad": 46
+    },
+    {
+     "objeto": "Iridescent Pearl",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Greater Astral Essence",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Lesser Mystic Essence",
+     "cantidad": 8
+    },
+    {
+     "objeto": "Vision Dust",
+     "cantidad": 81
+    },
+    {
+     "objeto": "Black Pearl",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Greater Mystic Essence",
+     "cantidad": 1
+    },
+    {
+     "objeto": "Lesser Nether Essence",
+     "cantidad": 49
+    },
+    {
+     "objeto": "Dream Dust",
+     "cantidad": 82
+    },
+    {
+     "objeto": "Illusion Dust",
+     "cantidad": 150
+    },
+    {
+     "objeto": "Firebloom",
+     "cantidad": 20
+    },
+    {
+     "objeto": "Crystal Vial",
+     "cantidad": 10
+    }
+   ],
+   "recogida": "",
+   "notas": "Guia de WoW Forever (beta): cantidades de crafteos amarillos son medias; 200-300 sin probar. Rings y collares no se pueden encantar en Classic.",
+   "fuentes": [
+    "https://www.method.gg/wow-forever/enchanting-in-wow-forever-1-300-leveling-guide-and-trainers"
+   ]
+  },
+  "356": {
+   "nombre": "Fishing",
+   "es": "Pesca",
+   "rangos": [
+    {
+     "nombre": "Apprentice",
+     "hasta": 75,
+     "nivelPersonaje": 5,
+     "aprender": "Cualquier instructor de pesca (Lumak Orgrimmar, Arnold Leland Stormwind, etc.)"
+    },
+    {
+     "nombre": "Journeyman",
+     "hasta": 150,
+     "nivelPersonaje": null,
+     "aprender": "Instructor de pesca"
+    },
+    {
+     "nombre": "Expert",
+     "hasta": 225,
+     "nivelPersonaje": 20,
+     "aprender": "Libro Expert Fishing - The Bass and You: Old Man Heming (Booty Bay, Stranglethorn) o casa de subastas"
+    },
+    {
+     "nombre": "Artisan",
+     "hasta": 300,
+     "nivelPersonaje": 35,
+     "aprender": "Mision Nat Pagle, Angler Extreme (Nat Pagle, Tidefury Cove, Dustwallow Marsh; Fishing 225): pescar Feralas Ahi (Feralas), Misty Reed Mahi Mahi (Swamp of Sorrows), Sar'theris Striker (Desolace), Savage Coast Blue Sailfin (Stranglethorn Vale)"
+    }
+   ],
+   "tramos": [
+    {
+     "desde": 1,
+     "hasta": 75,
+     "fabricar": "Pescar en lagos, estanques o rios de zonas iniciales: Dun Morogh, Durotar, Elwynn Forest, Mulgore, Teldrassil, Tirisfal Glades",
+     "veces": 0,
+     "materiales": [],
+     "notas": "Cana de pescar y Shiny Bauble de un vendedor de pesca"
+    },
+    {
+     "desde": 75,
+     "hasta": 150,
+     "fabricar": "Pescar en una capital: Darnassus, Stormwind City, Orgrimmar, Undercity o Thunder Bluff",
+     "veces": 0,
+     "materiales": [],
+     "notas": "Alternativas: The Barrens, Darkshore, Ironforge, Loch Modan, Silverpine Forest, Westfall"
+    },
+    {
+     "desde": 150,
+     "hasta": 225,
+     "fabricar": "Pescar en Dustwallow Marsh (recomendada, ahi empieza la mision Artisan)",
+     "veces": 0,
+     "materiales": [],
+     "notas": "Comprar Bright Baubles a Old Man Heming. Alternativas: Alterac Mountains, Arathi Highlands, Desolace, Stranglethorn Vale, Swamp of Sorrows, Thousand Needles"
+    },
+    {
+     "desde": 225,
+     "hasta": 300,
+     "fabricar": "Pescar en Felwood, Feralas, The Hinterlands, Tanaris, Un'Goro Crater o Western Plaguelands",
+     "veces": 0,
+     "materiales": [],
+     "notas": "Usar Bright Baubles en todas"
+    }
+   ],
+   "totales": [],
+   "recogida": "",
+   "notas": "Pesca exige paciencia. Sin lure en las zonas de la mision Artisan salvo Bright Baubles en Feralas para que no escapen los peces.",
+   "fuentes": [
+    "https://www.wow-professions.com/classic/fishing-leveling-guide-classic-wow"
+   ]
+  }
+ },
+ "huecos": [
+  "Enchanting: la guia no indica profesion de recogida ni donde conseguir cada vara/esencia",
+  "Alchemy 225-300 y Blacksmithing 240-300 son de beta/datos del juego sin probar",
+  "Alchemy: totales sumados por mi a partir de los tramos de wow-professions (la pagina no da totales directos)",
+  "Blacksmithing: totales sumados de las listas por rango de la fuente (Heavy Stone 60+60, Mithril 436+224); Expert/Artisan en la fuente se solapan (150-215 / 215-300)",
+  "Tailoring 265-300: la guia Forever no lo cubre; completado con la guia Classic Era (Runecloth Belt/Bag/Gloves) y la cantidad de Runecloth Belt (19) es estimada.",
+  "Tailoring: los totales de cloth (p.ej. 2315 Runecloth) se calcularon sumando los tramos; la guia no da un total unico.",
+  "Las guias Forever son de la beta y sus cantidades son estimaciones.",
+  "Cooking: la guia no da lista de totales de materiales",
+  "First Aid: la guia no indica el nivel de personaje de Apprentice/Journeyman/Expert",
+  "Fishing: no hay recetas; nivel de personaje de Journeyman no indicado; cebo/cana recomendados solo Shiny Bauble y Bright Bauble",
+  "Todo de una sola fuente (wow-professions.com classic); sin contrastar con otra"
+ ]
+}

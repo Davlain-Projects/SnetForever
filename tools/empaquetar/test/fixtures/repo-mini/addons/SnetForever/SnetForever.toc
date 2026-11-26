@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: SnetForever
+## Notes: Addon de prueba de repo-mini (tarea 15)
+## Version: 0.5.0
+## Dependencies: SnetForever_Rutas, SnetForever_Misiones
+## X-SNF-EsquemaDatos: 1
+
+nucleo\espacio.lua
+arranque.lua

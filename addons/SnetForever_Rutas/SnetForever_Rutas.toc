@@ -1,0 +1,43 @@
+## Interface: 16001
+## Title: SnetForever - Rutas
+## Notes: Guías de subida de nivel del Forever (datos de RestedXP, CC BY-NC-SA 4.0)
+## Version: 2026.11.13.1
+## Author: SnetForever
+## X-License: CC-BY-NC-SA-4.0
+## IconTexture: Interface\AddOns\SnetForever\recursos\icono
+
+nucleo.lua
+guias_1.lua
+guias_2.lua
+guias_3.lua
+guias_4.lua
+guias_5.lua
+guias_6.lua
+guias_7.lua
+guias_8.lua
+guias_9.lua
+guias_10.lua
+guias_11.lua
+guias_12.lua
+guias_13.lua
+guias_14.lua
+guias_15.lua
+guias_16.lua
+guias_17.lua
+guias_18.lua
+guias_19.lua
+guias_20.lua
+guias_21.lua
+guias_22.lua
+guias_23.lua
+guias_24.lua
+guias_25.lua
+guias_26.lua
+guias_27.lua
+guias_28.lua
+guias_29.lua
+guias_30.lua
+guias_31.lua
+guias_32.lua
+guias_33.lua
+guias_34.lua

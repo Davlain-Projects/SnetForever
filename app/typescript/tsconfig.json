@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "target": "ES2024",
+    "strict": true,
+    "newLine": "lf",
+    "noEmitOnError": true,
+    "rootDir": ".",
+    "outDir": "..",
+    "types": [
+      "node"
+    ],
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "useUnknownInCatchVariables": false,
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    "**/*.mts"
+  ],
+  "exclude": []
+}

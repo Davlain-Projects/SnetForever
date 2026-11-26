@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: SnetForever - Rutas
+## Version: 2026.11.11.1
+## X-License: CC-BY-NC-SA-4.0
+
+nucleo.lua
+guias_1.lua

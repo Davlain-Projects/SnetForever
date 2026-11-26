@@ -1,0 +1,12 @@
+{
+  "name": "snetforever-misguias-rxp",
+  "version": "0.1.0",
+  "description": "Convierte guías de RestedXP al formato de Mis guías (SnetForever_MisGuias/mis-guias.lua)",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test",
+    "convertir": "node src/cli.js"
+  }
+}

@@ -1,0 +1,8 @@
+SnetForever: publicación {{publicacion}}
+
+{{puente}}Estos archivos NO se han subido a ningún sitio. Para publicarlos, el jugador crea en GitHub (github.com/{{repo}}/releases/new) una versión con la etiqueta {{publicacion}}, sube los {{cuantos}} archivos de esta carpeta y la marca como "Latest". Nadie más lo hace por él.
+
+Los {{cuantos}} archivos que hay que subir a la página de la versión (este LEEME no hace falta subirlo):
+{{archivos}}
+
+La firma (snetforever-manifiesto.json.sig) se comprobó con la clave pública antes de escribir esta carpeta. Si se cambia cualquier archivo, la app no instalará nada: hay que volver a ejecutar «npm run publicar».

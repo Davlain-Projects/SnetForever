@@ -1,0 +1,33 @@
+SnetForever collaboration license
+
+Copyright © 2026 @davrodwconnections and @davidrod-WaveNorth (David), and @alvarezalain262-create (Alain), each with respect to the original SnetForever material in which they own copyright. All rights reserved except as granted below. This notice does not claim ownership of anyone else's work.
+
+For original material under this notice, the rights holders grant permission to view the source and to make, run and modify copies solely to prepare, test and submit proposed fixes to SnetForever. You may use GitHub's fork and pull request features for that purpose. This grant does not authorize general end-user use, sale, commercial exploitation, or redistribution for other purposes. Contact the maintainers for written permission for other uses. Rights granted by applicable law and by GitHub's terms remain available.
+
+These terms apply only to original material for which the maintainers control the necessary rights. Previously granted licenses continue to apply to their recipients. Separate licenses for third-party material remain in effect.
+
+---
+
+Parte de ia/codec.lua está adaptada de NeverQuestAlone (addon/NeverQuestAlone/Codec.lua, commit 3a9b93c), que se publica con esta licencia:
+
+MIT License
+
+Copyright (c) 2026 chelinho139 y los autores de NeverQuestAlone
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
