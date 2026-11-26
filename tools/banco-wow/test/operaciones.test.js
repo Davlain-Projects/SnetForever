@@ -16,7 +16,7 @@ const ESPERADO = {
     ignorarDuracion: ['lista', '0'], duracion: ['lista', '24'], tope: ['formula', '40000'], reservaEnBolsas: ['formula', '0'],
     caducadasMaximas: ['formula', '0'], pujaPorcentaje: ['numero', 100],
     rebaja: ['formula', '0c'],
-    precioMinimo: ['formula', 'max(1.5 * vendorsell, 0.25 * first(snfmercado, snfmercado, snfhistorico))'],
+    precioMinimo: ['formula', 'max(1.5 * vendorsell, 0.25 * first(snfmercado, snfregional(), snfhistorico))'],
     bajoMinimo: ['lista', 'noPublicar'], precioMaximo: ['formula', '50000g'], sobreMaximo: ['lista', 'maximo'],
     precioNormal: ['formula', 'max(2 * snfmercado, 12 * vendorsell)'],
     cancelarRebajadas: ['sino', true], cancelarParaSubir: ['sino', true], umbralReponer: ['formula', '1g'],
@@ -76,14 +76,14 @@ test('los 7 tipos con sus campos y valores por defecto de las capturas', () => {
   assert.equal(m.lua(`(function() for _, tipo in ipairs(${O}.ORDEN) do for _, c in ipairs(${O}.TIPOS[tipo].campos) do if c.depende then local d = ${O}.campo(tipo, c.depende); if not d or d.tipo ~= "sino" then return false end end end end return true end)()`), true);
   // Sniper: la fórmula larga de TSM con nuestras fuentes.
   const sniper = m.lua(`${O}.valor("sniper", "Op", "precioMaximo")`);
-  assert.match(sniper, /^max\(vendorsell, ifgt\(snfmercado, 250000g, 0\.8,/);
-  assert.match(sniper, /0\.05\){8} \* snfmercado\)$/);
+  assert.match(sniper, /^max\(vendorsell, ifgt\(snfregional\(\), 250000g, 0\.8,/);
+  assert.match(sniper, /0\.05\){8} \* snfregional\(\)\)$/);
   assert.doesNotMatch(sniper, /dbregion/i);
   // Los que se tradujeron de TSM son lo que da Formulas.traducir con el texto de la captura.
   const traducidos = [
     ['max(1.5 * vendorsell, 0.25 * first(dbmarket, dbregionmarketavg, dbhistorical))', 'subasta', 'precioMinimo'],
     ['dbmarket', 'compras', 'precioMaximo'], ['dbmarket', 'vendedor', 'valorMercado'], ['dbmarket', 'vendedor', 'valorDestruccion'],
-    [sniper.replace(/snfmercado/g, 'DBRegionMarketAvg'), 'sniper', 'precioMaximo'],
+    [sniper.replace(/snfregional\(\)/g, 'DBRegionMarketAvg'), 'sniper', 'precioMaximo'],
   ];
   for (const [tsm, tipo, clave] of traducidos) {
     assert.equal(m.lua(`(function() return ${F}.traducir(${q(tsm)}) end)()`), m.lua(`${O}.valor(${q(tipo)}, "Op", ${q(clave)})`), `${tipo}.${clave}`);

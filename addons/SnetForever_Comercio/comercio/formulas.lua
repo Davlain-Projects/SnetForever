@@ -14,15 +14,23 @@
 --   importe  = (número unidad)+   unidad: g u o (oro), s o p (plata), c (cobre): «1g 50s 20c» = «1o 50p 20c» = 15020 cobre
 --   número   = dígitos con punto decimal opcional («1.5», «.25»)
 --   porcentaje = número "%"       «120%» = 1,2; si lo sigue un valor, lo multiplica: «120% snfmercado»
--- Todo se calcula en cobre. Un valor puede ser «sin valor» (nil): first lo salta; min y max lo ignoran; cualquier otra
+-- Todo se calcula en cobre. Un valor puede ser «sin valor» (nil): first lo salta; min, max y avg lo ignoran; cualquier otra
 -- operación con «sin valor» da «sin valor». Dividir por cero da «sin valor».
 --
 -- Funciones: min(a, b…), max(a, b…), first(a, b…) (el primero con valor), avg(a, b…), round(x[, paso]), roundup(x[, paso]),
 -- rounddown(x[, paso]), ifgt / iflt / ifgte / iflte / ifeq(a, b, si, [si no]) (sin «si no» y sin cumplirse, «sin valor») y
 -- check(a, si[, si no]) (como en TSM: «si» cuando a es mayor que 0, si no «si no»).
 --
--- Fuentes: snfmercado (lo normal de la app), snfminimo (F1: la compra mínima de la foto de SNF.Subasta.foto), snfhistorico (de momento, también lo normal de
--- la app: la app no manda aún una media de varios días; cuando la mande, debe pasar a su propio campo), vendorsell (el
+-- Fuentes: snfmercado (lo normal de la app), snfminimo (F1: la compra mínima de la foto de SNF.Subasta.foto), snfhistorico (lo
+-- normal de la app, igual que snfmercado: es el alias de las importaciones de TSM y de las fórmulas ya guardadas, y no cambia
+-- para no mover sus precios), snfhistoricodiario() (fase 2: el histórico propio de la app, Precios.historico, la mediana de
+-- los valores diarios de hasta 30 días de la misma casa; se elige a mano, ninguna traducción lo pone; sin valor si la app no
+-- lo da, con la razón en Precios.historico, y siempre sin valor para una variante «i:1234:…» o una mascota, porque la app
+-- solo tiene el objeto base), snfcostemedio() (fase 2: el coste medio de las unidades que tienes según tus compras,
+-- Contabilidad.costeMedio; se elige a mano, ninguna traducción lo pone, smartavgbuy sigue sin fuente; sin valor con la razón
+-- en Contabilidad.costeMedio y siempre para una variante o una mascota), snfregional() (el precio regional de la app,
+-- Precios.regional: la media de mercado de las casas de toda la región, como DBRegionMarketAvg de TSM, al que traduce;
+-- sin valor si la app no lo da y siempre para una variante o una mascota), vendorsell (el
 -- precio de venta a vendedor del juego), vendorbuy (last observed merchant unit cost), crafting (sin
 -- valor en la parte 1) y las fuentes propias del jugador (SnetForeverCuenta.comercio.v2.fuentes[nombre] = texto).
 --
@@ -40,10 +48,11 @@
 --                                               usa una que no existe); si no vale, todo queda como estaba. El error va con
 --                                               Formulas.mensaje como los de las fórmulas.
 -- Formulas.quitarFuente(nombre) -> boolean      la borra (las fórmulas que la usen dirán que no existe).
--- Formulas.traducir(texto) -> texto, cambios, desconocidas   pasa las fuentes de TSM a las nuestras (dbmarket y
---                                               dbregionmarketavg -> snfmercado; dbminbuyout -> snfminimo; dbhistorical y
---                                               dbregionhistorical -> snfhistorico); las demás desconocidas quedan como
---                                               estaban y se listan.
+-- Formulas.traducir(texto, antes?) -> texto, cambios, desconocidas   pasa las fuentes de TSM a las nuestras (dbmarket ->
+--                                               snfmercado; dbregionmarketavg -> snfregional(); dbminbuyout -> snfminimo;
+--                                               dbhistorical y dbregionhistorical -> snfhistorico); las demás desconocidas
+--                                               quedan como estaban y se listan. Con `antes`, como se traducía antes del
+--                                               precio regional (dbregionmarketavg -> snfmercado).
 -- Formulas.mensaje(error) -> texto claro en el idioma del cliente (textos/es.lua y textos/en.lua, claves COMERCIO_FORMULA_*).
 -- Formulas.cobre(valor) -> cobre entero | nil   Task 22 (pendiente de la Task 14): las fórmulas calculan sin redondear (un
 --                                               porcentaje suelto vale 0,5 y una cantidad puede salir con decimales). Lo
@@ -64,8 +73,10 @@ local CACHE_MAX = 500
 local MAX_ITEM_ID = 2147483647
 
 local UNIDADES = {g = 10000, o = 10000, s = 100, p = 100, c = 1}
+-- dbregionmarketavg pasa a la fuente regional de la app; las importaciones de antes lo pasaban a snfmercado
+-- (TRADUCCION_ANTES: la usa ImportarTSM.actualizarRegional para reconocer lo importado y no tocar lo editado a mano).
 local TRADUCCION = {
-  dbmarket = "snfmercado", dbregionmarketavg = "snfmercado",
+  dbmarket = "snfmercado", dbregionmarketavg = "snfregional()",
   dbminbuyout = "snfminimo",
   dbhistorical = "snfhistorico", dbregionhistorical = "snfhistorico",
 }
@@ -111,6 +122,11 @@ local function idDe(item)
   return type(item) == "number" and item or nil
 end
 
+-- Fase 2: una clave con variante («i:8836::1:3») o una mascota («p:…») no es el objeto base que mide la app.
+local function esBase(clave)
+  return clave == nil or type(clave) == "number" or (type(clave) == "string" and string.find(clave, "^i:%d+$") ~= nil)
+end
+
 local function deLaApp(id)
   local precios = SNF.Precios
   if not id or not precios or not precios.de then
@@ -120,9 +136,48 @@ local function deLaApp(id)
   return ok and type(d) == "table" and numeroSeguro(d.normal) or nil
 end
 
+local HISTORICO_DIARIO = "snfhistoricodiario"
+local COSTE_MEDIO = "snfcostemedio"
+local REGIONAL = "snfregional"
+
+-- El precio regional de la app (Precios.regional: la media de mercado de toda la región, como DBRegionMarketAvg de TSM).
+-- Solo del objeto base: la app no distingue variantes ni mascotas.
+local function regional(id, clave)
+  local precios = SNF.Precios
+  if not id or not esBase(clave) or not precios or type(precios.regional) ~= "function" then
+    return nil
+  end
+  local ok, v = pcall(precios.regional, id)
+  return ok and numeroSeguro(v) or nil
+end
+
+local function historicoDiario(id, clave)
+  local precios = SNF.Precios
+  if not id or not esBase(clave) or not precios or type(precios.historico) ~= "function" then
+    return nil
+  end
+  local ok, d = pcall(precios.historico, id)
+  return ok and type(d) == "table" and numeroSeguro(d.valor) or nil
+end
+
+-- Fase 2: el coste medio de lo que tienes según tus compras (Contabilidad.costeMedio). Solo del objeto base, como el
+-- inventario y los recibos; sin valor con la razón en Contabilidad.costeMedio.
+local function costeMedio(id, clave)
+  local contabilidad = rawget(SNF, "Contabilidad")
+  if not id or not esBase(clave) or type(contabilidad) ~= "table" or type(contabilidad.costeMedio) ~= "function" then
+    return nil
+  end
+  local ok, d = pcall(contabilidad.costeMedio, id)
+  return ok and type(d) == "table" and numeroSeguro(d.valor) or nil
+end
+
+-- Las fuentes que solo se leen con paréntesis («snfhistoricodiario()»): así no chocan con una fuente propia ya guardada con
+-- ese nombre, que se sigue leyendo sin ellos.
+local CON_PARENTESIS = {[HISTORICO_DIARIO] = historicoDiario, [COSTE_MEDIO] = costeMedio, [REGIONAL] = regional}
+
 local FUENTES_BASE = {
   snfmercado = deLaApp,
-  -- Cuando la app mande una media de varios días, esta fuente debe leer ese campo de Precios.de en vez de «normal».
+  -- Lo mismo que snfmercado a propósito (compatibilidad): el histórico propio se pide con snfhistoricodiario().
   snfhistorico = deLaApp,
   -- F1 (ronda 2): la compra mínima de ahora con la misma foto que el tooltip (SNF.Subasta.foto: la lista de Navegar, si no la
   -- foto de la app y, solo sin ella, el escaneo). Antes leía solo el escaneo, y una réplica vieja pasaba por de ahora.
@@ -134,9 +189,16 @@ local FUENTES_BASE = {
     local ok, precio = pcall(subasta.foto, id)
     return ok and numeroSeguro(precio) or nil
   end,
+  -- El del juego o, si el juego aún no tiene el objeto en caché, el guardado (comercio/precio-vendedor.lua).
   vendorsell = function(id)
-    local objeto = id and SNF.API.infoObjeto(id)
-    local precio = objeto and numeroSeguro(objeto.pv)
+    local guardado = rawget(SNF, "PrecioVendedor")
+    local precio
+    if id and guardado then
+      precio = numeroSeguro(guardado.de(id))
+    else
+      local objeto = id and SNF.API.infoObjeto(id)
+      precio = objeto and numeroSeguro(objeto.pv)
+    end
     return precio and precio > 0 and precio or nil
   end,
   vendorbuy = function(id)
@@ -410,16 +472,21 @@ local function funcion(nombre, args)
       return mejor
     end
   elseif nombre == "avg" then
+    -- Como en TSM: la media de los que tienen valor (avg(crafting, 1g, 3g) sin receta es 2g); sin ninguno, «sin valor».
+    -- Las fórmulas importadas de TSM cuentan con ello: check(first(crafting, dbmarket, …), max(0.25 * avg(crafting, …), …)).
     return function(item, ctx)
-      local suma = 0.0
+      local suma, n = 0.0, 0
       for _, a in ipairs(args) do
         local x = a(item, ctx)
-        if not x then
-          return nil
+        if x then
+          suma = acotado(suma + x)
+          n = n + 1
         end
-        suma = acotado(suma + x)
       end
-      return suma / #args
+      if n == 0 then
+        return nil
+      end
+      return suma / n
     end
   end
   return redondeo(nombre, args)
@@ -438,7 +505,8 @@ local function baseValue(read, explicitId)
       return nil
     end
     local memo = ctx.memo
-    if id ~= ctx.id then
+    -- Con una variante («i:1234:…»), «item:1234» se guarda aparte aunque sea el mismo id: la referencia es el objeto base.
+    if id ~= ctx.id or (explicitId and ctx.variante) then
       local references = ctx.references
       if not references then
         references = {}
@@ -452,7 +520,8 @@ local function baseValue(read, explicitId)
     end
     local value = memo[read]
     if value == nil then
-      value = read(id) or false
+      -- La clave del objeto (con su variante) solo va con el objeto de la fórmula, no con «item:1234».
+      value = read(id, not explicitId and ctx.clave or nil) or false
       memo[read] = value
     end
     return value or nil
@@ -551,8 +620,17 @@ local function analizar(texto)
       local nombre = string.lower(f.v)
       local read = FUENTES_BASE[nombre]
       if esOp("(") then
+        -- Los paréntesis separan las fuentes nuevas de cualquier fuente propia anterior con el mismo nombre.
+        local conParentesis = CON_PARENTESIS[nombre]
+        if conParentesis then
+          read = conParentesis
+        end
         if read then
           pos = pos + 1
+          if conParentesis and esOp(")") then
+            pos = pos + 1
+            return baseValue(read)
+          end
           local reference = actual()
           if not reference or reference.k ~= "item" then
             falla("no_entiendo", nombreFicha(reference))
@@ -721,7 +799,7 @@ end
 -- ellas se ve igual; lo único que no se repite es la validación (existen, sin ciclos) hasta que se llame a compilar.
 local function preparar(p)
   return function(item)
-    local ctx = {id = idDe(item), memo = {}, pila = {}}
+    local ctx = {id = idDe(item), clave = item, variante = not esBase(item), memo = {}, pila = {}}
     local bien, r = pcall(p.f, item, ctx)
     if bien then
       return numeroSeguro(r)
@@ -924,10 +1002,19 @@ function Formulas.valor(texto, item)
   return f(item)
 end
 
-function Formulas.traducir(texto)
+-- Formulas.traducir(texto, antes?): con `antes`, la traducción de las importaciones anteriores al precio regional
+-- (dbregionmarketavg -> snfmercado), para reconocer una fórmula importada entonces.
+local TRADUCCION_ANTES = {}
+for k, v in pairs(TRADUCCION) do
+  TRADUCCION_ANTES[k] = v
+end
+TRADUCCION_ANTES.dbregionmarketavg = "snfmercado"
+
+function Formulas.traducir(texto, antes)
   if type(texto) ~= "string" then
     return "", 0, {}
   end
+  local tabla = antes and TRADUCCION_ANTES or TRADUCCION
   local cambios, desconocidas, vistas = 0, {}, {}
   local propias = Formulas.fuentes()
   local resultado = string.gsub(texto, "()%f[%w_]([%a_][%w_]*)()", function(desde, palabra, hasta)
@@ -938,13 +1025,18 @@ function Formulas.traducir(texto)
     end
     if despues == "(" then
       local prefix = string.match(texto, "^%s*%(%s*([%a_][%w_]*):%d+%s*%)", hasta)
-      if FUNCIONES[minuscula] or not prefix or not itemPrefix(prefix) then
+      if FUNCIONES[minuscula] or CON_PARENTESIS[minuscula] or not prefix or not itemPrefix(prefix) then
         return nil
       end
     end
-    if TRADUCCION[minuscula] then
+    local destino = tabla[minuscula]
+    if destino then
       cambios = cambios + 1
-      return TRADUCCION[minuscula]
+      -- «dbregionmarketavg(item:1234)» -> «snfregional(item:1234)»: los paréntesis ya los pone la referencia.
+      if despues == "(" then
+        destino = (string.gsub(destino, "%(%)$", ""))
+      end
+      return destino
     end
     if not vistas[minuscula] then
       vistas[minuscula] = true
@@ -953,6 +1045,61 @@ function Formulas.traducir(texto)
     return nil
   end)
   return resultado, cambios, desconocidas
+end
+
+-- Vista previa de una importación (comercio/importar-tsm.lua). Nada de esto cambia lo guardado ni cómo se calcula un precio.
+-- Formulas.palabras(texto) -> {nombres}   las fuentes que nombra la fórmula (en minúsculas, sin repetir y en orden de
+--     aparición), con las mismas reglas que traducir: no cuentan las funciones, las referencias «item:1234» ni los importes;
+--     sí cuenta «dbmarket(item:1234)».
+-- Formulas.traduccion(nombre) -> nuestra fuente | nil   la que pone traducir en lugar de esa fuente de TSM.
+-- Formulas.reservado(nombre) -> boolean   es una fuente o una función de SnetForever (no puede ser una fuente propia).
+-- Formulas.probar(texto, fuentes) -> true | false, error   como compilar, pero comprobando las referencias contra `fuentes`
+--     ({nombre = texto}, las que habrá después de importar) en vez de contra las guardadas. Detecta ciclos y fuentes rotas.
+function Formulas.palabras(texto)
+  local salida, vistas = {}, {}
+  if type(texto) ~= "string" then
+    return salida
+  end
+  for _, palabra, hasta in string.gmatch(texto, "()%f[%w_]([%a_][%w_]*)()") do
+    local minuscula = string.lower(palabra)
+    local cuenta = not (itemPrefix(palabra) and referenceId(texto, hasta))
+    if cuenta and string.match(texto, "^%s*(.?)", hasta) == "(" then
+      local prefix = string.match(texto, "^%s*%(%s*([%a_][%w_]*):%d+%s*%)", hasta)
+      cuenta = not FUNCIONES[minuscula] and not CON_PARENTESIS[minuscula] and prefix ~= nil and itemPrefix(prefix)
+    end
+    if cuenta and not vistas[minuscula] then
+      vistas[minuscula] = true
+      salida[#salida + 1] = minuscula
+    end
+  end
+  return salida
+end
+
+function Formulas.traduccion(nombre)
+  return type(nombre) == "string" and TRADUCCION[string.lower(nombre)] or nil
+end
+
+function Formulas.reservado(nombre)
+  if type(nombre) ~= "string" then
+    return false
+  end
+  local minuscula = string.lower(nombre)
+  return FUENTES_BASE[minuscula] ~= nil or FUNCIONES[minuscula] ~= nil
+end
+
+function Formulas.probar(texto, fuentes)
+  if type(texto) ~= "string" or string.find(texto, "^%s*$") then
+    return false, {c = "vacia"}
+  end
+  local p = parsear(texto)
+  if p.err then
+    return false, p.err
+  end
+  local ok, e = pcall(validar, p, {}, {}, type(fuentes) == "table" and fuentes or Formulas.fuentes())
+  if not ok then
+    return false, type(e) == "table" and e or {c = "interno"}
+  end
+  return true
 end
 
 -- Los mensajes salen de textos/es.lua y textos/en.lua (claves COMERCIO_FORMULA_*), en el idioma del cliente (L.t). Los que

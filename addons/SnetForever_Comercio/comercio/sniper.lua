@@ -18,6 +18,14 @@
 -- tablas: cada hallazgo lleva la hora a la que se leyó su fila (hora), y la tabla del sniper la enseña con su fuente
 -- («navegar 14:32», ui/subasta/sniper.lua).
 --
+-- Fase 3 de la paridad con TSM: con comercioSniperModo = «operaciones» no se mira la regla de sniper sino la operación de
+-- Sniper del grupo del objeto (Operaciones.aplicable: herencia y listas «Ignorar…»; sin grupo, la del Grupo Base) y el
+-- hallazgo es lo que no pasa de su «Precio máximo» (Operaciones.cobre). Sin operación, con la operación ignorada aquí, con
+-- la fórmula rota o sin valor, con variantes del objeto en otro grupo o con una mascota, no hay hallazgo: nunca se vuelve
+-- al porcentaje. Lo que no se ha elegido («regla», también para lo guardado antes) sigue como siempre. El hallazgo lleva
+-- su operación y su ruta; elegirlo lo vuelve a mirar (Sniper.vigente) y SNF.Compra lo mira otra vez con la cotización y
+-- antes de cada clic que compra (motivo «operacion»).
+--
 -- Nunca compra. Elegir un hallazgo (Sniper.elegir) prepara su compra con SNF.Compra.elegir, que pausa el sniper; la
 -- compra solo la hace el botón Comprar de la barra, con el clic del jugador. El sniper solo se para mientras la compra
 -- busca su subasta, espera a que se confirme una mercancía o espera al servidor ('buscando', 'confirmar', 'comprando'):
@@ -71,7 +79,11 @@
 --                                buena compra se actualiza en su sitio (sin sonar ni subirlo); si no, sale. Sale
 --                                también lo comprado (también con el sniper parado) y lo que ya no está a la venta tras
 --                                una vuelta completa.
--- Sniper.elegir(i) -> boolean    prepara la compra del hallazgo i con SNF.Compra.elegir.
+-- Sniper.elegir(i) -> boolean    prepara la compra del hallazgo i con SNF.Compra.elegir. En modo operaciones, si su
+--                                operación ya no admite el precio, sale de la lista y da false.
+-- Sniper.modo() -> 'regla' | 'operaciones'
+-- Sniper.vigente(item, itemKey, precio, {operacion, ruta}) -> boolean   ver arriba (lo usa SNF.Compra).
+--                                Los hallazgos del modo operaciones llevan además operacion, ruta y tope (cobre).
 -- SNF_COMERCIO_SNIPER(n)         n hallazgos nuevos; con n = 0, algo ha cambiado (estado o lista) y la ventana se
 --                                repinta. Si comercioSniperSonido, suena como mucho una vez por vuelta.
 --
@@ -308,6 +320,82 @@ local function reglaDe(item)
   return r, grupo
 end
 
+---------------------------------------------------------------------------------------------------
+-- Modo (fase 3 de la paridad con TSM). comercioSniperModo: «regla» (el de siempre y el de todo lo guardado sin elegir:
+-- la regla de sniper del grupo, sniperPct) u «operaciones» (las operaciones de Sniper de los grupos, propias o importadas
+-- de TSM, como su Sniper: precio <= «Precio máximo»). En modo operaciones nunca se vuelve al porcentaje: sin operación,
+-- con la operación ignorada aquí, con la fórmula rota o sin valor, el objeto no es hallazgo.
+---------------------------------------------------------------------------------------------------
+
+local function modoAjuste()
+  return SNF.Ajustes.get("comercioSniperModo") == "operaciones" and "operaciones" or "regla"
+end
+
+-- El grupo que manda para la itemKey: el de su clave base «i:<id>» o, sin grupo, el Grupo Base («»), como en TSM. La
+-- búsqueda general no dice qué variante (bonus de TSM) es la fila: si hay variantes guardadas en otro grupo, no se elige
+-- ninguno (nil, «variante»). Las mascotas (jaula con especie) tampoco: su precio va por especie (nil, «mascota»).
+local function rutaOperaciones(k)
+  if (tonumber(k.battlePetSpeciesID) or 0) > 0 then
+    return nil, "mascota"
+  end
+  local base = "i:" .. tostring(k.itemID)
+  local ruta = SNF.Arbol.objeto(base) or ""
+  if SNF.Arbol.varianteEnOtraRuta(base, ruta) then
+    return nil, "variante"
+  end
+  return ruta
+end
+
+local function pctMercado(item, precio)
+  local p = SNF.Precios.de(item)
+  local normal = type(p) == "table" and p.normal
+  if type(normal) == "number" and normal > 0 then
+    return precio / normal * 100
+  end
+  return nil
+end
+
+-- Como Reglas.evaluar, con la operación: {buena, pct, motivo, operacion, ruta, tope}. `ops` guarda por vuelta la
+-- operación de cada grupo (nombre false: ninguna) y su motivo.
+local function evaluarOperacion(item, k, precio, cantidad, ops)
+  if cantidad <= 0 then
+    return {buena = false, motivo = "sin_venta"}
+  end
+  local ruta, porque = rutaOperaciones(k)
+  if not ruta then
+    return {buena = false, motivo = porque}
+  end
+  local o = ops and ops[ruta]
+  if not o then
+    local nombre, motivo = SNF.Operaciones.aplicable(ruta, "sniper")
+    o = {nombre = nombre or false, motivo = motivo}
+    if ops then
+      ops[ruta] = o
+    end
+  end
+  if not o.nombre then
+    return {buena = false, motivo = o.motivo, ruta = ruta}
+  end
+  local tope = SNF.Operaciones.cobre("sniper", o.nombre, "precioMaximo", item)
+  if not tope then
+    return {buena = false, motivo = "sin_valor", ruta = ruta, operacion = o.nombre}
+  end
+  local pct = pctMercado(item, precio)
+  if precio > tope then
+    return {buena = false, pct = pct, motivo = "caro", ruta = ruta, operacion = o.nombre, tope = tope}
+  end
+  return {buena = true, pct = pct, motivo = "ok", ruta = ruta, operacion = o.nombre, tope = tope}
+end
+
+-- El veredicto de la vuelta en su modo.
+local function juzgar(item, k, precio, cantidad)
+  if vuelta.modo == "operaciones" then
+    return evaluarOperacion(item, k, precio, cantidad, vuelta.ops)
+  end
+  local regla = reglaDe(item)
+  return SNF.Reglas.evaluar(item, {precio = precio, cantidad = cantidad}, SNF.Precios.de(item), regla, "sniper")
+end
+
 local function quitarDeLista(cumple)
   local quitados = 0
   for i = #lista, 1, -1 do
@@ -360,35 +448,45 @@ local function leerFilas(filas, desde)
       vuelta.vistos[clave] = true
       local antes = conocidos[clave]
       conocidos[clave] = precio
-      if antes == nil or precio < antes then
-        local cantidad = tonumber(f.totalQuantity) or 0
-        local regla, grupo = reglaDe(item)
-        local ev = SNF.Reglas.evaluar(item, {precio = precio, cantidad = cantidad}, SNF.Precios.de(item), regla, "sniper")
-        if ev.buena and not precioDudoso(item, precio) and anadir({item = item, precio = precio, cantidad = cantidad,
-          pct = ev.pct, hora = hora, clave = clave, itemKey = copiaClave(k), grupo = grupo,
-          rotacionSinConfirmar = ev.rotacionSinConfirmar}) then
-          nuevos = nuevos + 1
-        end
-      elseif precio > antes and clave ~= claveElegida() then
-        -- Alguien ha comprado las más baratas: el hallazgo se vuelve a mirar con la regla al precio nuevo.
-        local h
+      local h
+      local recheck = (antes and precio >= antes) and clave ~= claveElegida()
+        and (precio > antes or vuelta.modo == "operaciones")
+      if recheck then
         for _, otro in ipairs(lista) do
           if otro.clave == clave then
             h = otro
             break
           end
         end
+      end
+      if antes == nil or precio < antes or (recheck and vuelta.modo == "operaciones" and not h) then
+        local cantidad = tonumber(f.totalQuantity) or 0
+        local grupo = vuelta.indice[item] -- también en modo operaciones: sus topes de unidades y oro siguen en la compra
+        local ev = juzgar(item, k, precio, cantidad)
+        if ev.buena and not precioDudoso(item, precio) and anadir({item = item, precio = precio, cantidad = cantidad,
+          pct = ev.pct, hora = hora, clave = clave, itemKey = copiaClave(k), grupo = grupo,
+          rotacionSinConfirmar = ev.rotacionSinConfirmar, operacion = ev.operacion, ruta = ev.ruta, tope = ev.tope}) then
+          nuevos = nuevos + 1
+        end
+      elseif recheck then
+        -- Alguien ha comprado las más baratas: el hallazgo se vuelve a mirar con la regla al precio nuevo. En modo
+        -- operaciones también al mismo precio: la operación del grupo o su fórmula pueden haber cambiado.
         if h then
           local cantidad = tonumber(f.totalQuantity) or 0
-          local regla = reglaDe(item)
-          local ev = SNF.Reglas.evaluar(item, {precio = precio, cantidad = cantidad}, SNF.Precios.de(item), regla, "sniper")
+          local ev = juzgar(item, k, precio, cantidad)
           if ev.buena and not precioDudoso(item, precio) then
+            local igual = h.precio == precio and h.cantidad == cantidad and h.pct == ev.pct and h.operacion == ev.operacion
+              and h.tope == ev.tope
             h.precio, h.cantidad, h.pct, h.hora = precio, cantidad, ev.pct, hora -- en su sitio, sin sonar (F1: con su hora nueva)
             h.rotacionSinConfirmar = ev.rotacionSinConfirmar -- F9p
+            h.operacion, h.ruta, h.tope = ev.operacion, ev.ruta, ev.tope
+            if not igual then
+              cambiados = cambiados + 1
+            end
           else
             quitarDeLista(function(otro) return otro == h end)
+            cambiados = cambiados + 1
           end
-          cambiados = cambiados + 1
         end
       end
     end
@@ -481,7 +579,7 @@ local function enviar(accion)
   local avisarVuelta, antes = false, estado
   if accion == "navegar" then
     numVueltas = numVueltas + 1
-    vuelta = {vistos = {}, cursor = 0, indice = indiceGrupos(), reglas = {}}
+    vuelta = {vistos = {}, cursor = 0, indice = indiceGrupos(), reglas = {}, modo = modoAjuste(), ops = {}}
     avisarVuelta = vistosUltima ~= nil
     vistosUltima = nil
   end
@@ -618,7 +716,8 @@ local function alCambiarCompra(fase, e)
   if elegido then
     -- F12: un hallazgo que resulta ser de otro personaje de la cuenta tampoco se queda en la lista.
     local acabada = fase == "hecho"
-      or (fase == "error" and type(e) == "table" and (e.motivo == "sin_subasta" or e.motivo == "otro_personaje"))
+      or (fase == "error" and type(e) == "table"
+        and (e.motivo == "sin_subasta" or e.motivo == "otro_personaje" or e.motivo == "operacion"))
     if acabada and item == elegido.item then
       local clave = elegido.clave
       elegido = nil
@@ -822,9 +921,27 @@ function Sniper.hallazgos()
   local copia = {}
   for i, h in ipairs(lista) do
     copia[i] = {item = h.item, precio = h.precio, cantidad = h.cantidad, pct = h.pct, hora = h.hora,
-      itemKey = copiaClave(h.itemKey), grupo = h.grupo, rotacionSinConfirmar = h.rotacionSinConfirmar}
+      itemKey = copiaClave(h.itemKey), grupo = h.grupo, rotacionSinConfirmar = h.rotacionSinConfirmar,
+      operacion = h.operacion, ruta = h.ruta, tope = h.tope}
   end
   return copia
+end
+
+function Sniper.modo()
+  return modoAjuste()
+end
+
+-- Lo usa SNF.Compra con las compras de un hallazgo del modo operaciones, al empezar, al llegar la cotización y antes de
+-- cada clic de compra: ¿sigue mandando esa operación para el objeto (mismo grupo, no ignorada aquí) y su «Precio máximo»
+-- de ahora admite `precio`? Lee el árbol, las operaciones y las fuentes de precio de este momento.
+function Sniper.vigente(item, itemKey, precio, op)
+  item, precio = tonumber(item), tonumber(precio)
+  if modoAjuste() ~= "operaciones" or type(op) ~= "table" or not item or not precio or precio <= 0 then
+    return false
+  end
+  local k = type(itemKey) == "table" and itemKey or {itemID = item}
+  local ev = evaluarOperacion(item, {itemID = item, battlePetSpeciesID = k.battlePetSpeciesID}, precio, 1)
+  return ev.buena == true and ev.operacion == op.operacion and ev.ruta == op.ruta
 end
 
 function Sniper.elegir(i)
@@ -839,8 +956,18 @@ function Sniper.elegir(i)
     grupo = false
   end
   local clave, item = h.clave, h.item
+  local sniperOp
+  if h.operacion then
+    -- Modo operaciones: la operación y su fórmula de ahora tienen que admitir aún el precio de la fila. Si no, sale.
+    sniperOp = {operacion = h.operacion, ruta = h.ruta}
+    if not Sniper.vigente(h.item, h.itemKey, h.precio, sniperOp) then
+      quitarDeLista(function(otro) return otro == h end)
+      avisar(0)
+      return false
+    end
+  end
   local ok = compra.elegir({item = h.item, precio = h.precio, cantidad = h.cantidad, itemKey = copiaClave(h.itemKey),
-    grupo = grupo, origen = "sniper"})
+    grupo = grupo, origen = "sniper", sniperOp = sniperOp})
   if ok then
     elegido = {clave = clave, item = item} -- solo si la compra lo ha aceptado: si no, sigue el de antes
   end
@@ -862,6 +989,31 @@ SNF.Eventos.escuchar("SNF_COMERCIO_ABIERTA", function()
     lista, conocidos, elegido = {}, {}, nil
     calmaHasta, jugadorHasta, ultimaMia = nil, nil, false
     enganchar()
+    avisar(0)
+  end)
+end)
+
+-- Otro modo: lo encontrado con el de antes ya no vale. La vuelta en curso sigue con el nuevo y todo se vuelve a mirar.
+SNF.Eventos.escuchar("SNF_AJUSTE_CAMBIADO", function(clave)
+  if clave ~= "comercioSniperModo" or SNF.Sniper ~= Sniper then
+    return
+  end
+  ejecutar(function()
+    local protegida = claveElegida()
+    if protegida then
+      local compra = SNF.Compra.estado()
+      local delSniper = compra and compra.origen == "sniper"
+      local enviada = delSniper and compra.fase == "comprando" and compra.esperando == "compra"
+      if not enviada then
+        if delSniper then SNF.Compra.ceder() end
+        elegido, protegida = nil, nil
+      end
+    end
+    quitarDeLista(function(h) return h.clave ~= protegida end)
+    conocidos = {}
+    if vuelta then
+      vuelta.modo, vuelta.ops = modoAjuste(), {}
+    end
     avisar(0)
   end)
 end)

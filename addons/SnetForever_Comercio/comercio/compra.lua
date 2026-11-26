@@ -409,6 +409,17 @@ local function limiteUnitario(e)
   return e.precioVisto
 end
 
+-- Fase 3 de la paridad con TSM: la compra de un hallazgo del sniper por operaciones solo sigue mientras esa operación
+-- manda para el objeto y su «Precio máximo» de ahora admite el precio de la fila (SNF.Sniper.vigente). Ninguna unidad pasa
+-- de ese precio (limiteUnitario), así que basta con mirarlo con él.
+local function operacionVigente(e)
+  if not e.sniperOp then
+    return true
+  end
+  local S = rawget(SNF, "Sniper")
+  return type(S) == "table" and type(S.vigente) == "function" and S.vigente(e.item, e.clave, limiteUnitario(e), e.sniperOp)
+end
+
 local function limiteUnidades(e)
   if e.shoppingId then
     return min(e.regla.maxUnidades, SNF.GroupShopping.limit(e.shoppingId, e.item, limiteUnitario(e)))
@@ -428,7 +439,7 @@ end
 local function dejarLista(e)
   e.aviso = caro(e)
   e.armada = nil
-  local motivo = impedimento(e.total)
+  local motivo = impedimento(e.total) or (not operacionVigente(e) and "operacion") or nil
   if motivo then
     fallar(e, motivo)
     return
@@ -445,8 +456,8 @@ end
 local function recorrer(e, quiero)
   local regla = e.regla
   local limite = limiteUnitario(e)
-  local units, cap
-  if e.shoppingId then units, cap = SNF.GroupShopping.budget(e.shoppingId, e.item, limite) end
+  local units
+  if e.shoppingId then units = SNF.GroupShopping.budget(e.shoppingId, e.item, limite) end
   quiero = min(quiero, regla.maxUnidades, units or regla.maxUnidades)
   local cantidad, total, porOro = 0, 0, false
   for _, f in ipairs(e.escalones) do
@@ -454,10 +465,6 @@ local function recorrer(e, quiero)
       break
     end
     local n = min(quiero - cantidad, f.n)
-    if cap and f.precio > 1 then
-      n = min(n, floor((cap - (total - cantidad) - 1) / (f.precio - 1)))
-      if n < 1 then break end
-    end
     local caben = floor((regla.maxOro - total) / f.precio)
     if caben < n then
       n, porOro = caben, true
@@ -963,6 +970,11 @@ local MANEJADORES = {
       fallar(e, "regla")
       return
     end
+    if not operacionVigente(e) then
+      C_AuctionHouse.CancelCommoditiesPurchase()
+      fallar(e, "operacion")
+      return
+    end
     if e.fase ~= "confirmar" then
       e.totalAntes = e.total -- lo que se enseñaba al pulsar Comprar
     end
@@ -1114,6 +1126,13 @@ function Compra.elegir(item, vivo, sola)
     if not shoppingId or not maxUnits or maxUnits < 1 or maxUnits ~= floor(maxUnits)
       or not SNF.GroupShopping.allow(shoppingId, item, maxUnits, visto) then return false end
   end
+  local sniperOp
+  if vivo.origen == "sniper" and type(vivo.sniperOp) == "table" then
+    sniperOp = {operacion = vivo.sniperOp.operacion, ruta = vivo.sniperOp.ruta}
+    local S = rawget(SNF, "Sniper")
+    if type(S) ~= "table" or type(S.vigente) ~= "function"
+      or not S.vigente(item, vivo.itemKey, visto, sniperOp) then return false end
+  end
   local previa = actual
   if previa and previa.fase == "comprando" and previa.esperando == "compra" then
     return false -- una compra pedida al servidor: hasta que responda no se elige otra
@@ -1131,6 +1150,7 @@ function Compra.elegir(item, vivo, sola)
     regla = exacta and sinRegla() or reglaDe(item, vivo.grupo),
     origen = vivo.origen,
     shoppingId = shoppingId,
+    sniperOp = sniperOp,
     fase = "buscando",
     sola = sola == true,
     exacta = exacta or nil,
@@ -1290,6 +1310,11 @@ function Compra.pulsar()
     and not SNF.GroupShopping.allow(e.shoppingId, e.item, e.cantidad, limiteUnitario(e)) then
     if e.fase == "confirmar" and e.tipo == "mercancia" then A.CancelCommoditiesPurchase() end
     fallar(e, "regla")
+    return false
+  end
+  if (e.fase == "lista" or e.fase == "confirmar") and not operacionVigente(e) then
+    if e.fase == "confirmar" and e.tipo == "mercancia" then A.CancelCommoditiesPurchase() end
+    fallar(e, "operacion")
     return false
   end
   if e.fase == "lista" then

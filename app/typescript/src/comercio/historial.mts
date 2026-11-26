@@ -17,6 +17,19 @@
 //     el tooltip no lo enseña).
 //   · Tendencia: la media de los valores de las 24 últimas de esas fotos contra la media de TODAS las anteriores que se
 //     guardan (48 si hay las 72; menos si hay menos), en %. null si no hay más de 24 fotos.
+//   · EL HISTÓRICO (fase 2, `historico` del resumen). Es otra serie, no otro nombre de `normal`, que no cambia. Por objeto
+//     y casa se guarda un valor por día UTC: la mediana de los valores de la hora de ese día (cada foto lo rehace; el día
+//     está siempre entero en las 72 filas) y cuántas fotos lo forman. Se guardan los últimos DIAS_HISTORICO (30) días. Un
+//     día cuenta si tiene al menos MIN_MUESTRAS_DIA (3) fotos. El histórico es la mediana de los valores de los días que
+//     cuentan dentro de los 30 días que acaban en el de la última foto de la casa, y va con su cobertura: `dias` (los que
+//     cuentan), `muestras` (las fotos de esos días), `desde` y `hasta` (el inicio, en segundos, del primero y del último).
+//     No se da (valor null) y dice por qué en `razon`:
+//       - 'sin-datos': el objeto no tiene ningún día;
+//       - 'pocos-dias': cuentan menos de MIN_DIAS_HISTORICO (5) días;
+//       - 'vencido': el último día que cuenta tiene más de MAX_DIAS_SIN_DATO (3) días frente al de la última foto.
+//     Todo es de la misma casa: no se mezclan casas ni se inventan datos de la región. No hay más precisión que la del
+//     objeto: la API junta todas las variantes de un id. Un objeto que deja de estar a la venta conserva sus días (sin
+//     resumen, porque no tiene filas) hasta que salen de la ventana; si vuelve, su histórico sigue ahí.
 //   · Lo que sale de la subasta. Entre dos fotos seguidas, una subasta que ya no está pudo venderse, retirarla su dueño
 //     o caducar. La API no dice cuál, pero sí cuánto tiempo le quedaba (corto: menos de 30 min; medio: de 30 min a 2 h;
 //     largo: más de 2 h), y con eso se separa lo que caducó de lo que salió antes de tiempo:
@@ -70,6 +83,7 @@
 //     usan el valor de mercado (mediana de esas 72) y la tendencia (las 24 últimas frente a todas las anteriores que
 //     se guardan); más la cantidad, las subastas, la compra mínima de la última y si es una mercancía (F5). Nada de
 //     más de 168 h.
+//   · días (fase 2): por objeto, hasta 30 [día, valor del día, fotos del día]; unos 17 bytes por día y objeto.
 //   · ventas: por objeto, lo que salió antes de tiempo, lo caducado y las unidades en trozos de 6 h (28 trozos = 7 días,
 //     en un Uint32Array); por casa, cuántos pares de fotos seguidas hubo en cada trozo. Así ocupa lo mismo siempre.
 //   · la última foto de la casa en columnas ordenadas por id (id, objeto, cantidad, tiempo y, F5, el precio por unidad de
@@ -89,6 +103,10 @@
 // romperse. F5 añade igual, sin cambiar de versión, dos columnas opcionales: `ultimaPrecio` (el precio por unidad de la
 // última foto, una por subasta) y `mercancia` (una por objeto, 1 o 0). Un historial sin ellas se lee: su primer par se
 // cuenta como antes (sin P*) y los objetos no saben si son mercancías hasta la foto siguiente. Una app de antes no las mira.
+// La fase 2 añade igual el resumen diario: `diario: 1` en la cabecera y cuatro columnas que van juntas (`diaFilas`, una por
+// objeto; `diaDias`, `diaValores` y `diaMuestras`, una por día). Un historial sin ellas se lee y cada objeto rehace sus días
+// con las filas que trae (las mismas fotos de la misma casa, a lo sumo 7 días): el histórico sale cuando haya 5 días que
+// cuenten. Una app de antes no las mira y olvida los objetos que solo tenían días.
 //
 // La hora (`hora`) son SEGUNDOS desde 1970 (epoch), en todas partes: al añadir fotos, al guardar y en el resumen.
 //
@@ -129,6 +147,12 @@ const TROZO = 6 * HORA;
 const TROZOS = HORAS_GUARDADAS / 6; // 28 trozos de 6 h = 7 días
 const VERSION = 2;
 const MAGIA = 'SNFH';
+// Fase 2 (histórico propio): el resumen diario. Ver «EL HISTÓRICO» en la cabecera.
+const DIA = 24 * HORA;
+export const DIAS_HISTORICO = 30; // la ventana del histórico, en días UTC (también los días que se guardan por objeto)
+export const MIN_MUESTRAS_DIA = 3; // fotos de un día para que ese día cuente
+export const MIN_DIAS_HISTORICO = 5; // días que cuentan para dar el histórico
+export const MAX_DIAS_SIN_DATO = 3; // si el último día que cuenta es más viejo que esto (frente a la última foto), vencido
 
 function vacio() {
   return {
@@ -148,7 +172,93 @@ function vacio() {
 const trozoDe = (hora) => Math.floor(hora / TROZO);
 
 function nuevoObjeto() {
-  return { f: new Float64Array(2 * FOTOS_NORMAL), n: 0, cantidad: 0, subastas: 0, minimo: 0, mercancia: false, v: null };
+  return {
+    f: new Float64Array(2 * FOTOS_NORMAL), n: 0, cantidad: 0, subastas: 0, minimo: 0, mercancia: false, v: null,
+    // el resumen diario (se crea con el primer día): d = [días UTC…, valores del día…], dm = fotos de cada día, nd = cuántos
+    d: null as Float64Array | null, dm: null as Uint8Array | null, nd: 0,
+  };
+}
+
+const diaDe = (hora) => Math.floor(hora / DIA);
+
+// Fase 2: el valor del día `dia` de un objeto es la mediana de los valores de la hora de ese día que hay en sus filas.
+// Las filas guardan las últimas 72 fotos y un día tiene como mucho 29 (una cada 50 min), así que el día de la foto que
+// se acaba de añadir está siempre entero en ellas. Se sobrescribe la entrada de ese día o se añade al final (y la más
+// vieja sale si ya hay DIAS_HISTORICO).
+function apuntarDia(it, dia) {
+  const valores = [];
+  for (let k = 0; k < it.n; k++) if (diaDe(it.f[k]) === dia) valores.push(it.f[FOTOS_NORMAL + k]);
+  if (!valores.length) return;
+  it.d ||= new Float64Array(2 * DIAS_HISTORICO);
+  it.dm ||= new Uint8Array(DIAS_HISTORICO);
+  let k = it.nd - 1;
+  if (k < 0 || it.d[k] !== dia) {
+    if (it.nd === DIAS_HISTORICO) {
+      it.d.copyWithin(0, 1, DIAS_HISTORICO);
+      it.d.copyWithin(DIAS_HISTORICO, DIAS_HISTORICO + 1);
+      it.dm.copyWithin(0, 1);
+      it.nd--;
+    }
+    k = it.nd++;
+  }
+  it.d[k] = dia;
+  it.d[DIAS_HISTORICO + k] = mediana(valores);
+  it.dm[k] = Math.min(255, valores.length);
+}
+
+// Quita los días que ya no están en la ventana (los de `minimo` o antes).
+function podarDias(it, minimo) {
+  let k = 0;
+  while (k < it.nd && it.d[k] <= minimo) k++;
+  if (!k) return;
+  it.d.copyWithin(0, k, DIAS_HISTORICO);
+  it.d.copyWithin(DIAS_HISTORICO, DIAS_HISTORICO + k);
+  it.dm.copyWithin(0, k);
+  it.nd -= k;
+}
+
+// Un historial sin el resumen diario (de antes de la fase 2) lo rehace con las filas que trae, que son de la misma casa
+// y de la misma fórmula: como mucho los 7 días que cubren sus 72 fotos.
+function rehacerDias(it) {
+  it.nd = 0;
+  let ultimo = null;
+  for (let k = 0; k < it.n; k++) {
+    const dia = diaDe(it.f[k]);
+    if (dia !== ultimo) apuntarDia(it, (ultimo = dia));
+  }
+}
+
+// El histórico de un objeto (ver la cabecera): la mediana de los valores diarios de los días que cuentan en la ventana,
+// con su cobertura. Si no se puede dar, valor null y la razón: 'sin-datos', 'pocos-dias' o 'vencido'. desde y hasta son
+// el inicio (segundos) del primer y del último día que cuenta.
+function historicoDe(est, it) {
+  const hoy = diaDe(est.horaUltima);
+  const minimo = hoy - DIAS_HISTORICO;
+  const valores = [];
+  let muestras = 0;
+  let desde = null;
+  let hasta = null;
+  for (let k = 0; k < it.nd; k++) {
+    const dia = it.d[k];
+    if (dia <= minimo || it.dm[k] < MIN_MUESTRAS_DIA) continue;
+    valores.push(it.d[DIAS_HISTORICO + k]);
+    muestras += it.dm[k];
+    desde ??= dia;
+    hasta = dia;
+  }
+  const dias = valores.length;
+  let razon = null;
+  if (!it.nd) razon = 'sin-datos';
+  else if (dias < MIN_DIAS_HISTORICO) razon = 'pocos-dias';
+  else if (hoy - hasta > MAX_DIAS_SIN_DATO) razon = 'vencido';
+  return {
+    valor: razon ? null : mediana(valores),
+    razon,
+    dias,
+    muestras,
+    desde: desde === null ? null : desde * DIA,
+    hasta: hasta === null ? null : hasta * DIA,
+  };
 }
 
 function objeto(est, item) {
@@ -228,6 +338,26 @@ function precioDeLaHora(lista) {
   return { precio: Math.round(suma / uds), minimo: orden[0].precio, cantidad: total, subastas: orden.length };
 }
 
+/**
+ * El valor de la hora de cada objeto de una foto (subastas y mercancías juntas), con la misma regla que el historial:
+ * Map item -> valor en cobre. Lo usa regional.mjs para las casas del resto de la región.
+ */
+export function valoresDeFoto(subastas, mercancias) {
+  const porItem = new Map();
+  for (const s of [...(subastas || []), ...(mercancias || [])]) {
+    const item = Number(s?.item);
+    if (!Number.isInteger(item) || item <= 0) continue;
+    if (!porItem.has(item)) porItem.set(item, []);
+    porItem.get(item).push(s);
+  }
+  const salida = new Map();
+  for (const [item, lista] of porItem) {
+    const p = precioDeLaHora(lista);
+    if (p && Number.isFinite(p.precio) && p.precio > 0) salida.set(item, p.precio);
+  }
+  return salida;
+}
+
 function mediana(nums) {
   const o = Float64Array.from(nums).sort();
   const m = o.length >> 1;
@@ -287,6 +417,7 @@ function calcularResumen(est, it) {
     vendidosDia: typeof vendidosDia;
     mercancia: boolean;
     hora: any;
+    historico: ReturnType<typeof historicoDe>;
     mercanciaSinSaber?: boolean;
   } = {
     // La compra mínima de la última foto en la que estuvo. Si enVenta es false ya no hay ninguno a ese precio: quien
@@ -305,6 +436,8 @@ function calcularResumen(est, it) {
     // desaparece por encima de lo más barato que sigue intacto no cuenta; en los objetos sueltos, sí (ver la cabecera).
     mercancia: it.mercancia === true,
     hora: it.f[n - 1],
+    // Fase 2: el histórico propio (resumen diario de esta casa), separado de `normal` (que no cambia). Ver la cabecera.
+    historico: historicoDe(est, it),
   };
   if (est.sinColumnaMercancia) salida.mercanciaSinSaber = true; // F9p, ronda 2: el campo solo existe mientras dura
   return salida;
@@ -432,7 +565,9 @@ function copiaFoto(f) {
 // Quita las filas de más de 168 h; un objeto sin filas ni ventas de los últimos 7 días se olvida.
 function podar(est, corte) {
   const validas = posicionesValidas(est);
+  const minimoDia = diaDe(est.horaUltima) - DIAS_HISTORICO;
   for (const [item, it] of est.items) {
+    if (it.nd) podarDias(it, minimoDia);
     let k = 0;
     while (k < it.n && it.f[k] <= corte) k++;
     if (k) {
@@ -440,7 +575,7 @@ function podar(est, corte) {
       it.f.copyWithin(FOTOS_NORMAL, FOTOS_NORMAL + k);
       it.n -= k;
     }
-    if (it.n) continue;
+    if (it.n || it.nd) continue; // fase 2: un objeto con días en la ventana se guarda (sin filas no tiene resumen)
     const conVentas = it.v && validas.some((p) => it.v[p * 3] || it.v[p * 3 + 1] || it.v[p * 3 + 2]);
     if (!conVentas) est.items.delete(item);
   }
@@ -500,10 +635,19 @@ function aBinario(est) {
   const mercancia = new Uint8Array(n);
   let total = 0;
   let conV = 0;
+  let totalDias = 0;
   for (const [, it] of lista) {
     total += it.n;
+    totalDias += it.nd;
     if (it.v) conV++;
   }
+  // Fase 2: el resumen diario, en columnas como las filas: cuántos días tiene cada objeto y, seguidos, sus días, valores y
+  // fotos por día.
+  const diaFilas = new Uint8Array(n);
+  const diaDias = new Uint32Array(totalDias);
+  const diaValores = new Float64Array(totalDias);
+  const diaMuestras = new Uint8Array(totalDias);
+  let posDia = 0;
   const horas = new Float64Array(total);
   const precios = new Float64Array(total);
   const conVentas = new Uint32Array(conV);
@@ -520,6 +664,13 @@ function aBinario(est) {
     horas.set(it.f.subarray(0, it.n), pos);
     precios.set(it.f.subarray(FOTOS_NORMAL, FOTOS_NORMAL + it.n), pos);
     pos += it.n;
+    diaFilas[i] = it.nd;
+    if (it.nd) {
+      diaDias.set(it.d.subarray(0, it.nd), posDia);
+      diaValores.set(it.d.subarray(DIAS_HISTORICO, DIAS_HISTORICO + it.nd), posDia);
+      diaMuestras.set(it.dm.subarray(0, it.nd), posDia);
+      posDia += it.nd;
+    }
     if (it.v) {
       conVentas[pv] = i;
       ventas.set(it.v, pv * 3 * TROZOS);
@@ -531,13 +682,14 @@ function aBinario(est) {
   const f = u || vacia;
   const precioUltima = f.precio || new Float64Array(f.ids.length); // leída de un historial de antes de F5: todo 0, sin precio
   return empaquetar(
-    { version: VERSION, horaUltima: est.horaUltima, trozos: est.trozos, pares: est.pares, hayUltima: !!u, tiempos: 1, hueco: est.hueco },
+    { version: VERSION, horaUltima: est.horaUltima, trozos: est.trozos, pares: est.pares, hayUltima: !!u, tiempos: 1, hueco: est.hueco, diario: 1 },
     [
       ['items', items], ['filas', filas], ['cantidad', cantidad], ['subastas', subastas], ['horas', horas],
       ['precios', precios], ['conVentas', conVentas], ['ventas', ventas],
       ['ultimaIds', f.ids], ['ultimaItems', f.items], ['ultimaCant', f.cant], ['ultimaCorta', f.corta],
       ['minimo', minimo], // T1b: opcional al leer (un historial de antes no la trae)
       ['ultimaPrecio', precioUltima], ['mercancia', mercancia], // F5: opcionales al leer, igual
+      ['diaFilas', diaFilas], ['diaDias', diaDias], ['diaValores', diaValores], ['diaMuestras', diaMuestras], // fase 2, igual
     ],
   );
 }
@@ -587,6 +739,18 @@ function comprobarColumnas(meta, c) {
   const k = c.ultimaIds.length;
   if (c.ultimaItems.length !== k || c.ultimaCant.length !== k || c.ultimaCorta.length !== k) throw new Error('última foto descuadrada');
   if (c.ultimaPrecio && c.ultimaPrecio.length !== k) throw new Error('precios de la última foto descuadrados');
+  // Fase 2: el resumen diario va entero o no va (sin él se rehace con las filas).
+  const diario = ['diaFilas', 'diaDias', 'diaValores', 'diaMuestras'].filter((nombre) => c[nombre]).length;
+  if (diario !== 0 && diario !== 4) throw new Error('resumen diario a medias');
+  if (diario) {
+    if (c.diaFilas.length !== n) throw new Error('días descuadrados');
+    let dias = 0;
+    for (const d of c.diaFilas) {
+      if (d > DIAS_HISTORICO) throw new Error('demasiados días');
+      dias += d;
+    }
+    if (c.diaDias.length !== dias || c.diaValores.length !== dias || c.diaMuestras.length !== dias) throw new Error('días descuadrados');
+  }
   if (!Number.isFinite(meta.horaUltima) || meta.trozos?.length !== TROZOS || meta.pares?.length !== TROZOS) throw new Error('cabecera rara');
 }
 
@@ -602,6 +766,7 @@ function deBinario(buf) {
   est.pares = meta.pares;
   const lista = [];
   let pos = 0;
+  let posDia = 0;
   for (let i = 0; i < c.items.length; i++) {
     const it = nuevoObjeto();
     it.n = Math.min(c.filas[i], FOTOS_NORMAL);
@@ -612,6 +777,18 @@ function deBinario(buf) {
     it.f.set(c.horas.subarray(pos, pos + it.n), 0);
     it.f.set(c.precios.subarray(pos, pos + it.n), FOTOS_NORMAL);
     pos += c.filas[i];
+    if (c.diaFilas) {
+      const nd = c.diaFilas[i];
+      if (nd) {
+        it.d = new Float64Array(2 * DIAS_HISTORICO);
+        it.dm = new Uint8Array(DIAS_HISTORICO);
+        it.d.set(c.diaDias.subarray(posDia, posDia + nd), 0);
+        it.d.set(c.diaValores.subarray(posDia, posDia + nd), DIAS_HISTORICO);
+        it.dm.set(c.diaMuestras.subarray(posDia, posDia + nd), 0);
+        it.nd = nd;
+      }
+      posDia += nd;
+    } else rehacerDias(it); // un historial de antes de la fase 2
     est.items.set(c.items[i], it);
     lista.push(it);
   }
@@ -788,6 +965,7 @@ export function crearHistorial({ fs, carpeta, opciones = {}, cuarentena = null, 
       if (!p) continue;
       const it = objeto(est, item);
       anadirFila(it, hora, p.precio);
+      apuntarDia(it, diaDe(hora));
       it.cantidad = p.cantidad;
       it.subastas = p.subastas;
       it.minimo = p.minimo;

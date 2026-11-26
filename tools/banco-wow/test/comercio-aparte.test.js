@@ -21,14 +21,18 @@ const COMERCIO = join(RAIZ, 'addons', 'SnetForever_Comercio');
 
 // Los archivos del addon de comercio, en el orden de su .toc (el mismo que tenían en el del núcleo).
 const ARCHIVOS = [
-  'comercio/comercio.lua', 'comercio/precios.lua', 'comercio/estado.lua', 'comercio/merchant-prices.lua', 'comercio/disenchant-samples.lua', 'comercio/recipe-costs.lua', 'comercio/formulas.lua', 'comercio/arbol.lua', 'comercio/grupos.lua', 'comercio/operaciones.lua', 'comercio/texto-grupos.lua', 'comercio/importar-tsm.lua', 'comercio/reglas.lua', 'comercio/propuesta.lua',
-  'comercio/escaneo.lua', 'comercio/inventario.lua', 'comercio/compra.lua', 'comercio/sniper.lua', 'comercio/busqueda.lua', 'comercio/vender.lua', 'comercio/mis-subastas.lua',
+  'comercio/comercio.lua', 'comercio/precios.lua', 'comercio/estado.lua', 'comercio/merchant-prices.lua', 'comercio/precio-vendedor.lua', 'comercio/disenchant-samples.lua', 'comercio/recipe-costs.lua', 'comercio/formulas.lua', 'comercio/arbol.lua', 'comercio/grupos.lua', 'comercio/operaciones.lua', 'comercio/texto-grupos.lua', 'comercio/importar-tsm-diagnostico.lua', 'comercio/importar-tsm.lua', 'comercio/reglas.lua', 'comercio/propuesta.lua',
+  'comercio/escaneo.lua', 'comercio/inventario.lua', 'comercio/almacen.lua', 'comercio/almacen-mover.lua', 'comercio/vendedor.lua', 'comercio/artesania.lua', 'comercio/correo.lua', 'comercio/compra.lua', 'comercio/sniper.lua', 'comercio/busqueda.lua', 'comercio/vender.lua', 'comercio/mis-subastas.lua',
   'comercio/auction-orders.lua', 'comercio/group-shopping.lua', 'comercio/ledger.lua',
   'ui/tema.lua', 'ui/piezas/botones.lua', 'ui/piezas/campos.lua', 'ui/piezas/contenedores.lua', 'ui/piezas/arbol.lua',
   'ui/piezas/tabla.lua', 'ui/piezas/muestrario.lua', 'ui/comercio_tabla.lua', 'ui/comercio_cantidad.lua', 'ui/subasta/ventana.lua', 'ui/subasta/navegar.lua', 'ui/subasta/resultados.lua', 'ui/subasta/sniper.lua', 'ui/subasta/auction-orders.lua', 'ui/comercio.lua', 'ui/tooltip.lua', // Task 20d
   'ui/principal.lua', 'ui/principal/dashboard.lua', 'ui/principal/contabilidad.lua', 'ui/principal/grupos.lua', // Task 12
   'ui/principal/editor-operacion.lua', 'ui/principal/editor-formula.lua', 'ui/principal/operaciones.lua', // Task 21 y Task 22 (el editor va antes: la página lo usa al crearse)
   'ui/principal/ajustes.lua', // Task 23 (el editor de fórmulas ⧉ va detrás del de operaciones, porque cambia su gancho)
+  'ui/almacen.lua', // Fase 4 de la paridad con TSM: la vista previa de Almacén
+  'ui/vendedor.lua', // Fase 4 de la paridad con TSM: la vista previa de Vendedor
+  'ui/artesania.lua', // Fase 4 de la paridad con TSM: la vista previa de Artesanía
+  'ui/correo.lua', // Fase 4 de la paridad con TSM: la vista previa de Correo
 ];
 // Las tablas que crea el addon de comercio en SnetForever.
 const MODULOS_COMERCIO = ['Comercio', 'Precios', 'EstadoComercio', 'MerchantPrices', 'Arbol', 'Grupos', 'Operaciones', 'TextoGrupos', 'ImportarTSM', 'Reglas', 'Propuesta', 'Escaneo', 'Compra', 'Sniper', 'Busqueda', 'Vender', 'MisSubastas', 'AuctionOrders', 'GroupShopping', 'Contabilidad', 'Tema',

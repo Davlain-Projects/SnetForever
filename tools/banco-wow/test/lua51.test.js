@@ -204,3 +204,62 @@ test('F3-10 ronda 1: la excepción pide límite de palabra a la izquierda (XSecu
   }
   assert.deepEqual(comprobarLua51(enLinea3('x = "a SecureActionButtonTemplate"'), OBJETIVOS), []);
 });
+
+// Excepción aprobada por Alain (26-nov, «Sí, un movimiento por clic»): SOLO comercio/almacen-mover.lua puede llamar a
+// C_Container.PickupContainerItem y C_Container.SplitContainerItem. Nada más se abre, ni ahí ni en otro archivo.
+const MOVER = 'addons/SnetForever_Comercio/comercio/almacen-mover.lua';
+const COGER = ['C_Container.PickupContainerItem(0, 1)', 'C_Container.SplitContainerItem(0, 1, 2)',
+  'C_Container . PickupContainerItem(b, h)', 'local f = C_Container.SplitContainerItem'];
+
+test('Almacén: C_Container.PickupContainerItem y SplitContainerItem se aceptan en comercio/almacen-mover.lua', () => {
+  for (const archivo of [MOVER, 'comercio/almacen-mover.lua', MOVER.replace(/\//g, '\\')]) {
+    for (const linea of COGER) {
+      assert.deepEqual(comprobarLua51(enLinea3(linea), archivo), [], `${archivo}: ${linea}`);
+    }
+  }
+});
+
+test('Almacén: las mismas llamadas siguen prohibidas en cualquier otro archivo', () => {
+  for (const archivo of ['p.lua', 'addons/SnetForever_Comercio/comercio/almacen.lua', 'addons/SnetForever_Comercio/ui/almacen.lua',
+    'addons/SnetForever/comercio/almacen-mover.lua', 'addons/SnetForever_Comercio/comercio/almacen-mover2.lua',
+    'addons/SnetForever_Comercio/ui/almacen-mover.lua', 'comercio/otro-almacen-mover.lua', 'almacen-mover.lua']) {
+    for (const linea of COGER) {
+      const r = comprobarLua51(enLinea3(linea), archivo);
+      assert.equal(r.length, 1, `${archivo}: ${linea}: ${JSON.stringify(r)}`);
+      assert.equal(r[0].linea, 3);
+      assert.match(r[0].motivo, /§4: C_Container\.(?:Pickup|Split)ContainerItem/);
+    }
+  }
+});
+
+test('Almacén: en almacen-mover.lua siguen prohibidas las globales, _G, UseContainerItem y las demás APIs de objetos', () => {
+  for (const linea of ['PickupContainerItem(0, 1)', 'SplitContainerItem(0, 1, 2)', '_G.PickupContainerItem(0, 1)',
+    '_G["SplitContainerItem"](0, 1, 2)', 'C_Container.UseContainerItem(0, 1)', 'UseContainerItem(0, 1)',
+    'PickupInventoryItem(16)', 'UseInventoryItem(16)', 'EquipItemByName("x")', 'C_Item.EquipItemByName("x")',
+    'AutoEquipCursorItem()', 'DeleteCursorItem()', 'SellCursorItem()', 'SendChatMessage("x")', 'TargetUnit("x")',
+    'local b = CreateFrame("Button", nil, p, "SecureActionButtonTemplate")', 'StaticPopup_Show("X")', 'a = b // c']) {
+    const r = comprobarLua51(enLinea3(linea), MOVER);
+    assert.equal(r.length, 1, `${linea}: ${JSON.stringify(r)}`);
+  }
+});
+
+test('Almacén: la excepción no tapa una segunda llamada prohibida en la misma línea', () => {
+  const r = comprobarLua51(enLinea3('C_Container.PickupContainerItem(0, 1); C_Container.UseContainerItem(0, 1)'), MOVER);
+  assert.equal(r.length, 1, JSON.stringify(r));
+  assert.match(r[0].motivo, /UseContainerItem/);
+});
+
+test('Almacén: las referencias indirectas quedan fuera de la excepción', () => {
+  for (const archivo of [MOVER, 'otro.lua']) {
+    for (const linea of [
+      'local f = rawget(C_Container, "PickupContainerItem")',
+      "local f = C_Container['SplitContainerItem']",
+      'local f = api.PickupContainerItem',
+      'local f = _G. C_Container.SplitContainerItem',
+    ]) {
+      const r = comprobarLua51(enLinea3(linea), archivo);
+      assert.equal(r.length, 1, `${archivo}: ${linea}: ${JSON.stringify(r)}`);
+      assert.match(r[0].motivo, /§4: .*ContainerItem/);
+    }
+  }
+});

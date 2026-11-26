@@ -60,6 +60,54 @@ The main Trade window and Auction House keep independent width and height contro
 
 *Simulator rendering with sample data.* The result displays the applicable operation and price limit next to the recommended quantity. A player can see why an offer is above the limit before opening the quantity and confirmation controls. [Auction workflows](../comercio/auction-workflows.md)
 
+### Warehousing preview and one move per click
+
+![Rendering of the Warehousing window with the deposit direction selected, one row chosen, the line naming its next move and the Move one stack button](images/warehouse-preview.png)
+
+*Interface rendering with sample data, from the theme colors, bundled fonts and the existing table control.* `/snet c almacen` opens a separate window, so the main Trade window keeps its five tabs. The player chooses a direction and a group. Each row names the group and its Warehousing operations, the source quantity, what would move, the target total afterwards and, when nothing moves, why. Uncertain rows show a question mark instead of zero. After Alain approved one move per click on 26 November 2026, the player can choose one row. The line under the status names the next move, with the quantity and the source and target bag and slot. **Move one stack** moves only that stack and stays off until the game confirms it. The button sits apart from Refresh and Close, on the left, so a click meant for those never moves an item. When the client lacks the functions or blocks them, the window shows the read-only text and the button stays off. [Warehousing](../comercio/almacen.md)
+
+### Vendoring preview
+
+![Simulator rendering of the read-only Vendoring window on the sell tab, with rows that would sell, rows kept back and rows set aside or uncertain with their reason](images/vendor-preview.png)
+
+*Simulator rendering with sample data.* The texts and colors come from the window open in the addon simulator, drawn with the theme colors and bundled fonts. `/snet c vendedor` opens a separate window next to the merchant, so the main Trade window keeps its tabs. It reuses the Warehousing layout, the tabs, the group selector and the table control. The sell tab shows the units you have, what would be sold, what you would keep and the merchant's price. The restock tab shows the restock target, the merchant's stock, what would be bought and the cost. Uncertain rows show a question mark in red instead of zero. The window has no sell or buy button and closes with the merchant. [Vendoring](../comercio/vendedor.md)
+
+![Simulator rendering of the read-only Vendoring window on the restock tab](images/vendor-restock-preview.png)
+
+### Crafting restock preview
+
+![Simulator rendering of the read-only Crafting window on the What to craft tab, with a row that would be crafted, rows that are not and an uncertain row with its reason](images/crafting-preview.png)
+
+*Simulator rendering with sample data.* The texts and colors come from the window open in the addon simulator, drawn with the theme colors and bundled fonts. `/snet c artesania` opens a separate window, so the main Trade window keeps its tabs, and it works without a merchant, bank or profession window open. It reuses the Vendoring layout, the tabs, the group selector and the table control. **What to craft** shows the restock range, the crafts times the units per craft, and cost, value and profit per unit, so a player can see why an item is not queued. Crafts and units carry `≤` when stock the addon cannot see could lower them, and the status line says so instead of treating unseen stock as zero. **Materials** adds up the materials and the cost of what is missing from the bags. Uncertain rows show a question mark in red. The window has no craft or buy button. [Crafting](../comercio/artesania.md)
+
+![Simulator rendering of the read-only Crafting window on the Materials tab](images/crafting-materials-preview.png)
+
+### Mailing send preview
+
+![Simulator rendering of the read-only Mailing window on the What to send tab, with rows that would be sent, a limit, an approximate row, a recipient that cannot be verified and rows that are not sent with their reasons](images/mailing-preview.png)
+
+*Simulator rendering with sample data.* The texts, values and colors come from the window open in the addon simulator, drawn with the theme colors and bundled fonts. `/snet c correo` opens a separate window with the Crafting layout, the tabs, the group selector and the table control, and it works without the mailbox open. **What to send** has one row per item and operation, because TSM shares the free units between operations in order: each row shows the units still free, the keep quantity, what a restocked recipient already has and what would be sent. `≤` marks a limit that unseen stock of the recipient can only lower, and `≈` marks a quantity that depends on such a limit in an earlier operation. A recipient that is not one of the player's characters shows as *cannot be verified*, so another player's name never appears. **By recipient** adds up what each character would receive. The window has no send button and never writes in the mailbox form. [Mailing](../comercio/correo.md)
+
+![Simulator rendering of the read-only Mailing window on the By recipient tab](images/mailing-recipients-preview.png)
+
+### Sniper mode
+
+![Rendering of the auction settings cog with the Sniper operations checkbox selected](images/sniper-operations-mode.png)
+
+*Interface rendering from the simulator's frame geometry, labels, theme colors and bundled fonts. The dashed outline marks the new control and is absent from the game.* The settings cog that already holds the Sniper sound gains one checkbox. When selected, the Sniper uses each group's Sniper operation in place of the sniper percentage. The setting stays with the other Sniper preferences and needs no permanent control in the Sniper tab. Saved settings stay in the existing mode until the player selects the checkbox. [Auction workflows](../comercio/auction-workflows.md#sniping-with-group-operations)
+
+### TSM import price diagnosis
+
+![Rendering of the TSM import preview with Replace selected and a missing price source highlighted](images/tsm-import-diagnostic.png)
+
+*Interface rendering with sample data.* The existing import box presents the price diagnosis for the selected mode above the migration details. The confirmation control is available once the preview matches that mode so the player can review which prices will change before applying the import. [Auction workflows](../comercio/auction-workflows.md)
+
+### Auction price history
+
+![Illustration of a historical auction price and its sample coverage](images/auction-historical-tooltip.png)
+
+*Illustration using the simulator fixture.* The optional tooltip row puts the historical price beside its coverage. When the current house has too little history, the row explains why the value is unavailable. [Local market history](../comercio/auction-workflows.md#local-market-history)
+
 ### Typography
 
 Alegreya SC Bold gives quest and section titles a carved small-cap shape. Barlow Semi Condensed Medium keeps objectives and settings readable in narrow panels. Barlow Semi Condensed SemiBold distinguishes buttons, prices and counts. The core addon bundles the static fonts so the guide can load them independently of the commerce module.

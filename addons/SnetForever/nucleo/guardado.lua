@@ -163,6 +163,10 @@ Ajustes.DEFECTO = {
   -- Sniper de la ventana de comercio).
   ["comercioSniperCada"] = 5,
   ["comercioSniperSonido"] = true,
+  -- Fase 3 de la paridad con TSM: qué decide un hallazgo del sniper. «regla» (la regla de sniper del grupo, el de siempre y
+  -- el de lo guardado sin elegir) u «operaciones» (las operaciones de Sniper de los grupos, como TSM). Casilla en el
+  -- engranaje de la barra de abajo.
+  ["comercioSniperModo"] = "regla",
   -- Comercio, ventana de compra (tarea 6): tras comprar, la ventana elige sola la fila buena siguiente (casilla en el
   -- engranaje de la barra de abajo). Con false se queda en «hecho» hasta que el jugador pulse otra fila.
   ["comercioSiguienteSola"] = true,
@@ -225,6 +229,7 @@ Ajustes.OPCIONES = {
   ["ventana.tema"] = {"forge", "neutro"},
   ["principal.pestana"] = {"dashboard", "contabilidad", "grupos", "operaciones", "ajustes"},
   ["comercioVista"] = {"snet", "blizzard"},
+  ["comercioSniperModo"] = {"regla", "operaciones"},
   ["objetivos.marca"] = {0, 1, 2, 3, 4, 5, 6, 7, 8},
 }
 

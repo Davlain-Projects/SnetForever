@@ -1030,7 +1030,6 @@ test('lo que no tenemos sigue sin salir: ni región, ni otros reinos, ni valor r
 const TT = 'SnetForever.TooltipComercio';
 // Task 39: los motivos y los nombres de Fabricación se acortan para caber en la columna de Ajustes › Tooltip.
 const LLEGA_CONTA = 'llega con Contabilidad';
-const LLEGA_HIST = 'llega más adelante';
 const LLEGA_VENDER = 'llega con Vender';
 const LLEGA_FAB = 'llega con Fabricación';
 // [clave, texto, [[clave, texto, defecto, excluye, llega]…]], con los textos ya traducidos (es).
@@ -1053,14 +1052,14 @@ const GRUPOS = [
     ['inventario', 'Inventario completo', true, 'inventarioSimple', null], ['inventarioSimple', 'Inventario simple', false, 'inventario', null],
   ]],
   ['contabilidad', 'Contabilidad', [
-    ['contaCompras', 'Compras', false, null, LLEGA_CONTA], ['contaVentas', 'Ventas', false, null, LLEGA_CONTA],
+    ['contaCompras', 'Compras', false, null, null], ['contaVentas', 'Ventas', false, null, LLEGA_CONTA],
     ['contaRitmo', 'Ritmo de venta', false, null, LLEGA_CONTA], ['contaCaducadas', 'Caducadas', false, null, LLEGA_CONTA],
     ['contaCanceladas', 'Canceladas', false, null, LLEGA_CONTA],
   ]],
   ['bdSubasta', 'Precios de la subasta', [
     ['aLaVenta', 'A la venta', true, null, null], ['minima', 'Compra mínima', true, null, null],
     ['mercadoSolo', 'Valor de mercado', false, 'mercado', null], ['mercado', 'Valor de mercado y tendencia', true, 'mercadoSolo', null],
-    ['historico', 'Precio histórico', false, null, LLEGA_HIST], ['salen', SALEN, true, null, null], ['parte', PARTE, true, null, null],
+    ['historico', 'Precio histórico', false, null, null], ['salen', SALEN, true, null, null], ['parte', PARTE, true, null, null],
   ]],
   ['opSubasta', 'Subasta (operación)', [
     ['cantidadPublicar', 'Cantidad que se publica', false, null, LLEGA_VENDER],
@@ -1337,7 +1336,7 @@ test('las líneas «llega con…» no se pueden encender (ponerLinea da false) y
   const m = maquina({ escaneo: false });
   m.lua(GRUPO_LINO);
   const llegan = GRUPOS.flatMap(([, , ls]) => ls.filter((l) => l[4]));
-  assert.equal(llegan.length, 15);
+  assert.equal(llegan.length, 13); // fase 2: el precio histórico y el coste medio de compra ya tienen datos
   for (const [clave] of llegan) {
     assert.equal(m.lua(`${TT}.ponerLinea(${aLua(clave)}, true)`), false, clave);
     assert.equal(m.lua(`${TT}.linea(${aLua(clave)})`), false, clave);

@@ -13,6 +13,7 @@ comercio\comercio.lua
 comercio\precios.lua
 comercio\estado.lua
 comercio\merchant-prices.lua
+comercio\precio-vendedor.lua
 comercio\disenchant-samples.lua
 comercio\recipe-costs.lua
 comercio\formulas.lua
@@ -20,11 +21,17 @@ comercio\arbol.lua
 comercio\grupos.lua
 comercio\operaciones.lua
 comercio\texto-grupos.lua
+comercio\importar-tsm-diagnostico.lua
 comercio\importar-tsm.lua
 comercio\reglas.lua
 comercio\propuesta.lua
 comercio\escaneo.lua
 comercio\inventario.lua
+comercio\almacen.lua
+comercio\almacen-mover.lua
+comercio\vendedor.lua
+comercio\artesania.lua
+comercio\correo.lua
 comercio\compra.lua
 comercio\sniper.lua
 comercio\busqueda.lua
@@ -57,3 +64,7 @@ ui\principal\editor-operacion.lua
 ui\principal\editor-formula.lua
 ui\principal\operaciones.lua
 ui\principal\ajustes.lua
+ui\almacen.lua
+ui\vendedor.lua
+ui\artesania.lua
+ui\correo.lua

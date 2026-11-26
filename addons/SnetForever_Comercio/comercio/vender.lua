@@ -38,15 +38,10 @@ function Vender.applicableOperations(item)
   local route = SNF.Arbol.objeto("i:" .. item) or ""
   local operations = SNF.Operaciones.deGrupo(route, TYPE)
   local matches = {}
-  local identity = SNF.Precios.identidad()
-  local faction = SNF.Precios.faccionActual()
-  local house = identity.reino and faction and (identity.reino .. "|" .. faction) or nil
-  local name = SNF.Personaje.clave()
-  local character = identity.reino and name and (name .. "-" .. identity.reino) or nil
   local ignored = false
   for _, operation in ipairs(operations) do
     if SNF.Operaciones.existe(TYPE, operation) then
-      if SNF.Operaciones.ignorada(TYPE, operation, character, house) then
+      if SNF.Operaciones.ignoradaAqui(TYPE, operation) then
         ignored = true
       else
         matches[#matches + 1] = operation
@@ -111,13 +106,16 @@ function Vender.rulesUnchanged(item, operation, mode, previous, quantities)
   return true
 end
 
-local function rounded(price, minimum)
-  if not price then return nil end
+local function priceStep()
   local auction = rawget(_G, "C_AuctionHouse")
   local supportsCopper = auction and rawget(auction, "SupportsCopperValues")
-  if supportsCopper and supportsCopper() == false then
-    price = floor(price / 100) * 100
-  end
+  return supportsCopper and supportsCopper() == false and 100 or 1
+end
+
+local function rounded(price, minimum)
+  if not price then return nil end
+  local step = priceStep()
+  price = floor(price / step) * step
   if price > 0 and price >= minimum then
     return price
   end
@@ -193,8 +191,14 @@ function Vender.decidir(item, name, rows, available, published, commodity)
   local stack = info and info.apilado or 1
   local batch = commodity and min(units, max(1, floor(stack)) * 40) or 1
   local duration, hours = Vender.duracion(rules.duration)
-  local bid = not commodity and floor(price * (rules.bidPercent or 100) / 100) or nil
-  if bid and (bid < 1 or bid >= price) then bid = nil end
+  local bid, percent = nil, rules.bidPercent or 100
+  if not commodity and percent > 0 and percent < 100 then
+    local step = priceStep()
+    local minimum = math.ceil(prices.minimo / step) * step
+    local wanted = floor(price * percent / (100 * step)) * step
+    local starting = max(wanted, minimum)
+    if starting > 0 and starting < price then bid = starting end
+  end
   local alerts, confirm = {}, nil
   if quantities.caducadas > 0 and not ledger then alerts[#alerts + 1] = "caducadas_sin_datos" end
   local vendor, market = rules.vendor, rules.market
@@ -262,11 +266,16 @@ function Vender.decidirCancelar(auction, name, rows)
   end
   result.masBarata = cheapest(competitors, name, prices, false)
   result.nuevo = decidePrice(name, remaining, prices)
-  if field(name, "cancelarRebajadas") and result.masBarata and result.masBarata < result.mio then
-    result.cancelar = result.nuevo ~= nil
-    result.motivo = result.cancelar and "rebajada" or "no_volveria"
+  -- Cancelling an undercut listing forfeits its deposit. It only pays off when
+  -- the repost is cheaper. A competitor below the minimum can resolve to the
+  -- same or a higher reset price, which only the repost-higher rule may cancel.
+  local undercut = field(name, "cancelarRebajadas") and result.masBarata and result.masBarata < result.mio
+  if undercut and result.nuevo and result.nuevo < result.mio then
+    result.cancelar, result.motivo = true, "rebajada"
   elseif field(name, "cancelarParaSubir") and result.nuevo and result.nuevo > result.mio + prices.umbral then
     result.cancelar, result.motivo = true, "subir"
+  elseif undercut then
+    result.motivo = result.nuevo and "bien" or "no_volveria"
   end
   return result
 end

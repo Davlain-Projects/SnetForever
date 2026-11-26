@@ -197,7 +197,7 @@ test('a grouped noncommodity result buys exactly one listing and never substitut
   } finally { m.cerrar(); }
 });
 
-test('the total must prove every commodity unit fits the cap, even when the average is cheap', () => {
+test('lowering the cap below a listed tier before confirming withdraws those units', () => {
   const m = nuevaMaquina();
   try {
     setup(m, '{mercancias={[2589]={{quantity=1,unitPrice=10},{quantity=1,unitPrice=30}}}}');
@@ -208,16 +208,14 @@ test('the total must prove every commodity unit fits the cap, even when the aver
     assert.equal(clickPurchase(m), true);
     m.avanzar(0.6);
     assert.equal(m.lua(`${BUY}.estado().fase`), 'confirmar');
-    m.lua('assert(SnetForever.Operaciones.poner("compras", "Restock", "precioMaximo", "30c"))');
+    assert.equal(m.lua(`${SHOP}.quoteWithinCap(${two.id}, 2589, 2, 40, 30)`), true, 'both tiers are under the cap');
+    m.lua('assert(SnetForever.Operaciones.poner("compras", "Restock", "precioMaximo", "20c"))');
     assert.equal(m.lua(`${SHOP}.quoteWithinCap(${two.id}, 2589, 2, 40, 30)`), false);
-    assert.equal(m.lua(`${SHOP}.quoteWithinCap(${two.id}, 2589, 1, 30, 30)`), true);
-    assert.equal(m.lua(`${BUY}.maxCantidad()`), 1);
+    assert.equal(m.lua(`${BUY}.maxCantidad()`), 0);
     assert.equal(clickPurchase(m), false);
     assert.equal(m.llamadas('C_AuctionHouse.ConfirmCommoditiesPurchase').length, 0);
     const bounded = scan(m).find(r => !r.overLimit);
-    assert.equal(bounded.available, 2);
-    assert.equal(bounded.quantity, 1, 'the scan still offers a provably affordable quantity');
-    assert.equal(bounded.price, 10);
+    assert.deepEqual([bounded.available, bounded.quantity, bounded.price], [1, 1, 10]);
     sinErrores(m);
   } finally { m.cerrar(); }
 });
@@ -237,6 +235,67 @@ test('an unavailable bag count suppresses restock and the scan does not evaluate
     assert.equal(m.lua(`${SHOP}.summary().status`), 'complete');
     assert.equal(m.lua(`${SHOP}.summary().count`), 0);
     assert.equal(m.lua(`${SHOP}.summary().skipped`), 2);
+    sinErrores(m);
+  } finally { m.cerrar(); }
+});
+
+test('a commodity restock near the cap offers the whole restock in one purchase, priced from the listed tiers', () => {
+  const m = nuevaMaquina();
+  try {
+    // Restock 8 (2 in bags) with an 800c cap: take 2 at 650c and 4 at 700c. Skip the 900c tier.
+    setup(m, '{mercancias={[2589]={{quantity=2,unitPrice=650},{quantity=30,unitPrice=700},{quantity=5,unitPrice=900}}}}');
+    const row = scan(m).find(r => !r.overLimit);
+    assert.deepEqual([row.quantity, row.price, row.total, row.available], [6, 700, 4100, 32]);
+    assert.equal(m.lua(`${SHOP}.prepare(${row.id})`), true);
+    m.avanzar(0.5);
+    assert.equal(m.lua(`${BUY}.maxCantidad()`), 6);
+    assert.equal(m.lua(`${BUY}.estado().cantidad`), 6);
+    assert.equal(clickPurchase(m), true);
+    m.avanzar(0.6);
+    assert.equal(m.lua(`${BUY}.estado().fase`), 'confirmar');
+    assert.equal(m.lua(`${BUY}.estado().total`), 4100);
+    assert.equal(clickPurchase(m), true);
+    m.avanzar(0.6);
+    assert.deepEqual(m.llamadas('C_AuctionHouse.ConfirmCommoditiesPurchase'), [[2589, 6]]);
+    sinErrores(m);
+  } finally { m.cerrar(); }
+});
+
+test('a commodity quote that differs from the listed tiers is never confirmed, even when its average is under the cap', () => {
+  const m = nuevaMaquina();
+  try {
+    setup(m, '{foto=true,mercancias={[2589]={{quantity=30,unitPrice=700}}}}');
+    const row = scan(m).find(r => !r.overLimit);
+    assert.equal(m.lua(`${SHOP}.prepare(${row.id})`), true);
+    m.avanzar(0.5);
+    // The server changes while the client keeps its last search: it would sell 5 at 1c and 1 at 1000c (above the cap).
+    // That quote, 1005c, is far below the 4200c listed, and its average is under the cap.
+    m.lua('BANCO.ponerSubasta({mercancias={[2589]={{quantity=5,unitPrice=1},{quantity=30,unitPrice=1000}}}})');
+    assert.equal(clickPurchase(m), true);
+    m.avanzar(0.6);
+    assert.deepEqual(m.llamadas('C_AuctionHouse.StartCommoditiesPurchase'), [[2589, 6]]);
+    assert.deepEqual([m.lua(`${BUY}.estado().fase`), m.lua(`${BUY}.estado().motivo`)], ['error', 'cambio_precio']);
+    assert.equal(m.llamadas('C_AuctionHouse.ConfirmCommoditiesPurchase').length, 0);
+    assert.equal(m.lua(`${SHOP}.quoteWithinCap(${row.id}, 2589, 6, 6 * 800 + 1, 700)`), false, 'the average must stay under the cap');
+    assert.equal(m.lua(`${SHOP}.quoteWithinCap(${row.id}, 2589, 7, 4900, 700)`), false, 'never more than the restock');
+    sinErrores(m);
+  } finally { m.cerrar(); }
+});
+
+test('a maximum price or restock formula without a value proposes nothing for that item', () => {
+  const m = nuevaMaquina();
+  try {
+    setup(m);
+    // No merchant has been opened, so vendorbuy has no value.
+    m.lua('assert(SnetForever.Operaciones.poner("compras", "Restock", "precioMaximo", "vendorbuy"))');
+    scan(m);
+    assert.deepEqual([m.lua(`${SHOP}.state().count`), m.lua(`${SHOP}.state().skipped`)], [0, 2]);
+    m.lua(`local S = SnetForever.Operaciones
+      assert(S.poner("compras", "Restock", "precioMaximo", "800c"))
+      assert(S.poner("compras", "Restock", "reponerCantidad", "vendorbuy"))`);
+    scan(m);
+    assert.deepEqual([m.lua(`${SHOP}.state().count`), m.lua(`${SHOP}.state().skipped`)], [0, 2]);
+    assert.equal(m.llamadas('C_AuctionHouse.StartCommoditiesPurchase').length, 0);
     sinErrores(m);
   } finally { m.cerrar(); }
 });

@@ -614,6 +614,13 @@ B.eventosConocidos = {
   PLAYER_XP_UPDATE = true,      -- (unitTarget)
   PLAYER_MONEY = true,          -- ()
   BAG_UPDATE_DELAYED = true,    -- ()
+  -- Almacén, movimiento por clic (wow-ui-source, rama forever, ContainerDocumentation.lua y CursorDocumentation.lua): un
+  -- hueco se bloquea o se desbloquea, cambia una bolsa y cambia el cursor. ADDON_ACTION_FORBIDDEN (addonName, functionName):
+  -- el juego prohíbe a un addon una función.
+  BAG_UPDATE = true,            -- (bagID)
+  ITEM_LOCK_CHANGED = true,     -- (bagOrSlotIndex, slotIndex)
+  CURSOR_CHANGED = true,        -- (isDefault, newCursorType, oldCursorType, oldCursorVirtualID)
+  ADDON_ACTION_FORBIDDEN = true, -- (addonName, functionName)
   -- Fase 4, tarea 7: el inventario apunta el banco al abrirlo y al cerrarlo (wowpedia: BANKFRAME_OPENED y BANKFRAME_CLOSED, sin argumentos).
   BANKFRAME_OPENED = true,      -- ()
   -- 13-nov: la IA apunta cuándo se abrió la casa de subastas (ia/subasta.lua; wowpedia: sin argumentos).
@@ -3542,7 +3549,7 @@ do
     ensenarObjeto(self, id)
   end
 
-  -- B.ponerBolsa(bolsa, hueco, datos): datos = {id, n, calidad?, ligado?, enlace?}, o nil para vaciar el hueco. La bolsa se
+  -- B.ponerBolsa(bolsa, hueco, datos): datos = {id, n, calidad?, ligado?, enlace?, sinValor?}, o nil para vaciar el hueco. La bolsa se
   -- crea con los huecos por defecto (mochila 16, banco 28, las demás 12) y B.ponerHuecos(bolsa, n) los cambia. T1a: enlace es
   -- el hyperlink de ese hueco tal cual (un objeto con sufijo, «|cnIQ<n>:» de WoW Forever…); sin él, el de siempre por su id.
   function B.ponerBolsa(b, hueco, datos)
@@ -3556,7 +3563,7 @@ do
       t.objetos[hueco] = nil
     else
       t.objetos[hueco] = {id = datos.id, n = datos.n or 1, calidad = datos.calidad or 1, ligado = datos.ligado == true,
-        enlace = datos.enlace}
+        enlace = datos.enlace, sinValor = datos.sinValor == true}
     end
   end
 
@@ -3598,7 +3605,7 @@ do
     if not t then return 0, 0 end
     local usados = 0
     for _ in pairs(t.objetos) do usados = usados + 1 end
-    return t.huecos - usados, 0
+    return t.huecos - usados, t.familia or 0
   end
   -- wowpedia: C_Container.GetContainerItemInfo(bagIndex, slotIndex): ContainerItemInfo {iconFileID, stackCount, isLocked,
   -- quality, isReadable, hasLoot, hasNoValue, itemID, isBound, hyperlink…} o nil si el hueco está vacío.
@@ -3615,13 +3622,138 @@ do
     local t = I().bolsas[b]
     local o = t and t.objetos[h]
     if not o then return nil end
-    return {iconFileID = 134400, stackCount = o.n, isLocked = false, quality = o.calidad, isReadable = false,
-      hasLoot = false, hasNoValue = false, itemID = o.id, isBound = o.ligado, hyperlink = o.enlace or enlaceHueco(o)}
+    return {iconFileID = 134400, stackCount = o.n, isLocked = o.bloqueado == true, quality = o.calidad, isReadable = false,
+      hasLoot = false, hasNoValue = o.sinValor == true, itemID = o.id, isBound = o.ligado, hyperlink = o.enlace or enlaceHueco(o)}
   end
 
   rawset(C_Container, "GetContainerNumSlots", function(b) return numHuecos("C_Container.GetContainerNumSlots", b) end)
   rawset(C_Container, "GetContainerNumFreeSlots", function(b) return numLibres("C_Container.GetContainerNumFreeSlots", b) end)
   rawset(C_Container, "GetContainerItemInfo", function(b, h) return infoHueco("C_Container.GetContainerItemInfo", b, h) end)
+  -----------------------------------------------------------------------------------------------------------------
+  -- Almacén, un movimiento por clic: el cursor y C_Container.PickupContainerItem / SplitContainerItem (wow-ui-source,
+  -- rama forever 1.60.1.71139, ContainerDocumentation.lua: las dos sin marca de restricción, SecretArguments
+  -- «AllowedWhenUntainted»). Lo que hace el cliente de verdad está sin medir en la partida; el banco imita esto:
+  --   * coger un hueco desbloqueado pone su pila (o, al partir, `amount` unidades) en el cursor y BLOQUEA el hueco;
+  --   * con un objeto en el cursor, pulsar un hueco vacío lo suelta: el cursor queda vacío enseguida, el origen sigue
+  --     bloqueado y el destino vacío hasta que el «servidor» responde B.contenedores.demora segundos después
+  --     (ITEM_LOCK_CHANGED, BAG_UPDATE, BAG_UPDATE_DELAYED); pulsar el hueco de donde salió lo devuelve;
+  --   * pulsar un hueco ocupado con el cursor lleno no hace nada (el cursor sigue lleno).
+  -- B.contenedores (lo cambian las pruebas):
+  --   demora       segundos hasta que el servidor responde (0,2 por defecto)
+  --   rechazar     el servidor rechaza: vuelve todo como estaba (el origen se desbloquea)
+  --   noSoltar     el cliente no deja soltar en el destino (el cursor sigue lleno)
+  --   exigirClic   fuera del OnClick de un botón (Click()) la llamada no hace nada y lanza ADDON_ACTION_BLOCKED
+  --   prohibir     la llamada no hace nada y lanza ADDON_ACTION_FORBIDDEN
+  --   prohibirSoltar  lo mismo, pero solo al soltar (con un objeto en el cursor)
+  --   fallar       la llamada da un error de Lua
+  --   sinRespuesta el servidor nunca responde (el origen se queda bloqueado)
+  -- B.cursorObjeto = {bolsa, hueco, id, n, enlace} | nil; B.cursorAjeno = "spell"… simula otra cosa en el cursor.
+  -----------------------------------------------------------------------------------------------------------------
+  B.contenedores = {demora = 0.2}
+  B.cursorObjeto = nil
+  B.cursorAjeno = nil
+
+  local function cursorCambio()
+    B.disparar("CURSOR_CHANGED", B.cursorObjeto == nil and B.cursorAjeno == nil, 0, 0, 0)
+  end
+  local function bloqueo(b, h)
+    B.disparar("ITEM_LOCK_CHANGED", b, h)
+  end
+  -- Lo que el cliente mira antes de cada llamada: true si la llamada no debe hacer nada.
+  local function impedida(api)
+    local C = B.contenedores
+    if C.fallar then error(api .. ": fallo simulado", 3) end
+    if C.prohibir then
+      B.disparar("ADDON_ACTION_FORBIDDEN", "SnetForever_Comercio", api)
+      return true
+    end
+    if C.exigirClic and B.enClic == 0 then
+      B.anotar("ADDON_ACTION_BLOCKED", api)
+      B.disparar("ADDON_ACTION_BLOCKED", "SnetForever_Comercio", api)
+      return true
+    end
+    return false
+  end
+  local function coger(b, h, cantidad)
+    local t = I().bolsas[b]
+    local o = t and t.objetos[h]
+    if not o or o.bloqueado then return end
+    if cantidad and (cantidad < 1 or cantidad >= o.n) then return end
+    B.cursorObjeto = {bolsa = b, hueco = h, id = o.id, n = cantidad or o.n, enlace = o.enlace or enlaceHueco(o)}
+    o.bloqueado = true
+    bloqueo(b, h)
+    cursorCambio()
+  end
+  local function responder(mov)
+    local C = B.contenedores
+    if C.sinRespuesta then return end
+    programar({vence = B.tick + pasosDe(C.demora or 0.2, "B.contenedores.demora"), f = function()
+      local to, td = I().bolsas[mov.bolsa], I().bolsas[mov.aBolsa]
+      local o = to.objetos[mov.hueco]
+      if o then o.bloqueado = nil end
+      if o and not C.rechazar and not td.objetos[mov.aHueco] then
+        o.n = o.n - mov.n
+        if o.n <= 0 then to.objetos[mov.hueco] = nil end
+        td.objetos[mov.aHueco] = {id = o.id, n = mov.n, calidad = o.calidad, ligado = o.ligado, enlace = o.enlace}
+      end
+      bloqueo(mov.bolsa, mov.hueco)
+      bloqueo(mov.aBolsa, mov.aHueco)
+      B.disparar("BAG_UPDATE", mov.bolsa)
+      if mov.aBolsa ~= mov.bolsa then B.disparar("BAG_UPDATE", mov.aBolsa) end
+      B.disparar("BAG_UPDATE_DELAYED")
+    end})
+  end
+  local function soltar(b, h)
+    local c = B.cursorObjeto
+    local t = I().bolsas[b]
+    if not t or h < 1 or h > t.huecos then return end
+    if b == c.bolsa and h == c.hueco then -- vuelve al hueco de donde salió
+      local o = I().bolsas[b].objetos[h]
+      if o then o.bloqueado = nil end
+      B.cursorObjeto = nil
+      bloqueo(b, h)
+      cursorCambio()
+      return
+    end
+    if t.objetos[h] or B.contenedores.noSoltar then return end
+    B.cursorObjeto = nil
+    cursorCambio()
+    responder({bolsa = c.bolsa, hueco = c.hueco, aBolsa = b, aHueco = h, n = c.n})
+  end
+  rawset(C_Container, "PickupContainerItem", function(b, h)
+    B.anotar("C_Container.PickupContainerItem", b, h)
+    if impedida("PickupContainerItem") or B.cursorAjeno then return end
+    if B.cursorObjeto and B.contenedores.prohibirSoltar then
+      B.disparar("ADDON_ACTION_FORBIDDEN", "SnetForever_Comercio", "PickupContainerItem")
+      return
+    end
+    if B.cursorObjeto then soltar(b, h) else coger(b, h) end
+  end)
+  rawset(C_Container, "SplitContainerItem", function(b, h, cantidad)
+    B.anotar("C_Container.SplitContainerItem", b, h, cantidad)
+    if type(cantidad) ~= "number" then error("uso: SplitContainerItem(bolsa, hueco, cantidad)", 2) end
+    if impedida("SplitContainerItem") or B.cursorAjeno or B.cursorObjeto then return end
+    coger(b, h, cantidad)
+  end)
+  -- wowpedia: GetCursorInfo() -> infoType, ... («item», itemID, itemLink con un objeto); nada con el cursor vacío.
+  function GetCursorInfo()
+    B.anotar("GetCursorInfo")
+    if B.cursorAjeno then return B.cursorAjeno, 1 end
+    local c = B.cursorObjeto
+    if c then return "item", c.id, c.enlace end
+    return nil
+  end
+  -- Para las pruebas: la bolsa `b` es de un tipo especial (GetContainerNumFreeSlots da esa familia).
+  function B.ponerFamilia(b, familia)
+    local t = I().bolsas[b] or {huecos = HUECOS_POR_DEFECTO[b] or 12, objetos = {}}
+    t.familia = familia
+    I().bolsas[b] = t
+  end
+  -- Para las pruebas: bloquea o desbloquea un hueco ocupado (otro addon o el jugador lo tiene cogido).
+  function B.bloquearHueco(b, h, si)
+    I().bolsas[b].objetos[h].bloqueado = si and true or nil
+  end
+
   -- Las globales viejas (en Forever solo falta GetContainerItemInfo; con el perfil forever se quita). La vieja da valores
   -- sueltos: texture, count, locked, quality, readable, lootable, link, isFiltered, noValue, itemID, isBound.
   function GetContainerNumSlots(b) return numHuecos("GetContainerNumSlots", b) end
@@ -3629,7 +3761,7 @@ do
   function GetContainerItemInfo(b, h)
     local i = infoHueco("GetContainerItemInfo", b, h)
     if not i then return nil end
-    return i.iconFileID, i.stackCount, i.isLocked, i.quality, i.isReadable, i.hasLoot, i.hyperlink, false, false, i.itemID, i.isBound
+    return i.iconFileID, i.stackCount, i.isLocked, i.quality, i.isReadable, i.hasLoot, i.hyperlink, false, i.hasNoValue, i.itemID, i.isBound
   end
 
   -- wowpedia: C_Item.GetItemInfo(item): itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType,

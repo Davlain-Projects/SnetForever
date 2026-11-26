@@ -40,6 +40,11 @@
 --                                    un icono de nuestro atlas (Tema.iconoTexto), no una letra: la del juego puede no
 --                                    traer ▲▼. (Antes el % comparaba el mercado con la compra mínima y no se entendía.)
 --                                    Task 37: o sin la tendencia (la línea «mercadoSolo»), como el «Market value» de TSM.
+--       Precio histórico             Fase 2, apagada por defecto: «9g 80s 00c 12 días, 288 lecturas (app, hace 17 min)», el
+--                                    histórico propio de la app (SNF.Precios.historico: la mediana de los valores diarios de
+--                                    hasta 30 días de esta casa), con su cobertura. Sin dato, en gris «no disponible: …» con
+--                                    la razón (pocos días, vencido, sin días, app de antes, no cabía) o, en una variante,
+--                                    que la app no las distingue. Es lo que lee la fuente snfhistoricodiario().
 --       Salidas locales/día (ventas y retiradas, aprox.)   F5: en una MERCANCÍA, las unidades que dejan la subasta antes de que
 --                                    se les acabe el tiempo, sin las que se cancelan por encima de lo más barato que sigue
 --                                    intacto (nadie compra por encima de eso: ver app/src/comercio/historial.mjs). Un
@@ -241,6 +246,10 @@
 --                                   «precioNormal», «precioMaximo», «tope»)
 --       maximo(tipo) -> valor | nil, error?          el «precioMaximo» de la operación de Compras o de Sniper
 --       regla() -> true | false | nil                ids() -> item, icono | nil
+--       historico() -> datos | nil, razon, cobertura   Fase 2: SNF.Precios.historico del objeto (opcional; sin ella no
+--                                   sale la línea). Con una variante, nil y "variante".
+--       compras() -> resultado | nil                 Fase 2: SNF.Contabilidad.costeMedio del objeto (opcional; sin ella no
+--                                   sale la línea «Coste medio de compra»).
 --       casaSinDatos() -> faccion | nil              F6: con la subasta abierta, su facción si la app no trae su casa (la
 --                                   neutral, SNF.Precios.sinDatos). Opcional (sin ella, nil).
 --     opciones (opcional): {formato = "texto" | "iconos", todas = true}. Sin formato, o con uno que no vale, el formato
@@ -389,7 +398,7 @@ Tooltip.GRUPOS = {
     con("inventarioSimple", "COMERCIO_TT_AJ_INV_SIMPLE", false, "inventario"),
   }},
   {clave = "contabilidad", texto = "COMERCIO_TT_G_CONTABILIDAD", lineas = {
-    llega("contaCompras", "COMERCIO_TT_CONTA_COMPRAS", "COMERCIO_TT_LLEGA_CONTABILIDAD"),
+    con("contaCompras", "COMERCIO_TT_CONTA_COMPRAS"), -- fase 2: el coste medio de tus compras, apagada por defecto
     llega("contaVentas", "COMERCIO_TT_CONTA_VENTAS", "COMERCIO_TT_LLEGA_CONTABILIDAD"),
     llega("contaRitmo", "COMERCIO_TT_CONTA_RITMO", "COMERCIO_TT_LLEGA_CONTABILIDAD"),
     llega("contaCaducadas", "COMERCIO_TT_CONTA_CADUCADAS", "COMERCIO_TT_LLEGA_CONTABILIDAD"),
@@ -400,7 +409,7 @@ Tooltip.GRUPOS = {
     con("minima", "COMERCIO_TT_MINIMA", true),
     con("mercadoSolo", "COMERCIO_TT_MERCADO", false, "mercado"),
     con("mercado", "COMERCIO_TT_AJ_MERCADO_TENDENCIA", true, "mercadoSolo"),
-    llega("historico", "COMERCIO_TT_HISTORICO", "COMERCIO_TT_LLEGA_HISTORICO"),
+    con("historico", "COMERCIO_TT_HISTORICO"), -- fase 2: apagada por defecto
     con("salen", "COMERCIO_TT_SALEN", true),
     con("parte", "COMERCIO_TT_PARTE", true),
   }},
@@ -1069,12 +1078,44 @@ local function generalInventario(g)
   end
 end
 
+-- Fase 2: el coste medio de lo que tienes según tus compras (Contabilidad.costeMedio, lo que lee snfcostemedio()), con
+-- las unidades y las partidas que lo cubren, o por qué no lo hay. Sin unidades, sin datos del objeto o de un objeto que no
+-- se apila no sale: esa razón sería la misma en casi cualquier tooltip.
+local RAZONES_COMPRAS = {["sin-compras"] = "COMERCIO_TT_COMPRAS_SIN_COMPRAS",
+  ["existencias-incompletas"] = "COMERCIO_TT_COMPRAS_SIN_VER", variante = "COMERCIO_TT_COMPRAS_VARIANTE",
+  empate = "COMERCIO_TT_COMPRAS_EMPATE"}
+local function generalCompras(g)
+  local ver = sale(g, "contaCompras")
+  if not (ver or todas) or not recibe(D, "compras") then
+    return
+  end
+  local c = D.compras()
+  if type(c) ~= "table" then
+    return
+  end
+  local titulo = etiqueta("COMERCIO_TT_COSTE_MEDIO")
+  if type(c.valor) == "number" then
+    doble(titulo, dinero(floor(c.valor)) .. " " .. pintar("gris", relleno("COMERCIO_TT_COMPRAS_COBERTURA",
+      Texto.numero(c.existencias or 0), Texto.numero(c.partidas and #c.partidas or 0))), nil, not ver)
+  elseif c.razon == "compras-insuficientes" then
+    doble(titulo, pintar("gris", relleno("COMERCIO_TT_HISTORICO_NO", relleno("COMERCIO_TT_COMPRAS_POCAS",
+      Texto.numero(c.cubiertas or 0), Texto.numero(c.existencias or 0)))), nil, not ver)
+  elseif c.razon == "faltan-datos" then
+    -- Un recibo reciente de este id no prueba sus unidades, su variante o su importe: no se salta por otro más viejo.
+    doble(titulo, pintar("gris", relleno("COMERCIO_TT_HISTORICO_NO", relleno("COMERCIO_TT_COMPRAS_FALTAN_DATOS",
+      Texto.numero(c.sinPruebas and c.sinPruebas.antes or 0)))), nil, not ver)
+  elseif RAZONES_COMPRAS[c.razon] then
+    doble(titulo, pintar("gris", relleno("COMERCIO_TT_HISTORICO_NO", etiqueta(RAZONES_COMPRAS[c.razon]))), nil, not ver)
+  end
+end
+
 local function componerGeneral(g)
   pendiente = "COMERCIO_TT_SNF"
   parte("grupo", generalGrupo, g)
   parte("venta", generalVenta, g)
   parte("fuentes", generalFuentes, g)
   parte("inventario", generalInventario, g)
+  parte("compras", generalCompras, g)
   pendiente = nil
 end
 
@@ -1087,15 +1128,16 @@ local function componerSubasta(g)
   local verTendencia = sale(g, "mercado")
   local verMercado = verTendencia or sale(g, "mercadoSolo")
   local verSalen, verParte = sale(g, "salen"), sale(g, "parte")
+  local verHistorico = sale(g, "historico")
   local reglaEncendida = sale(g, "regla")
   local verRegla = (reglaEncendida or todas) and rutaDe() -- sin grupo no hay regla que mirar
-  if not (verVenta or verMinima or verMercado or verSalen or verParte or verRegla or todas) then
+  if not (verVenta or verMinima or verMercado or verHistorico or verSalen or verParte or verRegla or todas) then
     return
   end
   local precio, cantidad, subastas, edad, p, fuente, edadDeLaApp = D.subasta()
   -- F6: la subasta abierta es de otra casa que la app no trae (la neutral): nada de la app (ni valor de mercado, ni lo que
   -- sale, ni la parte: serían de la casa de la Horda) y una línea gris que lo dice, en el sitio del valor de mercado.
-  local sinCasa = (verMercado or verSalen or verParte or todas) and recibe(D, "casaSinDatos") and D.casaSinDatos() or nil
+  local sinCasa = (verMercado or verHistorico or verSalen or verParte or todas) and recibe(D, "casaSinDatos") and D.casaSinDatos() or nil
   if sinCasa then
     p = nil
   end
@@ -1147,6 +1189,28 @@ local function componerSubasta(g)
     local tendencia = conTendencia and p.conTendencia and tendenciaTexto(p.tendencia) or nil
     doble(etiqueta("COMERCIO_TT_MERCADO"), conApp(tendencia and (tendencia .. " " .. dinero(p.normal)) or dinero(p.normal)),
       nil, not verMercado)
+  end
+  -- Fase 2: el histórico propio, con su cobertura, o por qué no lo hay. Nunca de otra casa (sinCasa).
+  if (verHistorico or todas) and not sinCasa and recibe(D, "historico") then
+    local h, razon, cobertura = D.historico()
+    if type(h) == "table" and type(h.valor) == "number" then
+      doble(etiqueta("COMERCIO_TT_HISTORICO"), conApp(dinero(h.valor) .. " " .. pintar("gris",
+        relleno("COMERCIO_TT_HISTORICO_COBERTURA", Texto.numero(h.dias or 0), Texto.numero(h.muestras or 0)))), nil,
+        not verHistorico)
+    elseif type(razon) == "string" and razon ~= "sin-precios" and razon ~= "sin-casa" and razon ~= "casa-sin-datos" then
+      local motivo
+      if razon == "pocos-dias" then
+        local c = type(cobertura) == "table" and cobertura or {}
+        motivo = relleno("COMERCIO_TT_HIST_POCOS_DIAS", Texto.numero(c.dias or 0), Texto.numero(c.minDias or 0))
+      elseif razon == "vencido" then
+        motivo = relleno("COMERCIO_TT_HIST_VENCIDO", Texto.numero(type(cobertura) == "table" and cobertura.maxDiasSinDato or 3))
+      else
+        local claves = {["sin-datos"] = "COMERCIO_TT_HIST_SIN_DATOS", ["formato-anterior"] = "COMERCIO_TT_HIST_FORMATO_ANTERIOR",
+          ["no-cabe"] = "COMERCIO_TT_HIST_NO_CABE", variante = "COMERCIO_TT_HIST_VARIANTE"}
+        motivo = etiqueta(claves[razon] or "COMERCIO_TT_HIST_SIN_DATOS")
+      end
+      doble(etiqueta("COMERCIO_TT_HISTORICO"), pintar("gris", relleno("COMERCIO_TT_HISTORICO_NO", motivo)), nil, not verHistorico)
+    end
   end
   -- F5: el nombre depende de si es una mercancía (ya sin las cancelaciones de encima del más barato intacto) o un objeto
   -- suelto (todo lo que sale antes de tiempo, con el aviso de que no son ventas). El número, entero y con separador.
@@ -1304,6 +1368,8 @@ do
     maximo = function(tipo) return maximos[tipo] end,
     regla = function() return true, true end, -- F9p: es una mercancía: «El precio cumple tu regla · rotación sin confirmar»
     casaSinDatos = function() return nil end, -- F6: la subasta del ejemplo es la propia (la app tiene sus datos)
+    historico = function() return {valor = 98000, dias = 12, muestras = 288} end, -- fase 2: 12 días de esta casa
+    compras = function() return {valor = 87500, existencias = 23, cubiertas = 23, partidas = {{}, {}, {}}} end, -- fase 2
     ids = function() return 2447, 133939 end,
   }
 end
@@ -1321,7 +1387,8 @@ local subastaPedida = false
 local s1, s2, s3, s4, s5, s6, s7 = nil, nil, nil, nil, nil, nil, nil -- lo de DATOS.subasta()
 local apuntadas = {} -- [lugar .. fórmula] = true: cada fórmula rota se apunta una sola vez por sesión
 
-function Tooltip.datos(item)
+function Tooltip.datos(item, sourceTooltip)
+  DATOS.sourceTooltip = sourceTooltip
   actual = item
   groupReader = nil
   grupoPedido, grupoActual = false, nil
@@ -1441,6 +1508,37 @@ end
 function DATOS.casaSinDatos()
   local precios = rawget(SNF, "Precios")
   return recibe(precios, "sinDatos") and precios.sinDatos() or nil
+end
+
+-- Fase 2: el histórico de la app del objeto (la misma casa que Precios.de). El tooltip es de un id de objeto: la app no
+-- distingue variantes, así que una clave con variante («i:1234:…») no tiene histórico.
+function DATOS.historico()
+  local precios = rawget(SNF, "Precios")
+  if type(actual) ~= "number" then
+    return nil, "variante"
+  end
+  if not recibe(precios, "historico") then
+    return nil
+  end
+  local source = DATOS.sourceTooltip
+  if recibe(source, "GetItem") then
+    local ok, _, link = pcall(source.GetItem, source)
+    if ok then
+      local id, variant = SNF.Contabilidad.parseItemLink(link)
+      if id == actual and variant then return nil, "variante" end
+    end
+  end
+  return precios.historico(actual)
+end
+
+-- Fase 2: el coste medio de tus compras del objeto (Contabilidad.costeMedio guarda el resultado: no recorre la contabilidad
+-- en cada tooltip).
+function DATOS.compras()
+  local contabilidad = rawget(SNF, "Contabilidad")
+  if not recibe(contabilidad, "costeMedio") then
+    return nil
+  end
+  return contabilidad.costeMedio(actual)
 end
 
 function DATOS.subasta()
@@ -1684,7 +1782,7 @@ local function componerEnAparte(juego, item, enSitio)
   end
   aparte:ClearLines()
   escribirEn = aparte
-  local ok, err = pcall(Tooltip.componer, SALIDA, Tooltip.datos(item), lineasGuardadas(), OPCIONES_REALES)
+  local ok, err = pcall(Tooltip.componer, SALIDA, Tooltip.datos(item, juego), lineasGuardadas(), OPCIONES_REALES)
   escribirEn = nil
   if not ok then
     error(err, 0)
@@ -1736,7 +1834,7 @@ function Tooltip.anadir(tooltip, item, data)
   OPCIONES_REALES.formato = formatoGuardado
   if incrustado then
     escribirEn = tooltip
-    ok, err = pcall(Tooltip.componer, SALIDA, Tooltip.datos(item), lineasGuardadas(), OPCIONES_REALES)
+    ok, err = pcall(Tooltip.componer, SALIDA, Tooltip.datos(item, tooltip), lineasGuardadas(), OPCIONES_REALES)
   else
     ok, err = pcall(componerEnAparte, tooltip, item, Repinte.enSitio) -- el del juego no lleva ninguna línea nuestra
   end

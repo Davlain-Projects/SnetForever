@@ -25,8 +25,8 @@ const NUEVOS = [
 // principal: el tema va antes de toda ui que lo use; tarea 12: la ventana, la última). Desde la 0.7.0 van en el .toc de
 // SnetForever_Comercio, que el cliente carga después de todo el núcleo.
 const NUEVOS_COMERCIO = [
-  'comercio\\comercio.lua', 'comercio\\precios.lua', 'comercio\\estado.lua', 'comercio\\merchant-prices.lua', 'comercio\\disenchant-samples.lua', 'comercio\\recipe-costs.lua', 'comercio\\formulas.lua', 'comercio\\arbol.lua', 'comercio\\grupos.lua', 'comercio\\operaciones.lua', 'comercio\\texto-grupos.lua', 'comercio\\importar-tsm.lua', 'comercio\\reglas.lua', 'comercio\\propuesta.lua',
-  'comercio\\escaneo.lua', 'comercio\\inventario.lua', 'comercio\\compra.lua', 'comercio\\sniper.lua', 'comercio\\busqueda.lua', 'comercio\\vender.lua', 'comercio\\mis-subastas.lua', 'comercio\\auction-orders.lua', 'comercio\\group-shopping.lua', 'comercio\\ledger.lua',
+  'comercio\\comercio.lua', 'comercio\\precios.lua', 'comercio\\estado.lua', 'comercio\\merchant-prices.lua', 'comercio\\precio-vendedor.lua', 'comercio\\disenchant-samples.lua', 'comercio\\recipe-costs.lua', 'comercio\\formulas.lua', 'comercio\\arbol.lua', 'comercio\\grupos.lua', 'comercio\\operaciones.lua', 'comercio\\texto-grupos.lua', 'comercio\\importar-tsm-diagnostico.lua', 'comercio\\importar-tsm.lua', 'comercio\\reglas.lua', 'comercio\\propuesta.lua',
+  'comercio\\escaneo.lua', 'comercio\\inventario.lua', 'comercio\\almacen.lua', 'comercio\\almacen-mover.lua', 'comercio\\vendedor.lua', 'comercio\\artesania.lua', 'comercio\\correo.lua', 'comercio\\compra.lua', 'comercio\\sniper.lua', 'comercio\\busqueda.lua', 'comercio\\vender.lua', 'comercio\\mis-subastas.lua', 'comercio\\auction-orders.lua', 'comercio\\group-shopping.lua', 'comercio\\ledger.lua',
   'ui\\tema.lua', 'ui\\piezas\\botones.lua', 'ui\\piezas\\campos.lua', 'ui\\piezas\\contenedores.lua', 'ui\\piezas\\arbol.lua', 'ui\\piezas\\tabla.lua', 'ui\\piezas\\muestrario.lua', 'ui\\comercio_tabla.lua', 'ui\\comercio_cantidad.lua', 'ui\\subasta\\ventana.lua', 'ui\\subasta\\navegar.lua', 'ui\\subasta\\resultados.lua', 'ui\\subasta\\sniper.lua', 'ui\\subasta\\auction-orders.lua', 'ui\\comercio.lua', 'ui\\tooltip.lua',
   // Task 12: la ventana principal y sus dos páginas provisionales.
   'ui\\principal.lua', 'ui\\principal\\dashboard.lua', 'ui\\principal\\contabilidad.lua', 'ui\\principal\\grupos.lua',
@@ -34,6 +34,8 @@ const NUEVOS_COMERCIO = [
   // Task 23: el editor de fórmulas ⧉ va detrás del de operaciones (cambia su gancho); la página Ajustes, la última.
   'ui\\principal\\editor-operacion.lua', 'ui\\principal\\editor-formula.lua', 'ui\\principal\\operaciones.lua',
   'ui\\principal\\ajustes.lua',
+  // Fase 4 de la paridad con TSM: la vista previa de Almacén, ventana aparte.
+  'ui\\almacen.lua', 'ui\\vendedor.lua', 'ui\\artesania.lua', 'ui\\correo.lua',
 ];
 const MODULOS = ['JSON', 'Codec', 'Franja', 'Timbres', 'Buzon', 'Contexto', 'Inventario', 'Subasta', 'Envio', 'Latido', 'Ruta', 'Marcas', 'Chat'];
 const MODULOS_COMERCIO = ['Comercio', 'Precios', 'EstadoComercio', 'MerchantPrices', 'Arbol', 'Grupos', 'Operaciones', 'TextoGrupos', 'ImportarTSM', 'Reglas', 'Propuesta', 'Escaneo', 'Compra', 'Sniper', 'Busqueda', 'Vender', 'MisSubastas', 'AuctionOrders', 'GroupShopping', 'Contabilidad', 'Tema', 'Piezas', 'Muestrario', 'TablaComercio', 'CantidadComercio', 'UIComercio', 'TooltipComercio', 'Principal', 'PrincipalDashboard', 'PrincipalContabilidad', 'PrincipalGrupos', 'PrincipalOperaciones', 'SubastaVentana', 'SubastaNavegar', 'EditorOperacion'];

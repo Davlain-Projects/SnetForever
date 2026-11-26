@@ -52,7 +52,8 @@
 -- Operaciones.propios() -> {personajes = {...}, casas = {...}}   anota al personaje que juega ahora y da los propios.
 -- valor / poner con los campos «ignorarReinos» (casas «<reino>|<faccion>») e «ignorarPersonajes»: solo valen los propios.
 -- Operaciones.ignorada(tipo, nombre, personaje, casa) -> boolean   personaje «<nombre> - <reino>», casa «<reino>|<faccion>».
--- Operaciones.deGrupo(ruta, tipo) -> {nombres}, heredadaDe | nil, faltan   heredadaDe: la ruta del ascendiente de quien las hereda
+-- Operaciones.ignoradaAqui, Operaciones.aplicable y Operaciones.cobre: ver junto a su código (fase 3 de la paridad).
+-- Operaciones.deGrupo(ruta, tipo) -> {nombres}, heredadaDe | nil, faltan  heredadaDe: la ruta del ascendiente de quien las hereda
 --                                                             («» = Grupo Base); nil si el grupo tiene override. `faltan` lista
 --                                                             las operaciones nombradas que ya no existen.
 -- Operaciones.gruposDe(tipo, nombre) -> {rutas}               los grupos que tienen la operación en su lista propia (los que la
@@ -77,7 +78,8 @@ local MAX_NOMBRE = 60
 ---------------------------------------------------------------------------------------------------
 -- Los 7 tipos. Los valores por defecto son los de las capturas de TSM (INVENTARIO 2.5, op-01 a op-15); los campos de
 -- Publicación que las capturas no llegan a enseñar se han sacado de cómo trata TSM la operación de subasta. Los textos
--- de fórmula pasan por Formulas.traducir (dbmarket y dbregionmarketavg -> snfmercado, dbhistorical -> snfhistorico).
+-- de fórmula pasan por Formulas.traducir (dbmarket -> snfmercado, dbregionmarketavg -> snfregional(), dbhistorical ->
+-- snfhistorico).
 ---------------------------------------------------------------------------------------------------
 
 local function campo(clave, tipo, defecto, nombre, descripcion, extra)
@@ -119,10 +121,11 @@ local FUENTES_VENDEDOR = {
   opcion("subastasAlters", "Subastas de los alters"), opcion("correo", "Correo"),
 }
 
--- El precio de venta que TSM propone para Sniper (lo que se busca por debajo de cuánto), con nuestras fuentes.
-local SNIPER_PRECIO = "max(vendorsell, ifgt(snfmercado, 250000g, 0.8, ifgt(snfmercado, 100000g, 0.7, "
-  .. "ifgt(snfmercado, 50000g, 0.6, ifgt(snfmercado, 25000g, 0.5, ifgt(snfmercado, 10000g, 0.4, "
-  .. "ifgt(snfmercado, 5000g, 0.3, ifgt(snfmercado, 2000g, 0.2, ifgt(snfmercado, 1000g, 0.1, 0.05)))))))) * snfmercado)"
+-- El precio de venta que TSM propone para Sniper (lo que se busca por debajo de cuánto), con nuestras fuentes: TSM usa
+-- DBRegionMarketAvg, que es snfregional() (el precio regional de la app).
+local SNIPER_PRECIO = "max(vendorsell, ifgt(snfregional(), 250000g, 0.8, ifgt(snfregional(), 100000g, 0.7, "
+  .. "ifgt(snfregional(), 50000g, 0.6, ifgt(snfregional(), 25000g, 0.5, ifgt(snfregional(), 10000g, 0.4, "
+  .. "ifgt(snfregional(), 5000g, 0.3, ifgt(snfregional(), 2000g, 0.2, ifgt(snfregional(), 1000g, 0.1, 0.05)))))))) * snfregional())"
 
 local TIPOS = {
   subasta = {
@@ -146,7 +149,7 @@ local TIPOS = {
         {min = 0, max = 100, unidad = "%", pestana = "publicacion", seccion = "Precio de publicación"}),
       campo("rebaja", "formula", "0c", "Rebaja", "Cuánto por debajo de la subasta más barata de otro se publica.",
         {pestana = "publicacion", seccion = "Precio de publicación"}),
-      campo("precioMinimo", "formula", "max(1.5 * vendorsell, 0.25 * first(snfmercado, snfmercado, snfhistorico))", "Precio mínimo",
+      campo("precioMinimo", "formula", "max(1.5 * vendorsell, 0.25 * first(snfmercado, snfregional(), snfhistorico))", "Precio mínimo",
         "Por debajo de este precio no se publica (o se hace lo que diga «Si queda por debajo del mínimo»).",
         {pestana = "publicacion", seccion = "Precio de publicación"}),
       campo("bajoMinimo", "lista", "noPublicar", "Si queda por debajo del mínimo", "Qué hacer cuando la subasta más barata está por debajo del precio mínimo.",
@@ -1007,6 +1010,46 @@ function Operaciones.ignorada(tipo, nombre, personaje, casa)
   local pjs = type(op.ignorarPersonajes) == "table" and op.ignorarPersonajes or {}
   local casas = type(op.ignorarReinos) == "table" and op.ignorarReinos or {}
   return (personaje ~= nil and pjs[personaje] == true) or (casa ~= nil and casas[casa] == true)
+end
+
+-- Fase 3 de la paridad con TSM: lo que comparten Compras por grupo, Vendedor y el Sniper por operaciones.
+-- Operaciones.ignoradaAqui(tipo, nombre) -> boolean   ignorada para el personaje que juega o para su casa de ahora. El
+--   personaje se mira en la forma que guardan el editor y la importación de TSM («<nombre> - <reino>») y en la corta
+--   («<nombre>-<reino>») que ya miraban Compras por grupo y Vendedor. Sin reino seguro (provisional) solo vale la casa.
+function Operaciones.ignoradaAqui(tipo, nombre)
+  local reino = SNF.Precios.identidad().reino
+  local faccion = SNF.Precios.faccionActual()
+  local pj = SNF.Personaje.clave()
+  local casa = reino and faccion and (reino .. "|" .. faccion) or nil
+  if Operaciones.ignorada(tipo, nombre, reino and pj and (pj .. " - " .. reino) or nil, casa) then
+    return true
+  end
+  return reino ~= nil and pj ~= nil and Operaciones.ignorada(tipo, nombre, pj .. "-" .. reino, nil)
+end
+
+-- Operaciones.aplicable(ruta, tipo) -> nombre | nil, motivo   la primera operación de `tipo` del grupo (con la herencia de
+--   Operaciones.deGrupo) si no está ignorada aquí. motivo: «sin_operacion» o «ignorada». Como en TSM, una operación
+--   ignorada no deja paso a otra.
+function Operaciones.aplicable(ruta, tipo)
+  local nombre = Operaciones.deGrupo(ruta, tipo)[1]
+  if not nombre then
+    return nil, "sin_operacion"
+  end
+  if Operaciones.ignoradaAqui(tipo, nombre) then
+    return nil, "ignorada"
+  end
+  return nombre
+end
+
+-- Operaciones.cobre(tipo, nombre, campo, item) -> cobre entero | nil   la fórmula del campo para el objeto (con sus
+--   vínculos). nil si la fórmula no vale, no da valor o da algo que no es una cantidad (secreto, negativo o infinito).
+function Operaciones.cobre(tipo, nombre, campo, item)
+  local formula = Operaciones.valor(tipo, nombre, campo)
+  local valor = type(formula) == "string" and SNF.Formulas.valor(formula, item) or nil
+  if not SNF.API.esSecreto(valor) and type(valor) == "number" and valor >= 0 and valor < math.huge then
+    return SNF.Formulas.cobre(valor)
+  end
+  return nil
 end
 
 ---------------------------------------------------------------------------------------------------

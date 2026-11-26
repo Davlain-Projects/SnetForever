@@ -17,15 +17,24 @@
 // sus 5 candidatas, CASAS.Neutral): se prueba uno por ronda. Ronda 1: si una descarga de candidatas falla a medias, se
 // reintenta en la ronda siguiente con lo ya bajado (como mucho 3 veces); si ninguna candidata sale con claridad, esa
 // casa no se vuelve a probar en 24 h (estado.sinCasa). La ranura lleva la casa propia, la neutral y, si caben, las demás (como mucho MAX_CASAS_RANURA), cada una en su Q[casa].
+// Precio regional (regional.mjs, opcional): cada foto nueva de una casa seguida se anota (como mucho cada 12 h) y, una vez
+// por hora y después de publicar, se baja una casa más de la región (la que hace más que no se mira de las 15 de CASAS que
+// no se siguen). La ranura lleva el precio regional de cada objeto (precios-lua.mjs: R[item]).
 //
-// crearProgramadorComercio({cliente, historial, catalogo, casas, escribir, reloj, dormir, registrar, espacio?})
+// crearProgramadorComercio({cliente, historial, catalogo, casas, escribir, reloj, dormir, registrar, espacio?, regional?})
 //   cliente: (region) => cliente de blizzard.mjs (o el cliente directamente); historial: historial.mjs; catalogo: objetos.mjs;
 //   casas: el estado del comercio (estado.mjs: enUso, identidad, desde, ponerDesde, conocidas, aprender, porDescubrir,
 //   descubierto, sinCasa, ponerSinCasa, siguienteSeq, guardar); espacio: el respiro entre casas (ESPACIO_CASAS_MS); escribir(textos, {generado}): escribe la ranura (escribirPrecios); reloj(): milisegundos;
 //   dormir(ms): una promesa; registrar(nivel, texto): el registro (nunca lleva secretos).
 //   → {arrancar(), parar(), ahora()}: ahora() hace una ronda ya, sea la hora que sea, y da su resultado.
 import { CASAS, casaDe, descubrir } from './casas.mjs';
+import { CADA_PROPIA_S } from './regional.mjs';
 import { textosPrecios } from './precios-lua.mjs';
+import { DIAS_HISTORICO, MIN_DIAS_HISTORICO, MIN_MUESTRAS_DIA, MAX_DIAS_SIN_DATO } from './historial.mjs';
+// Fase 2: los umbrales del histórico, que viajan en p1 para que el addon diga por qué no hay histórico.
+const UMBRALES_HISTORICO = Object.freeze({
+    ventana: DIAS_HISTORICO, minDias: MIN_DIAS_HISTORICO, minMuestras: MIN_MUESTRAS_DIA, maxDiasSinDato: MAX_DIAS_SIN_DATO,
+});
 const MIN = 60_000;
 const HORA = 60 * MIN;
 // F7, ronda 1: lo que se espera para volver a probar una casa con la que ningún escaneo se pareció a ninguna candidata.
@@ -58,7 +67,7 @@ function aMuestras(lista) {
     }
     return m;
 }
-export function crearProgramadorComercio({ cliente, historial, catalogo, casas, escribir, reloj = Date.now, dormir, registrar = (() => { }), espacio = ESPACIO_CASAS_MS, }) {
+export function crearProgramadorComercio({ cliente, historial, catalogo, casas, escribir, reloj = Date.now, dormir, registrar = (() => { }), espacio = ESPACIO_CASAS_MS, regional = null, }) {
     const clienteDe = typeof cliente === 'function' ? cliente : () => cliente;
     const pendientes = new Map(); // "<region>|<casa>" → {subastas?, mercancias?}: {hora, texto, lista}
     const memoria = new Map(); // "<region>|<casa>" → {subastas, mercancias}: el desde con el que preguntar
@@ -77,6 +86,7 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
     let despertar = null;
     let bloqueadoHasta = 0;
     let cadena = Promise.resolve();
+    let horaRegional = -1; // inicio (ms) de la hora en la que ya se bajó (o se intentó) una casa de la región
     const avisarUnaVez = (clave, nivel, texto) => {
         if (avisados.has(clave))
             return;
@@ -226,7 +236,8 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
         }
     }
     // Las filas de precios de las casas en uso. Lo que no está en la última foto de la casa sale con cantidad y subastas 0.
-    function filasDe(listaCasas) {
+    // Fase 2: `historicos` (opcional) se llena con el histórico de cada objeto que tiene, de la misma casa que su fila.
+    function filasDe(listaCasas, historicos = null) {
         const salida = {};
         for (const casa of listaCasas) {
             const todos = historial.todos(casa);
@@ -237,9 +248,12 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
                 if (r && r.hora > ultima)
                     ultima = r.hora;
             const filas = {};
+            const hist = {};
             for (const [item, r] of todos) {
                 if (!r)
                     continue;
+                if (r.historico && r.historico.razon !== 'sin-datos')
+                    hist[item] = r.historico;
                 const enVenta = r.hora === ultima;
                 filas[item] = [
                     r.precio, enVenta ? r.cantidad : 0, r.normal,
@@ -253,8 +267,101 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
                 }
             }
             salida[casa] = filas;
+            if (historicos)
+                historicos[casa] = hist;
         }
         return salida;
+    }
+    // El precio regional para la ranura, o null (sin módulo regional o sin datos). Un fallo aquí no para la publicación.
+    function regionalParaRanura() {
+        if (!regional)
+            return null;
+        try {
+            return regional.valores(Math.floor(reloj() / 1000));
+        }
+        catch (e) {
+            registrar('aviso', `comercio: el precio regional no se pudo calcular (${codigo(e)})`);
+            return null;
+        }
+    }
+    // Anota en el precio regional la foto de una casa seguida (como mucho cada CADA_PROPIA_S). Nunca para la ronda.
+    function anotarRegional(casa, hora, subastas, mercancias) {
+        if (!regional)
+            return false;
+        try {
+            return regional.anotar(casa, hora, subastas, mercancias, { cada: CADA_PROPIA_S });
+        }
+        catch (e) {
+            registrar('aviso', `comercio: la foto de la casa ${casa} no entró en el precio regional (${codigo(e)})`);
+            return false;
+        }
+    }
+    async function guardarRegional() {
+        try {
+            await regional.guardar();
+        }
+        catch (e) {
+            registrar('aviso', `comercio: el precio regional no se pudo guardar (${codigo(e)}); se guardará con la próxima casa`);
+        }
+    }
+    // Una vez por hora: baja una casa de la región que no se sigue (la que hace más que no se mira) y la anota.
+    // → 'sin_credenciales' | 'anotada' | null
+    async function rondaRegional(cli, uso, inicio, pedidas) {
+        if (!regional || horaRegional === inicio)
+            return null;
+        horaRegional = inicio;
+        let casa = null;
+        try {
+            casa = regional.siguiente(Object.values(CASAS).flat(), uso.casas);
+        }
+        catch (e) {
+            registrar('aviso', `comercio: no se pudo elegir la casa regional (${codigo(e)})`);
+            return null;
+        }
+        if (casa == null)
+            return null;
+        if (pedidas > 0 && espacio > 0)
+            await dormir(espacio);
+        const listas = {};
+        let hora = 0;
+        for (const tipo of TIPOS) {
+            let r;
+            try {
+                r = await cli[tipo](casa, {});
+            }
+            catch (e) {
+                r = { estado: 'error', motivo: codigo(e) };
+            }
+            if (r?.estado === 'sin_credenciales')
+                return 'sin_credenciales';
+            if (r?.estado !== 'nueva' || !Array.isArray(r.subastas)) {
+                registrar('aviso', `comercio: la casa ${casa} de la región no respondió (${tipo}${r?.motivo ? `, ${r.motivo}` : ''}); se probará otra en la próxima hora`);
+                try {
+                    regional.probada(casa, Math.floor(reloj() / 1000));
+                }
+                catch {
+                    // el turno sigue igual: se volverá a elegir
+                }
+                await guardarRegional();
+                return null;
+            }
+            listas[tipo] = r.subastas;
+            hora = Math.max(hora, segundos(r.hora) ?? Math.floor(reloj() / 1000));
+        }
+        let anotada = false;
+        try {
+            anotada = regional.anotar(casa, hora, listas.subastas, listas.mercancias);
+            if (!anotada)
+                regional.probada(casa, Math.floor(reloj() / 1000));
+        }
+        catch (e) {
+            registrar('aviso', `comercio: la casa ${casa} no entró en el precio regional (${codigo(e)})`);
+        }
+        await guardarRegional();
+        registrar('info', anotada
+            ? `comercio: precio regional: casa ${casa} anotada (${listas.subastas.length + listas.mercancias.length} subastas)`
+            : `comercio: precio regional: la casa ${casa} no trae subastas`);
+        return anotada ? 'anotada' : null;
     }
     async function publicar(uso, generado) {
         try {
@@ -271,7 +378,8 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
             catch (e) {
                 registrar('aviso', `comercio: grupos sin hacer (${codigo(e)})`);
             }
-            const filas = filasDe(uso.casas);
+            const historicos = {};
+            const filas = filasDe(uso.casas, historicos);
             const nombresDe = (deCasas) => {
                 const nombres = {};
                 for (const casa of Object.keys(deCasas)) {
@@ -313,7 +421,11 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
                         .filter((g) => g.objetos.length > 0);
                 }
                 try {
-                    textos = textosPrecios({ ...base, casas: solo, grupos: gruposAqui, nombres: nombresDe(solo), info });
+                    const historico = Object.fromEntries(elegidas.map((c) => [c, historicos[c] || {}]));
+                    textos = textosPrecios({
+                        ...base, casas: solo, grupos: gruposAqui, nombres: nombresDe(solo), info, historico,
+                        umbralesHistorico: UMBRALES_HISTORICO, regional: regionalParaRanura(),
+                    });
                     break;
                 }
                 catch (e) {
@@ -444,7 +556,7 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
             return null;
         }
     }
-    async function ronda() {
+    async function ronda(conRegional = false) {
         const uso = enUso();
         if (!uso) {
             // Sin ninguna casa en uso (un reino sin casa supuesta, como los nombres reales de Forever): se prueba igualmente a
@@ -484,6 +596,7 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
         let cambios = false; // algo que guardar en el estado
         const inicio = inicioDeHora(reloj());
         let pedidas = 0;
+        let regionalCambiado = false;
         for (const casa of uso.casas) {
             if (hecha(uso.region, casa, inicio))
                 continue;
@@ -515,6 +628,8 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
             if (r.mercancias)
                 listas.set(clave(uso.region, casa), r.mercancias);
             if (r.anadida) {
+                if (anotarRegional(casa, r.hora, r.subastas, r.mercancias))
+                    regionalCambiado = true;
                 nuevas.push(casa);
                 generado = Math.max(generado, r.hora);
                 for (const s of r.subastas)
@@ -532,6 +647,8 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
             }
             await publicar(uso, generado);
         }
+        if (regionalCambiado)
+            await guardarRegional();
         if (!sinCredenciales) {
             try {
                 const d = await intentarDescubrir(listas);
@@ -541,6 +658,17 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
             }
             catch (e) {
                 registrar('aviso', `comercio: no se pudo descubrir la casa (${codigo(e)})`);
+            }
+        }
+        // Lo último de la ronda, y solo en las del calendario (no en las de ahora(), que adelanta un escaneo): una casa de la
+        // región. Así nunca retrasa ni la publicación ni el descubrimiento de una casa.
+        if (conRegional && !sinCredenciales) {
+            try {
+                if ((await rondaRegional(cli, uso, inicio, pedidas)) === 'sin_credenciales')
+                    sinCredenciales = true;
+            }
+            catch (e) {
+                registrar('aviso', `comercio: fallo con la casa regional (${codigo(e)})`);
             }
         }
         if (cambios) {
@@ -557,9 +685,10 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
             avisados.delete('sin-credenciales');
         return { estado: sinCredenciales ? 'sin_credenciales' : 'ok', nuevas };
     }
-    // Una ronda cada vez (la del calendario y las de ahora() no se pisan).
-    function enCadena() {
-        const hecho = cadena.then(ronda, ronda);
+    // Una ronda cada vez (la del calendario y las de ahora() no se pisan). `conRegional`: solo las del calendario.
+    function enCadena(conRegional = false) {
+        const hacer = () => ronda(conRegional);
+        const hecho = cadena.then(hacer, hacer);
         cadena = hecho.catch(() => { });
         return hecho;
     }
@@ -574,7 +703,7 @@ export function crearProgramadorComercio({ cliente, historial, catalogo, casas, 
             return inicio + CALENDARIO.desde - t;
         if (t - inicio >= CALENDARIO.hasta || (todasHechas(inicio) && !reintentoPendiente()))
             return siguiente - t;
-        const r = await enCadena();
+        const r = await enCadena(true);
         const t2 = reloj();
         const inicio2 = inicioDeHora(t2);
         if (r.estado === 'sin_credenciales') {

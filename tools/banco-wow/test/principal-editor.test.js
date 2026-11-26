@@ -200,7 +200,7 @@ for (const [tipo, esperado] of Object.entries(OTROS)) {
     assert.deepEqual(r.etiquetas, [...esperado.etiquetas, ...MANEJO]);
     assert.deepEqual(r.clases, [...esperado.clases, 'varios', 'varios', 'grupos']);
     assert.ok(r.bien.every((b) => b), `controles: ${JSON.stringify(r.bien)}`);
-    if (tipo === 'sniper') assert.match(r.valor1, /^max\(vendorsell, ifgt\(snfmercado, 250000g/, 'la fórmula larga, en una línea');
+    if (tipo === 'sniper') assert.match(r.valor1, /^max\(vendorsell, ifgt\(snfregional\(\), 250000g/, 'la fórmula larga, en una línea');
     sinErrores(m);
   });
 }

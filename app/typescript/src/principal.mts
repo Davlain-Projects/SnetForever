@@ -112,6 +112,7 @@ import { leerCredenciales } from './comercio/credenciales.mjs';
 import { crearHistorial as crearHistorialComercio } from './comercio/historial.mjs';
 import { crearMedidorSalen, casasHordaDe } from './comercio/medir-salen.mjs';
 import { crearCatalogo } from './comercio/objetos.mjs';
+import { crearRegional } from './comercio/regional.mjs';
 import { escribirPrecios } from './comercio/precios-lua.mjs';
 import { crearEstadoComercio, firmaCuentas, leerCuentas } from './comercio/estado.mjs';
 import { crearProgramadorComercio, ESPERA_SIN_CASA_MS } from './comercio/programador.mjs';
@@ -1260,6 +1261,7 @@ export async function arrancar(argv = process.argv.slice(2), entorno = process.e
     registrar: (nivel, texto) => log(nivel, texto),
     alPar: medidorSalen.alPar,
   });
+  const regionalComercio = crearRegional({ fs, carpeta: carpetaComercio, registrar: (nivel, texto) => log(nivel, texto) });
   const catalogoComercio = crearCatalogo({
     cliente: { objeto: (id) => clienteEnUso().objeto(id) },
     fs, carpeta: carpetaComercio, dormir: dormirSuelto, ahora,
@@ -1288,6 +1290,7 @@ export async function arrancar(argv = process.argv.slice(2), entorno = process.e
       dormir: dormirSuelto,
       registrar: (nivel, texto) => log(nivel, texto),
       ...(Number.isFinite(deps.espacioComercio) ? { espacio: deps.espacioComercio } : {}),
+      regional: regionalComercio,
     });
     app.comercio.arrancar();
   }

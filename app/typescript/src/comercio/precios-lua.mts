@@ -18,8 +18,19 @@
 //       más barato que sigue intacto, ver historial.mjs); en un objeto suelto no se escribe y la fila se queda en 9. Solo
 //       va detrás de subastas y conTendencia. Un addon de antes no lo mira.
 //   SNF_PRECIOS.nombres[item] = "nombre" (los nombres de los objetos, para listas sin consultar al juego).
+//   Fase 2 (histórico propio): si la app lo manda, p1 lleva `historico = {v = 1, ventana, minDias, minMuestras,
+//     maxDiasSinDato}` (los umbrales de historial.mjs) y cada fila con días lleva, además de sus números, un campo con
+//     nombre: `h = {valor, dias, muestras, desde, hasta, razon}`. desde y hasta son DÍAS UTC (segundos / 86400) del primer
+//     y del último día que cuenta (0 si ninguno); razon 0 si el histórico se da, 1 pocos días, 2 vencido; con razon > 0,
+//     valor es -1. Un campo con nombre no cambia `#fila` ni las posiciones: un addon de antes no lo ve. Si no cabe, se
+//     manda sin él y p1 lleva `historico = {omitido = true}`. Una ranura de una app de antes no trae `historico`.
 //   F7: casas puede traer varias (la propia, la neutral y, si caben, la de la otra facción: programador.mjs las elige,
 //   MAX_CASAS_RANURA), cada una con sus filas; conocidas dice de qué "<reino>|<faccion>" es cada una. El formato no cambia.
+//   Precio regional (regional.mjs, el DBRegionMarketAvg de TSM): si la app lo manda, p1 lleva `regional = {}` y
+//     `regionalInfo = {casas, desde, hora}` (cuántas casas de la región cuentan y la hora, en segundos, de su foto más vieja
+//     y más nueva), y los archivos de datos `R[item] = cobre`. Si no cabe, caen primero los nombres, luego el histórico y
+//     por último el regional; sin él, p1 lleva `regionalInfo = {omitido = true}`. Una ranura de una app de antes no trae
+//     `regionalInfo`; un addon de antes no lo mira.
 // p1.lua abre la tabla solo si no hay ninguna cargada o la cargada tiene un seq menor; los demás archivos solo añaden
 // datos si SNF_PRECIOS.seq es el suyo, así una ranura vieja nunca pisa una más nueva.
 import * as fsReal from 'node:fs';
@@ -111,22 +122,65 @@ function gruposLua(grupos) {
  * p2…p6 con los límites de tamaño y de constantes; si los nombres son lo que no cabe, se reintenta sin ellos.
  */
 export function textosPrecios(entrada) {
-  try {
-    return armarTextos(entrada);
-  } catch (e) {
-    if (e.code !== 'PRECIOS_GRANDES' || !entrada.nombres || Object.keys(entrada.nombres).length === 0) throw e;
-    return armarTextos({ ...entrada, nombres: {} });
+  const intentos = [entrada];
+  if (entrada.nombres && Object.keys(entrada.nombres).length > 0) intentos.push({ ...entrada, nombres: {} });
+  // Fase 2: lo siguiente que cae es el histórico (lo de siempre va antes); p1 dice que se ha quitado.
+  if (entrada.historico) intentos.push({ ...entrada, nombres: {}, historico: null, historicoOmitido: true });
+  // Lo último que cae es el precio regional; p1 dice que se ha quitado.
+  if (entrada.regional) {
+    const sinHistorico = entrada.historico ? { historico: null, historicoOmitido: true } : {};
+    intentos.push({ ...entrada, nombres: {}, ...sinHistorico, regional: null, regionalOmitido: true });
+  }
+  for (let i = 0; ; i++) {
+    try {
+      return armarTextos(intentos[i]);
+    } catch (e) {
+      if (e.code !== 'PRECIOS_GRANDES' || i === intentos.length - 1) throw e;
+    }
   }
 }
 
-function armarTextos({ seq, generado, region, conocidas = {}, casas = {}, grupos = [], nombres = {}, info = {} }) {
+const RAZONES_HISTORICO = { 'pocos-dias': 1, vencido: 2 };
+const DIA_S = 86400;
+
+// Fase 2: el campo `h` de una fila (ver el formato arriba), o null si el objeto no tiene días (o no hay histórico).
+function historicoFila(h, casa, item) {
+  if (!h) return null;
+  if (typeof h !== 'object') throw fallo('LUA_TIPO', `precios: histórico malo en ${casa}/${item}`);
+  if (h.razon === 'sin-datos') return null;
+  const razon = h.razon == null ? 0 : RAZONES_HISTORICO[h.razon];
+  if (razon === undefined) throw fallo('LUA_TIPO', `precios: razón del histórico desconocida en ${casa}/${item}`);
+  const dia = (s, que) => (s == null ? 0 : Math.floor(numero(s, que) / DIA_S));
+  return [
+    razon ? -1 : numero(h.valor, 'valor histórico'),
+    numero(h.dias, 'días del histórico'),
+    numero(h.muestras, 'muestras del histórico'),
+    dia(h.desde, 'desde del histórico'),
+    dia(h.hasta, 'hasta del histórico'),
+    razon,
+  ];
+}
+
+function armarTextos({
+  seq, generado, region, conocidas = {}, casas = {}, grupos = [], nombres = {}, info = {},
+  historico = null, historicoOmitido = false, umbralesHistorico = null, regional = null, regionalOmitido = false,
+}) {
   numero(seq, 'seq');
   const summaries = Object.keys(casas).sort((a, b) => Number(a) - Number(b)).flatMap((casa) => {
     const row = info[casa];
     if (!row) return [];
     return [`[${idNumerico(casa, 'casa')}]={hora=${numero(row.hora, 'hora')},desde=${numero(row.desde, 'desde')},pares=${numero(row.pares, 'pares')}}`];
   });
-  const metadata = summaries.length ? `, info = {${summaries.join(', ')}}` : '';
+  let metadata = summaries.length ? `, info = {${summaries.join(', ')}}` : '';
+  if (historico) {
+    const u = umbralesHistorico || {};
+    metadata += `, historico = {v = 1, ventana = ${numero(u.ventana, 'ventana')}, minDias = ${numero(u.minDias, 'minDias')}, ` +
+      `minMuestras = ${numero(u.minMuestras, 'minMuestras')}, maxDiasSinDato = ${numero(u.maxDiasSinDato, 'maxDiasSinDato')}}`;
+  } else if (historicoOmitido) metadata += ', historico = {omitido = true}';
+  if (regional) {
+    metadata += `, regional = {}, regionalInfo = {casas = ${numero(regional.casas, 'casas regionales')}, ` +
+      `desde = ${numero(regional.desde, 'desde regional')}, hora = ${numero(regional.hora, 'hora regional')}}`;
+  } else if (regionalOmitido) metadata += ', regionalInfo = {omitido = true}';
   const cabecera =
     `if SNF_PRECIOS == nil or (SNF_PRECIOS.seq or 0) < ${seq} then\n` +
     `  SNF_PRECIOS = {v = 1, seq = ${seq}, generado = ${numero(generado, 'generado')}, region = ${luaCadena(String(region))},\n` +
@@ -140,7 +194,7 @@ function armarTextos({ seq, generado, region, conocidas = {}, casas = {}, grupos
 
   // Cada archivo de datos empieza con la guarda del seq. Es un `return`, no un `if` que envuelva todo: Lua 5.1 no admite
   // saltos tan largos. `Q` es la tabla de casas, `N` la de nombres y `c` la casa actual.
-  const guarda = `local P = SNF_PRECIOS\nif not (P and P.seq == ${seq}) then return end\nlocal Q, N, c = P.casas, P.nombres\n`;
+  const guarda = `local P = SNF_PRECIOS\nif not (P and P.seq == ${seq}) then return end\nlocal Q, N, R, c = P.casas, P.nombres, P.regional\n`;
   const pie = '';
   const trozos = [];
   let t = null;
@@ -173,7 +227,17 @@ function armarTextos({ seq, generado, region, conocidas = {}, casas = {}, grupos
     for (const item of Object.keys(casas[casa])) {
       idNumerico(item, 'objeto');
       const f = fila(casas[casa][item], casa, item);
-      anadir(casa, `c[${item}]={${f.join(',')}}\n`, [`#${item}`, ...f.slice(0, 6).map((n) => `#${n}`), ...(f.length > 7 ? [`#${f[7]}`] : [])]);
+      const h = historico ? historicoFila(historico[casa]?.[item], casa, item) : null;
+      const claves = [`#${item}`, ...f.slice(0, 6).map((n) => `#${n}`), ...(f.length > 7 ? [`#${f[7]}`] : [])];
+      if (h) claves.push('"h', ...h.map((n) => `#${n}`));
+      anadir(casa, `c[${item}]={${f.join(',')}${h ? `,h={${h.join(',')}}` : ''}}\n`, claves);
+    }
+  }
+  if (regional) {
+    for (const item of Object.keys(regional.valores || {})) {
+      idNumerico(item, 'objeto regional');
+      const v = numero(regional.valores[item], 'precio regional');
+      anadir(null, `R[${item}]=${v}\n`, [`#${item}`, `#${v}`]);
     }
   }
   for (const item of Object.keys(nombres)) {

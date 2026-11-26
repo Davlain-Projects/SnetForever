@@ -72,6 +72,29 @@ test('posting sizes commodity batches with only C_Item.GetItemInfo', () => {
   }
 });
 
+test('a starting bid respects the minimum and uses the currency allowed by the client', () => {
+  const m = nuevaMaquina();
+  try {
+    const bids = m.lua(`(function()
+      ${operation}
+      C_AuctionHouse.SupportsCopperValues = function() return true end
+      local function draft(pct, commodity)
+        set("pujaPorcentaje", pct)
+        local d = V.decidir(2589, "Test", {}, 8, 0, commodity)
+        return {d.precioUnidad, d.puja or false}
+      end
+      local out = {draft(25), draft(75), draft(0), draft(100), draft(25, true)}
+      C_AuctionHouse.SupportsCopperValues = function() return false end
+      set("precioMinimo", "125c")
+      set("precioNormal", "300c")
+      out[#out + 1] = draft(50)
+      return out
+    end)()`);
+    assert.deepEqual(bids, [[200, 100], [200, 150], [200, false], [200, false], [200, false], [300, 200]]);
+    sinErrores(m);
+  } finally { m.cerrar(); }
+});
+
 test('inherited sale operations plan against successive active ceilings and live bag reserves', () => {
   const m = nuevaMaquina();
   try {
@@ -95,6 +118,47 @@ test('inherited sale operations plan against successive active ceilings and live
         plans[2].draft.motivo, plans[3].draft.unidades}}
     end)()`);
     assert.deepEqual(state, [['Test', 'Same ceiling', 'Restock'], [4, 'tope', 3]]);
+    sinErrores(m);
+  } finally {
+    m.cerrar();
+  }
+});
+
+test('an undercut listing is cancelled only when the repost would be cheaper', () => {
+  const m = nuevaMaquina();
+  try {
+    const decisions = m.lua(`(function()
+      ${operation}
+      set("rebaja", "0c")
+      local function cancel(mine, low)
+        local d = V.decidirCancelar({item = 2589, precioUnidad = mine, cantidad = 1}, "Test",
+          {{precioUnidad = mine, mia = true, cantidad = 1}, {precioUnidad = low, cantidad = 1}})
+        return {d.cancelar, d.motivo, d.nuevo or false}
+      end
+      local out = {}
+      out[#out + 1] = cancel(150, 140)
+      set("bajoMinimo", "minimo")
+      out[#out + 1] = cancel(100, 90)
+      out[#out + 1] = cancel(150, 90)
+      set("bajoMinimo", "normal")
+      out[#out + 1] = cancel(200, 90)
+      set("bajoMinimo", "maximo")
+      out[#out + 1] = cancel(150, 90)
+      set("cancelarParaSubir", false)
+      out[#out + 1] = cancel(150, 90)
+      set("bajoMinimo", "noPublicar")
+      out[#out + 1] = cancel(150, 90)
+      return out
+    end)()`);
+    assert.deepEqual(decisions, [
+      [true, 'rebajada', 140],
+      [false, 'bien', 100],
+      [true, 'rebajada', 100],
+      [false, 'bien', 200],
+      [true, 'subir', 300],
+      [false, 'bien', 300],
+      [false, 'no_volveria', false],
+    ]);
     sinErrores(m);
   } finally {
     m.cerrar();

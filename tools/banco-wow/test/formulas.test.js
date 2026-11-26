@@ -10,7 +10,9 @@ function maquina() {
   const m = nuevaMaquina();
   m.lua(`PRE = {[100] = {precio = 9000, normal = 10000}, [200] = {normal = 60000}}
     ESC = {[100] = {precio = 8000}}
+    REG = {}
     SnetForever.Precios.de = function(i) return PRE[i] end
+    SnetForever.Precios.regional = function(i) return REG[i] end
     SnetForever.Escaneo.datos = function() return ESC end`);
   m.itemInfo(100, { nombre: 'Uno', precio: 500 });
   m.itemInfo(200, { nombre: 'Dos', precio: 0 });
@@ -100,7 +102,11 @@ test('first salta sin valor; min y max ignoran sin valor; crafting no tiene valo
   assert.equal(v(m, 'crafting + 1g'), undefined, 'cualquier otra operación con sin valor da sin valor');
   assert.equal(v(m, '2g * crafting'), undefined);
   assert.equal(v(m, 'avg(1g, 3g)'), 20000);
-  assert.equal(v(m, 'avg(1g, crafting)'), undefined);
+  assert.equal(v(m, 'avg(1g, crafting)'), 10000, 'avg ignora sin valor, como TSM');
+  assert.equal(v(m, 'avg(crafting, 1g, 3g)'), 20000);
+  assert.equal(v(m, 'avg(crafting)'), undefined, 'avg sin ningún valor da sin valor');
+  assert.equal(v(m, 'check(first(crafting, snfmercado, snfmercado), max(0.25 * avg(crafting, snfmercado, snfmercado), 1s))', 100), 2500,
+    'la fórmula importada de TSM para la operación Forever da precio sin receta');
   assert.equal(v(m, 'round(1234, 100)'), 1200);
   assert.equal(v(m, 'round(1250)'), 1250);
   assert.equal(v(m, 'roundup(1201, 100)'), 1300);
@@ -125,6 +131,22 @@ test('ifgt(snfmercado, 5000g, 0.3, 0.05) * snfmercado', () => {
   sinErrores(m);
 });
 
+test('snfregional() es el precio regional de la app; DBRegionMarketAvg se traduce a ella', () => {
+  const m = maquina();
+  m.lua('REG[100] = 12000');
+  assert.equal(v(m, 'snfregional()', 100), 12000);
+  assert.equal(v(m, 'snfregional()', 200), undefined, 'sin precio regional, sin valor');
+  assert.equal(v(m, 'snfregional(item:100)', 200), 12000, 'con referencia a otro objeto');
+  assert.equal(v(m, '80% snfregional()', 100), 9600);
+  assert.equal(m.lua(`(function() return ${F}.valor("snfregional()", "i:100::1:3") end)()`), undefined, 'una variante no es el objeto base');
+  assert.equal(traducir(m, '80% DBRegionMarketAvg').texto, '80% snfregional()');
+  assert.equal(traducir(m, 'dbregionmarketavg(item:100) + dbmarket').texto, 'snfregional(item:100) + snfmercado');
+  assert.equal(traducir(m, '80% snfregional()').cambios, 0, 'lo ya traducido no se toca');
+  const antes = m.lua(`(function() local t, n = ${F}.traducir("first(dbmarket, dbregionmarketavg)", true) return {t = t, n = n} end)()`);
+  assert.deepEqual(antes, { t: 'first(snfmercado, snfmercado)', n: 2 }, 'con «antes», como se importaba antes');
+  sinErrores(m);
+});
+
 test('la fórmula larga de op-07 (sniper) compila y calcula', () => {
   const m = maquina();
   // Termina como la captura (…egionMarketAvg, 5000g, 0.3, ifgt(…2000g…, ifgt(…1000g…, 0.05)))))))) * DBRegionMarketAvg)):
@@ -137,13 +159,14 @@ test('la fórmula larga de op-07 (sniper) compila y calcula', () => {
   assert.equal(t.cambios, 9, 'nueve fuentes DBRegionMarketAvg');
   assert.deepEqual(t.desc, []);
   assert.ok(!/dbregion/i.test(t.texto));
-  assert.ok(t.texto.endsWith('0.05)))))))) * snfmercado)'));
+  assert.ok(t.texto.endsWith('0.05)))))))) * snfregional())'));
   // Sin traducir, esas fuentes no existen en SnetForever; traducida, compila.
   assert.match(valor(m, op07).e, /no existe en SnetForever/);
   const tr = t.texto;
-  // Objeto 100: 1g de mercado no pasa de 1000g: 0,05 × 10000 = 500, y vendorsell vale 500.
+  // Objeto 100: 1g de precio regional no pasa de 1000g: 0,05 × 10000 = 500, y vendorsell vale 500.
+  m.lua('REG[100] = 10000');
   assert.equal(v(m, tr, 100), 500);
-  m.lua('PRE[400] = {normal = 60000000}; PRE[500] = {normal = 200000000}; PRE[600] = {normal = 30000000}');
+  m.lua('REG[400] = 60000000; REG[500] = 200000000; REG[600] = 30000000');
   assert.equal(v(m, tr, 400), 0.3 * 60000000, '6000g: pasa de 5000g');
   assert.equal(v(m, tr, 500), 0.4 * 200000000, '20000g: pasa de 10000g');
   assert.equal(v(m, tr, 600), 0.2 * 30000000, '3000g: pasa de 2000g');
