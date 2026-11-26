@@ -181,7 +181,8 @@ local ALTO_CAJA = 18
 local ANCHO_BOTON = 107 -- Comprar y Descartar
 local ANCHO_LLEVAS = 140 -- «Llevas X de Y», en pequeño, a la izquierda de los botones
 local LADO_ENGRANAJE = 20
-local ANCHO_AJUSTES, ALTO_AJUSTES = 320, 150 -- la ventanita del engranaje (tarea S2: con la casilla del sonido del sniper)
+local ANCHO_AJUSTES, ALTO_AJUSTES = 320, 172 -- la ventanita del engranaje (tarea S2: con la casilla del sonido del sniper;
+-- fase 3 de la paridad: con la del modo del sniper)
 local ALFA_BLOQUEADO = 0.55 -- Comprar recién cambiado: se ve, pero medio segundo no acepta clics
 local ICONO_ENGRANAJE = "Interface\\Buttons\\UI-OptionsButton"
 local REPINTADO = 0.5 -- segundos entre repintados por SNF_COMERCIO_ESCANEO
@@ -1189,6 +1190,8 @@ local function textoMotivo(e)
     return L.t("COMERCIO_MOTIVO_TOPE", dinero(SNF.Compra.gastado()), dinero(SNF.Ajustes.get("comercioTope")))
   elseif m == "regla" then
     return L.t("COMERCIO_MOTIVO_REGLA", Texto.numero(e.regla.maxUnidades), dinero(e.regla.maxOro))
+  elseif m == "operacion" then
+    return L.t("COMERCIO_MOTIVO_OPERACION")
   elseif m == "sin_subasta" then
     return L.t("COMERCIO_MOTIVO_SIN_SUBASTA")
   elseif m == "ya_no_esta" then
@@ -1248,6 +1251,7 @@ local function pintarGasto()
   end
   g.siguiente.refrescar()
   g.sonido.refrescar()
+  g.sniperOperaciones.refrescar()
   g.largeText.refrescar()
   local compra = rawget(SNF, "Compra")
   local gastado = compra and type(compra.gastado) == "function" and compra.gastado() or 0
@@ -3234,11 +3238,19 @@ local function crearGasto()
   end)
   g.sonido:SetWidth(ANCHO_AJUSTES - 2 * MARGEN - 4)
   g.sonido:SetPoint("TOPLEFT", g, "TOPLEFT", MARGEN + 2, -102)
+  -- Fase 3 de la paridad: el modo del sniper (comercioSniperModo). Marcada, deciden las operaciones de Sniper de los grupos.
+  g.sniperOperaciones = Estilo.casillaComercio(g, function() return L.t("COMERCIO_SNIPER_OPERACIONES") end, function()
+    return SNF.Ajustes.get("comercioSniperModo") == "operaciones"
+  end, function(valor)
+    SNF.Ajustes.set("comercioSniperModo", valor and "operaciones" or "regla")
+  end)
+  g.sniperOperaciones:SetWidth(ANCHO_AJUSTES - 2 * MARGEN - 4)
+  g.sniperOperaciones:SetPoint("TOPLEFT", g, "TOPLEFT", MARGEN + 2, -124)
   g.largeText = Estilo.casillaComercio(g, function() return L.t("AUCTION_LARGE_TEXT") end,
     function() return SNF.Ajustes.get("auction.largeText") end,
     function(value) SNF.Ajustes.set("auction.largeText", value) end)
   g.largeText:SetWidth(ANCHO_AJUSTES - 2 * MARGEN - 4)
-  g.largeText:SetPoint("TOPLEFT", g, "TOPLEFT", MARGEN + 2, -124)
+  g.largeText:SetPoint("TOPLEFT", g, "TOPLEFT", MARGEN + 2, -146)
   g:SetScript("OnHide", siempre("ventana", function()
     g.tope:ClearFocus() -- salir de una caja guarda lo escrito
     g.aviso:ClearFocus()

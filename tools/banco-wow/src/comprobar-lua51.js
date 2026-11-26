@@ -91,12 +91,12 @@ const GLOBAL = '(?<![\\w.:])';
 const API_PROHIBIDAS = [
   'AcceptQuest', 'CompleteQuest', 'GetQuestReward', 'SelectGossipOption', 'SelectGossipAvailableQuest',
   'SelectGossipActiveQuest', 'TakeTaxiNode', 'TargetUnit', 'SetRaidTarget', 'CastSpellByName', 'CastSpellByID',
-  'UseItemByName', 'UseContainerItem', 'RunMacroText', 'EditMacro', 'CreateMacro', 'PickupContainerItem',
+  'UseItemByName', 'UseContainerItem', 'RunMacroText', 'EditMacro', 'CreateMacro',
   'ConfirmBinder', 'AcceptXPLoss', 'BuyTrainerService', 'SendChatMessage', 'SetCVar', 'AbandonQuest',
   'SetAbandonQuest', 'EasyMenu', 'LibStub',
   // Fase 4: el addon nunca vende, usa, equipa, coge ni borra objetos.
   'UseInventoryItem', 'PickupInventoryItem', 'EquipItemByName', 'AutoEquipCursorItem', 'DeleteCursorItem',
-  'SplitContainerItem', 'SellCursorItem',
+  'SellCursorItem',
 ];
 const NOMBRES = API_PROHIBIDAS.join('|');
 
@@ -107,6 +107,12 @@ const ultimoNombre = (s) => sinEspacios(s).split(/[.:]/).pop();
 const esDialogo = (archivo) => /^(?:addons\/SnetForever\/)?motor\/dialogos\.lua$/.test(String(archivo).replace(/\\/g, '/'));
 const API_DIALOGOS = new Set(['AcceptQuest', 'CompleteQuest', 'GetQuestReward', 'SelectAvailableQuest', 'SelectActiveQuest']);
 const permiteDialogo = (nombre, archivo) => esDialogo(archivo) && API_DIALOGOS.has(nombre);
+
+// Excepción aprobada por Alain (26-nov, «Sí, un movimiento por clic»): SOLO el ejecutor de Almacén
+// (addons/SnetForever_Comercio/comercio/almacen-mover.lua, con la ruta del repositorio o relativa al addon) puede llamar a
+// C_Container.PickupContainerItem y C_Container.SplitContainerItem, con el espacio de nombres delante. Las globales viejas,
+// _G[...], UseContainerItem y todas las demás siguen prohibidas también ahí.
+const esAlmacenMover = (archivo) => /^(?:addons\/SnetForever_Comercio\/)?comercio\/almacen-mover\.lua$/.test(String(archivo).replace(/\\/g, '/'));
 
 // El único archivo que puede usar SecureActionButtonTemplate (F3-10): ui/objetivos.lua del addon, con la ruta del
 // repositorio (addons/SnetForever/ui/objetivos.lua) o relativa al addon (ui/objetivos.lua), con / o con \.
@@ -127,10 +133,24 @@ const REGLAS = [
   // §4 en cualquier sitio del código, con espacio de nombres delante.
   {
     vista: 'codigo',
-    re: /(C_GossipInfo\s*\.\s*(?:SelectOption|SelectAvailableQuest|SelectActiveQuest)|C_Container\s*\.\s*(?:UseContainerItem|PickupContainerItem|SplitContainerItem)|C_Item\s*\.\s*EquipItemByName|C_CVar\s*\.\s*SetCVar|C_QuestLog\s*\.\s*(?:AbandonQuest|SetAbandonQuest)|C_ChatInfo\s*\.\s*SendChatMessage|:\s*AddDataProvider|\.\s*pinPools)/,
+    re: /(C_GossipInfo\s*\.\s*(?:SelectOption|SelectAvailableQuest|SelectActiveQuest)|C_Container\s*\.\s*UseContainerItem|C_Item\s*\.\s*EquipItemByName|C_CVar\s*\.\s*SetCVar|C_QuestLog\s*\.\s*(?:AbandonQuest|SetAbandonQuest)|C_ChatInfo\s*\.\s*SendChatMessage|:\s*AddDataProvider|\.\s*pinPools)/,
     motivo: (m) => `prohibido por §4: ${sinEspacios(m[1])}`,
     clave: (m) => `§4 ${ultimoNombre(m[1])}`,
     permitido: (m, archivo) => permiteDialogo(ultimoNombre(m[1]), archivo),
+  },
+  // Solo el acceso directo por C_Container se permite en el ejecutor.
+  {
+    vista: 'codigo',
+    re: /\b(C_Container\s*\.\s*)?(PickupContainerItem|SplitContainerItem)\b/,
+    motivo: (m) => `API prohibida por §4: ${sinEspacios(m[0])}`,
+    clave: (m) => `§4 ${m[2]}`,
+    permitido: (m, archivo) => m[1] && esAlmacenMover(archivo) && !/[.:]\s*$/.test(m.input.slice(0, m.index)),
+  },
+  {
+    vista: 'conCadenas',
+    re: /(?:\brawget\s*\([^,\n]+,\s*|\[\s*)(["'])(PickupContainerItem|SplitContainerItem)\1\s*[)\]]/,
+    motivo: (m) => `API prohibida por §4: ${m[2]}`,
+    clave: (m) => `§4 ${m[2]}`,
   },
   // §4 a través de _G: _G.Nombre, _G["Nombre"] o _G['Nombre'].
   {

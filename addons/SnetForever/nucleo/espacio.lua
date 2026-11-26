@@ -345,9 +345,13 @@ end
 -- Contenedores y objetos (fase 4, inventario de la IA). Solo se lee: nunca se usa, vende, equipa ni coge nada. Un valor
 -- secreto del motor no se compara: el dato se salta.
 --   API.huecosBolsa(b) -> n | nil              huecos de la bolsa (C_Container.GetContainerNumSlots → global → nil).
---   API.libresBolsa(b) -> n | nil              huecos libres (C_Container.GetContainerNumFreeSlots → global → nil).
---   API.infoContenedor(b, h) -> {id, n, ca, l, enlace} | nil   lo que hay en el hueco (C_Container.GetContainerItemInfo,
---                                              que da una tabla → la global vieja, que da valores sueltos → nil). l = 0|1.
+--   API.libresBolsa(b) -> n, familia | nil     huecos libres (C_Container.GetContainerNumFreeSlots → global → nil) y el
+--                                              tipo de bolsa que da el juego (0 = normal; nil si no lo da o es secreto).
+--   API.infoContenedor(b, h) -> {id, n, ca, l, enlace, b} | nil   lo que hay en el hueco (C_Container.GetContainerItemInfo,
+--                                              que da una tabla → la global vieja, que da valores sueltos → nil). l = 0|1;
+--                                              b = isLocked (true | false, nil si no se sabe).
+--   API.huecoVacio(b, h) -> true | false | nil   Almacén: el juego dice que el hueco está vacío (GetContainerItemInfo da
+--                                              nil), que tiene algo (aunque no se pueda leer) o nil si no se sabe.
 --   API.infoObjeto(idOEnlace) -> {nombre, ca, nv, h, pv, apilado} | nil   C_Item.GetItemInfo → GetItemInfo; nil sin caché.
 --                                              ca calidad, nv nivel, h equipLoc, pv precio de venta, apilado tamaño de pila.
 --   API.estadisticas(enlace) -> {ITEM_MOD_…=n} | nil   C_Item.GetItemStats → GetItemStats; nil si no hay o están vacías.
@@ -413,23 +417,30 @@ function API.libresBolsa(bolsa)
   if not f then
     return nil
   end
-  local ok, n = pcall(f, bolsa)
-  return ok and numero(n) or nil
+  local ok, n, familia = pcall(f, bolsa)
+  if not ok or not numero(n) then
+    return nil
+  end
+  return numero(n), not esSecreto(familia) and numero(familia) or nil
 end
 
 -- Del hueco de una bolsa: {id, n, ca, l, enlace}. C_Container da una tabla ContainerItemInfo; la global vieja,
 -- texture, count, locked, quality, readable, lootable, link, isFiltered, noValue, itemID, isBound.
-function API.infoContenedor(bolsa, hueco)
+-- Almacén exige la cantidad real con cantidadObligatoria; las consultas antiguas conservan su valor por defecto.
+-- Vendedor lee además lc (true si el juego dice si está ligado) y sv (true/false si dice si el objeto no tiene valor de
+-- venta; nil si no lo dice).
+function API.infoContenedor(bolsa, hueco, cantidadObligatoria)
   local f = de("C_Container", "GetContainerItemInfo") or global("GetContainerItemInfo")
   if not f then
     return nil
   end
-  local ok, a, n, _, calidad, _, _, enlace, _, _, id, ligado = pcall(f, bolsa, hueco)
+  local ok, a, n, bloqueado, calidad, _, _, enlace, _, sinValor, id, ligado = pcall(f, bolsa, hueco)
   if not ok or a == nil then
     return nil
   end
   if type(a) == "table" then
-    id, n, calidad, ligado, enlace = a.itemID, a.stackCount, a.quality, a.isBound, a.hyperlink
+    id, n, calidad, ligado, enlace, bloqueado, sinValor = a.itemID, a.stackCount, a.quality, a.isBound, a.hyperlink,
+      a.isLocked, a.hasNoValue
   end
   id = numero(id)
   if not id or id <= 0 then
@@ -438,8 +449,31 @@ function API.infoContenedor(bolsa, hueco)
   if esSecreto(n) then
     return nil -- sin saber cuántas hay, el hueco no cuenta
   end
-  n = numero(n) or 1
-  return {id = id, n = n, ca = numero(calidad), l = (not esSecreto(ligado) and ligado == true) and 1 or 0, enlace = texto(enlace)}
+  n = numero(n)
+  if cantidadObligatoria and (not n or n <= 0 or n ~= math.floor(n)) then
+    return nil
+  end
+  if esSecreto(bloqueado) or type(bloqueado) ~= "boolean" then
+    bloqueado = nil
+  end
+  if esSecreto(sinValor) or type(sinValor) ~= "boolean" then
+    sinValor = nil
+  end
+  local conocido = not esSecreto(ligado) and type(ligado) == "boolean"
+  return {id = id, n = n or 1, ca = numero(calidad), l = (conocido and ligado == true) and 1 or 0, lc = conocido,
+    sv = sinValor, enlace = texto(enlace), b = bloqueado}
+end
+
+function API.huecoVacio(bolsa, hueco)
+  local f = de("C_Container", "GetContainerItemInfo") or global("GetContainerItemInfo")
+  if not f then
+    return nil
+  end
+  local ok, a = pcall(f, bolsa, hueco)
+  if not ok or esSecreto(a) then
+    return nil
+  end
+  return a == nil
 end
 
 function API.infoObjeto(idOEnlace)

@@ -75,6 +75,14 @@
 --     jugador (352 grupos y el base). chocan: los que ya existen en SnetForever; enOtroGrupo: los objetos que ya están en un
 --     grupo nuestro distinto del de TSM (los del Grupo Base no cuentan).
 --     entrada = {tipo, operacion, campo, antes, despues, desconocidas} o, de una fuente propia, {fuente, antes, despues, ...}.
+--     Plan de paridad, entrega 1: también `diagnosticos` = {juntar, reemplazar} (comercio/importar-tsm-diagnostico.lua:
+--     fuentes equivalentes, estimaciones locales y fuentes que faltan, con las operaciones y campos afectados, directos, por
+--     fuentes propias y por vínculos, y cuántos grupos las usan en el perfil y de verdad), uno por modo porque Juntar conserva
+--     tus fuentes propias y tus listas de operaciones y Reemplazar las aparta; `diagnostico` es el de Juntar (y, en
+--     `esperado` de una importación, el de su modo). `huella`: un número que cambia si cambia lo leído de TSM (cada objeto
+--     con su grupo), tus fuentes propias o las listas de operaciones de tus grupos.
+--     Las traducciones no cambian: snfhistorico sigue leyendo lo mismo que snfmercado; el histórico propio (fase 2)
+--     es snfhistoricodiario() y se elige a mano.
 --     analizar() lo hace de una vez (para las pruebas y para quien no tenga prisa): con los datos del jugador es un tirón de
 --     más de 50 ms en el banco, así que la ventanita usa leer().
 -- ImportarTSM.leer({alAvanzar = fn(lectura), alTerminar = fn(lectura)}) -> lectura | nil, motivo   Ronda 1: lo mismo que
@@ -82,8 +90,9 @@
 --     "fallo", avance (0..100, solo crece), perfil, resumen (al acabar), mensaje?}. No se pausa en combate: no toca nada y
 --     cada paso está acotado. Empezar otra cancela la anterior.
 -- ImportarTSM.lectura() -> lectura | nil   la última.   ImportarTSM.cancelarLectura()   la para (la ventanita, al cerrarse).
--- ImportarTSM.importar({modo = "juntar"|"reemplazar", moverObjetos, alAvanzar = fn(informe), alTerminar = fn(informe)})
---     -> informe | nil, motivo     empieza (nil si no está disponible, en combate o ya hay uno en marcha).
+-- ImportarTSM.importar({modo = "juntar"|"reemplazar", moverObjetos, huella?, alAvanzar = fn(informe), alTerminar = fn(informe)})
+--     -> informe | nil, motivo     empieza (nil si no está disponible, en combate o ya hay uno en marcha). Con `huella` (la de
+--     la vista previa), si lo leído ya no da la misma huella, termina en «fallo» antes de escribir nada (IMPORTAR_TSM_CAMBIO).
 -- ImportarTSM.estado() -> informe | nil   el de la importación en marcha o la última.
 --     informe = {estado = "importando"|"pausado"|"hecho"|"fallo", modo, avance (0..100, solo crece), esperado (el
 --     resumen), grupos, objetos, operaciones, fuentes, quedan, quitados, fuentesTuyas, formulas = {traducidas, marcadas},
@@ -122,7 +131,10 @@ local PERFIL_DEFECTO = "Default"
 local GLOBAL_TSM = "TradeSkillMasterDB"
 
 -- Lo que hace cada paso (medido en el banco: ningún paso pasa de 50 ms; en el juego va mucho más deprisa).
-local TROZO = {grupos = 40, leerGrupos = 20, leerOperaciones = 3, operaciones = 24, objetos = 500, formulas = 12, comprobar = 800}
+local TROZO = {
+  grupos = 40, leerGrupos = 20, leerOperaciones = 3, operaciones = 24, objetos = 500, formulas = 12, comprobar = 800,
+  leerObjetos = 800,
+}
 
 local TIPOS_TSM = {
   Auctioning = "subasta", Crafting = "artesania", Mailing = "correo", Shopping = "compras", Sniper = "sniper",
@@ -765,6 +777,15 @@ local function recorrer(t, tabla, n, f)
   return false
 end
 
+-- Plan de paridad, entrega 1: la huella de lo leído (DiagnosticoTSM.hash de cada entrada, mezclado y sumado: no depende del
+-- orden). Importar con la huella de la vista previa se niega si TSM, tus fuentes propias o las listas de operaciones de tus
+-- grupos (lo que decide el diagnóstico al juntar) cambiaron desde que se revisó. Los objetos entran uno a uno, clave y
+-- grupo juntos (leerObjetos), así que cambiar de grupo dos objetos se nota aunque las cuentas por grupo sigan iguales.
+local function huella(t, texto)
+  local D = SNF.DiagnosticoTSM
+  t.huella = D.sumar(t.huella, D.mezclar(D.hash(texto)))
+end
+
 local function leerFuentes(t)
   local nombres = {}
   for nombre, texto in pairs(t.tablas.fuentes) do
@@ -776,8 +797,14 @@ local function leerFuentes(t)
   table.sort(nombres)
   for _, nombre in ipairs(nombres) do
     t.cuenta.fuentes = t.cuenta.fuentes + 1
-    local texto = pasarFormula(t, t.tablas.fuentes[nombre], {fuente = string.lower(nombre)})
-    t.fuentes[#t.fuentes + 1] = {nombre = string.lower(nombre), escrito = nombre, texto = texto}
+    local original = t.tablas.fuentes[nombre]
+    local texto = pasarFormula(t, original, {fuente = string.lower(nombre)})
+    t.fuentes[#t.fuentes + 1] = {nombre = string.lower(nombre), escrito = nombre, texto = texto, antes = recortar(original)}
+    huella(t, "f|" .. nombre .. "|" .. original)
+  end
+  -- Las fuentes propias que ya tienes también deciden cómo se traduce y cómo se calcula: entran en la huella.
+  for nombre, texto in pairs(SNF.Formulas.fuentes()) do
+    huella(t, "t|" .. nombre .. "|" .. texto)
   end
   return true
 end
@@ -798,6 +825,7 @@ local function leerGrupos(t)
         t.cuenta.chocan = t.cuenta.chocan + 1
       end
     end
+    huella(t, "g|" .. ruta .. "|" .. SNF.DiagnosticoTSM.serializar(g))
     if type(g) ~= "table" then
       return
     end
@@ -845,6 +873,7 @@ local function leerOperaciones(t)
     local tipo = TIPOS_TSM[tsmTipo]
     t.cuenta.operaciones[tipo] = t.cuenta.operaciones[tipo] + 1
     t.cuenta.totalOperaciones = t.cuenta.totalOperaciones + 1
+    huella(t, "o|" .. tsmTipo .. "|" .. nombre .. "|" .. SNF.DiagnosticoTSM.serializar(datos))
     local op = pasarOperacion(t, tsmTipo, nombre, datos)
     op.valido = nombreOpValido(nombre)
     t.ops[#t.ops + 1] = op
@@ -862,8 +891,13 @@ end
 
 local function leerObjetos(t)
   local objetos = t.v2.objetos
-  return recorrer(t, t.tablas.objetos, TROZO.comprobar, function(clave, ruta)
+  local D, memo = SNF.DiagnosticoTSM, t.memoRutas
+  local fin = recorrer(t, t.tablas.objetos, TROZO.leerObjetos, function(clave, ruta)
+    if type(clave) == "string" and type(ruta) == "string" then
+      t.huella = D.sumar(t.huella, D.par(clave, ruta, memo))
+    end
     if type(clave) == "string" and type(ruta) == "string" and ruta ~= "" then
+      t.porRuta[ruta] = (t.porRuta[ruta] or 0) + 1
       t.cuenta.objetos = t.cuenta.objetos + 1
       local donde = objetos[clave]
       if type(donde) == "string" and donde ~= "" and donde ~= ruta then
@@ -871,6 +905,93 @@ local function leerObjetos(t)
       end
     end
   end)
+  return fin
+end
+
+-- Plan de paridad, entrega 1: el diagnóstico de precios (comercio/importar-tsm-diagnostico.lua), en pasos. Solo lee lo que
+-- ya se leyó de TSM y las fuentes propias que tienes; no escribe nada.
+-- Un diagnóstico por modo: lo que se revisa tiene que ser lo que quedará. Al leer (la vista previa) se hacen los dos, para
+-- enseñar el del modo elegido; al importar, solo el del modo de la importación (es el que sale en el informe final).
+--   juntar      con tus fuentes propias (mandan) y las listas de operaciones que ya tienen tus grupos (se quedan).
+--   reemplazar  sin nada tuyo: tus fuentes van a _antes (`apartadas`, para decir por qué falta una).
+
+-- Las listas propias de los grupos que ya existen (y del Grupo Base): {[ruta] = {tipo = {nombres}}}. Al juntar se quedan.
+-- También entran en la huella, porque deciden el uso efectivo que enseña el diagnóstico de Juntar.
+local function listasLocales(t)
+  local salida = {}
+  local g = type(t.v2.gruposOps) == "table" and t.v2.gruposOps or {}
+  local S = SNF.DiagnosticoTSM.serializar
+  -- Los nombres que se reutilizan al juntar también dependen de las operaciones locales y de sus campos.
+  local operaciones = type(t.v2.operaciones) == "table" and t.v2.operaciones or {}
+  for tipo, lista in pairs(operaciones) do
+    if type(tipo) == "string" and type(lista) == "table" then
+      for nombre, valores in pairs(lista) do
+        if type(nombre) == "string" and type(valores) == "table" then
+          huella(t, "lo|" .. tipo .. "|" .. nombre .. "|" .. S(valores))
+        end
+      end
+    end
+  end
+  for ruta, tipos in pairs(g) do
+    if type(ruta) == "string" and type(tipos) == "table" and (ruta == "" or t.existentes[ruta]) then
+      for tipo, lista in pairs(tipos) do
+        if type(tipo) == "string" and type(lista) == "table" then
+          local nombres = {}
+          for _, n in ipairs(lista) do
+            if type(n) == "string" then
+              nombres[#nombres + 1] = n
+            end
+          end
+          salida[ruta] = salida[ruta] or {}
+          salida[ruta][tipo] = nombres
+          huella(t, "l|" .. ruta .. "|" .. tipo .. "|" .. S(lista))
+        end
+      end
+    end
+  end
+  return salida
+end
+
+local resolver -- más abajo (Escribir): el nombre final de una operación
+
+local function diagnosticar(t)
+  local D = SNF.DiagnosticoTSM
+  -- Para Juntar, primero el nombre final de cada operación (como lo hará resolverOperaciones, que luego lo reutiliza: aún no
+  -- se ha escrito nada), en trozos: así una lista tuya que se queda y nombra una operación reutilizada cuenta como uso.
+  local conJuntar = t.modo == nil or t.modo == "juntar"
+  if conJuntar and not t.diagResuelto then
+    local hasta = math.min(#t.ops, t.i + TROZO.operaciones - 1)
+    for k = t.i, hasta do
+      if t.ops[k].valido then
+        resolver(t, t.ops[k], {})
+      end
+    end
+    t.i = hasta + 1
+    t.diagResuelto = t.i > #t.ops
+    return false
+  end
+  if not t.diagCola then
+    local locales = listasLocales(t)
+    local tuyas = SNF.Formulas.fuentes()
+    t.diagCola, t.diagnosticos, t.diagI = {}, {}, 1
+    for _, modo in ipairs(t.modo and {t.modo} or {"juntar", "reemplazar"}) do
+      local juntar = modo == "juntar"
+      t.diagCola[#t.diagCola + 1] = {modo = modo, d = D.nuevo({
+        modo = modo, ops = t.ops, entradas = t.entradas, fuentes = t.fuentes, rutas = t.rutas, overrides = t.overrides,
+        porRuta = t.porRuta, tuyas = juntar and tuyas or {}, apartadas = not juntar and tuyas or nil,
+        retained = juntar and t.v2.operaciones or nil, locales = juntar and locales or nil, finales = juntar and t.finales or nil,
+      })}
+    end
+    return false
+  end
+  local actual = t.diagCola[t.diagI]
+  if D.paso(actual.d) then
+    t.diagnosticos[actual.modo] = actual.d
+    t.diagI = t.diagI + 1
+  end
+  local siguiente = t.diagCola[t.diagI]
+  t.progreso = (t.diagI - 1 + (siguiente and D.avance(siguiente.d) or 0)) / #t.diagCola
+  return t.diagI > #t.diagCola
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -1016,8 +1137,26 @@ local function escribirGrupos(t)
   return false
 end
 
+-- ¿Poner `nombre.campo -> otra` haría un ciclo? (siguiendo la cadena desde la otra se vuelve a esta)
+local function haceCiclo(ops, nombre, campo, otra)
+  local visto, actual = {}, otra
+  while type(actual) == "string" and not visto[actual] do
+    if actual == nombre then
+      return true
+    end
+    visto[actual] = true
+    local o = ops[actual]
+    local vinculos = type(o) == "table" and type(o.vinculos) == "table" and o.vinculos
+    actual = vinculos and vinculos[campo] or nil
+  end
+  return false
+end
+
 -- ¿La operación que ya existe tiene los mismos campos que la que viene? `enlaces`: los vínculos con los nombres finales.
-local function operacionIgual(existente, op, enlaces)
+-- Plan de paridad, entrega 1 (migración repetida): un vínculo de TSM que haría un círculo no se escribió la primera vez
+-- (escribirVinculos), así que su ausencia en la que ya existe (`nombre` dentro de `ops`) no la hace distinta: se comparan sus
+-- valores propios. Antes, cada importación repetida de un círculo de vínculos creaba «Nombre 2».
+local function operacionIgual(existente, op, enlaces, ops, nombre)
   local O = SNF.Operaciones
   if type(existente) ~= "table" then
     return false
@@ -1026,7 +1165,11 @@ local function operacionIgual(existente, op, enlaces)
   local vinculos = type(existente.vinculos) == "table" and existente.vinculos or {}
   for _, def in ipairs(O.TIPOS[op.tipo].campos) do
     local suyo = vinculos[def.clave]
-    if suyo ~= enlaces[def.clave] then
+    local viene = enlaces[def.clave]
+    if suyo == nil and viene ~= nil and ops and haceCiclo(ops, nombre, def.clave, viene) then
+      viene = nil -- se cortó al escribir: cuenta su valor propio
+    end
+    if suyo ~= viene then
       return false
     end
     if not suyo then
@@ -1046,7 +1189,8 @@ local function operacionIgual(existente, op, enlaces)
 end
 
 -- El nombre final de una operación: la suya, o la que hay si es igual, o «Nombre 2»... (nunca se pisa una del jugador).
-local function resolver(t, op, pila)
+-- Solo lee lo guardado: apunta el resultado en t.finales, t.reservados y la operación (lo usa también diagnosticar).
+function resolver(t, op, pila)
   local id = op.tipo .. "|" .. op.nombre
   if t.finales[id] then
     return t.finales[id]
@@ -1068,7 +1212,7 @@ local function resolver(t, op, pila)
   ops = type(ops) == "table" and ops or {}
   local final, accion = op.nombre, "nueva"
   if ops[op.nombre] ~= nil then
-    if operacionIgual(ops[op.nombre], op, enlaces) then
+    if operacionIgual(ops[op.nombre], op, enlaces, ops, op.nombre) then
       accion = "reutilizar"
     else
       accion = "renombrada"
@@ -1081,7 +1225,7 @@ local function resolver(t, op, pila)
           if ops[candidato] == nil then
             final = candidato
             break
-          elseif operacionIgual(ops[candidato], op, enlaces) then
+          elseif operacionIgual(ops[candidato], op, enlaces, ops, candidato) then
             final, accion = candidato, "reutilizar"
             break
           end
@@ -1134,21 +1278,6 @@ local function escribirOperaciones(t)
   t.i = hasta + 1
   t.progreso = #t.ops > 0 and (t.i - 1) / #t.ops or 1
   return t.i > #t.ops
-end
-
--- ¿Poner `nombre.campo -> otra` haría un ciclo? (siguiendo la cadena desde la otra se vuelve a esta)
-local function haceCiclo(ops, nombre, campo, otra)
-  local visto, actual = {}, otra
-  while type(actual) == "string" and not visto[actual] do
-    if actual == nombre then
-      return true
-    end
-    visto[actual] = true
-    local o = ops[actual]
-    local vinculos = type(o) == "table" and type(o.vinculos) == "table" and o.vinculos
-    actual = vinculos and vinculos[campo] or nil
-  end
-  return false
 end
 
 local function escribirVinculos(t)
@@ -1344,17 +1473,18 @@ end
 -- El trabajo: fases, pasos y avance.
 ---------------------------------------------------------------------------------------------------
 
--- {función, peso en el avance}. Las 4 primeras solo leen (son las de analizar).
+-- {función, peso en el avance}. Las 5 primeras solo leen (son las de analizar; la quinta es el diagnóstico de precios).
 local FASES = {
   {leerFuentes, 1, "leerFuentes"}, {leerGrupos, 3, "leerGrupos"}, {leerOperaciones, 6, "leerOperaciones"},
-  {leerObjetos, 10, "leerObjetos"}, {guardarAntes, 1, "guardarAntes"}, {escribirFuentes, 1, "escribirFuentes"},
+  {leerObjetos, 10, "leerObjetos"}, {diagnosticar, 3, "diagnosticar"},
+  {guardarAntes, 1, "guardarAntes"}, {escribirFuentes, 1, "escribirFuentes"},
   {escribirGrupos, 5, "escribirGrupos"}, {resolverOperaciones, 4, "resolverOperaciones"},
   {escribirOperaciones, 4, "escribirOperaciones"}, {escribirVinculos, 1, "escribirVinculos"},
   {escribirGruposOps, 4, "escribirGruposOps"}, {escribirObjetos, 30, "escribirObjetos"},
   {comprobarObjetos, 15, "comprobarObjetos"}, {comprobarResto, 2, "comprobarResto"},
   {comprobarFormulas, 13, "comprobarFormulas"},
 }
-local FASES_LEER = 4
+local FASES_LEER = 5
 
 local function nuevoTrabajo(base, c, v2)
   local _, reinoNuestroPj, reinoTSMPj = quienSoy()
@@ -1373,17 +1503,25 @@ local function nuevoTrabajo(base, c, v2)
     hayGrupos = next(existentes) ~= nil,
     cuenta = cuenta, fuentesTSM = {}, fuentes = {}, rutas = {}, overrides = {}, ops = {}, porId = {}, entradas = {},
     formulas = {traducidas = {}, marcadas = {}}, quitados = {personajes = 0, casas = 0, destinatarios = 0},
-    finales = {}, reservados = {}, creados = {}, usados = {}, traducidas = {}, implicitos = {},
-    fase = 1, i = 1, cursor = nil, progreso = 0, base = 0,
+    finales = {}, reservados = {}, creados = {}, usados = {}, traducidas = {}, implicitos = {}, porRuta = {},
+    memoRutas = {}, fase = 1, i = 1, cursor = nil, progreso = 0, base = 0, huella = 0,
   }
 end
 
+-- diagnosticos = {juntar = diagnostico, reemplazar = diagnostico} (al importar, solo el del modo); diagnostico = el de
+-- `modoDiagnostico` (el del modo de la importación o, en la vista previa, el de Juntar, que es lo que se elige primero).
 local function resumenDe(t)
+  local diagnosticos = {}
+  for modo, d in pairs(t.diagnosticos or {}) do
+    diagnosticos[modo] = SNF.DiagnosticoTSM.resultado(d)
+  end
+  local modo = t.modo or "juntar"
   return {
     perfil = t.perfil, grupos = t.cuenta.grupos, objetos = t.cuenta.objetos, operaciones = copiar(t.cuenta.operaciones),
     totalOperaciones = t.cuenta.totalOperaciones, fuentes = t.cuenta.fuentes, chocan = t.cuenta.chocan,
     enOtroGrupo = t.cuenta.enOtroGrupo, hayGrupos = t.hayGrupos, quitados = copiar(t.quitados),
-    formulas = copiar(t.formulas),
+    formulas = copiar(t.formulas), huella = t.huella,
+    diagnosticos = diagnosticos, modoDiagnostico = modo, diagnostico = diagnosticos[modo],
   }
 end
 
@@ -1491,7 +1629,8 @@ local function terminar(t, estado, mensaje)
     marcoCombate:UnregisterEvent("PLAYER_REGEN_ENABLED")
   end
   -- Lo que ya no hace falta (las tablas de TSM y lo leído) se suelta; el informe se queda.
-  t.tablas, t.ops, t.porId, t.entradas, t.traducidas = nil, nil, nil, nil, nil
+  t.tablas, t.ops, t.porId, t.entradas, t.traducidas, t.diagCola, t.diagnosticos, t.porRuta, t.memoRutas =
+    nil, nil, nil, nil, nil, nil, nil, nil, nil
   t.rutas, t.overrides, t.fuentes, t.finales, t.reservados, t.creados, t.usados, t.existentes = nil, nil, nil, nil, nil, nil, nil, nil
   avisar(t, "alTerminar")
 end
@@ -1537,7 +1676,8 @@ local function terminarLectura(t, estado, mensaje)
     inf.resumen = resumenDe(t)
     inf.avance = 100
   end
-  t.tablas, t.ops, t.porId, t.entradas, t.traducidas = nil, nil, nil, nil, nil
+  t.tablas, t.ops, t.porId, t.entradas, t.traducidas, t.diagCola, t.diagnosticos, t.porRuta, t.memoRutas =
+    nil, nil, nil, nil, nil, nil, nil, nil, nil
   t.rutas, t.overrides, t.fuentes, t.existentes = nil, nil, nil, nil
   avisar(t, "alTerminar")
 end
@@ -1589,6 +1729,12 @@ paso = function(t)
     if t.fase == FASES_LEER then
       t.informe.esperado = resumenDe(t)
       t.informe.quitados = copiar(t.quitados)
+      -- Plan de paridad, entrega 1: lo que se va a escribir tiene que ser lo que el jugador revisó. Si TSM (o tus fuentes
+      -- propias) cambió desde la vista previa, se para antes de escribir nada.
+      if not t.soloLeer and t.huellaPedida ~= nil and t.huellaPedida ~= t.huella then
+        terminar(t, "fallo", msg("IMPORTAR_TSM_CAMBIO"))
+        return
+      end
     end
     siguienteFase(t)
   end
@@ -1619,6 +1765,7 @@ function ImportarTSM.importar(opciones)
   end
   t.modo = opciones.modo == "reemplazar" and "reemplazar" or "juntar"
   t.mover = opciones.moverObjetos == true
+  t.huellaPedida = type(opciones.huella) == "number" and opciones.huella or nil
   t.alAvanzar, t.alTerminar = opciones.alAvanzar, opciones.alTerminar
   t.informe = {
     estado = "importando", modo = t.modo, avance = 0, grupos = 0, objetos = 0, operaciones = 0, fuentes = 0, quedan = 0,
@@ -1778,3 +1925,102 @@ function ImportarTSM.inventario()
   end
   return r
 end
+
+-- Correo (paridad con TSM, fase 4): el destinatario de una operación de Correo se guarda como lo escribió TSM. Para
+-- compararlo con nuestros personajes hace falta pasarlo a nuestro formato con las mismas reglas que la importación.
+-- ImportarTSM.nombreDeTSM(nombre) -> «Nombre Apellido», primer nombre   ImportarTSM.reinoDeTSM() -> reino de TSM | nil
+function ImportarTSM.nombreDeTSM(nombre)
+  if type(nombre) ~= "string" then
+    return nil
+  end
+  return nombreDeTSM(nombre)
+end
+
+function ImportarTSM.reinoDeTSM()
+  return reinoDeTSM()
+end
+
+-- Precio regional: las operaciones y fuentes propias importadas ANTES traducían DBRegionMarketAvg a snfmercado (el mercado
+-- local). Ahora va a snfregional() (la media de toda la región que calcula la app). Esto pone al día lo importado entonces,
+-- comparando con la configuración de TSM que el juego tiene cargada:
+--   · solo un campo cuyo texto guardado es EXACTAMENTE la traducción vieja del de TSM (la operación del mismo tipo y nombre,
+--     o «Nombre 2» de una importación al juntar): lo que el jugador editó a mano no se toca;
+--   · solo si el de TSM nombra DBRegionMarketAvg (si no, la traducción no cambia).
+-- Se hace una vez (comercio.v2.regionalActualizado = true) al entrar al mundo con TSM cargado; sin TSM, se reintenta en la
+-- sesión siguiente.
+-- ImportarTSM.actualizarRegional() -> cambiados | nil, motivo
+function ImportarTSM.actualizarRegional()
+  local base, motivo = leerBase()
+  if not base then
+    return nil, motivo
+  end
+  local _, v2 = cuentaComercio(false)
+  if not v2 then
+    return nil, "sin-cuenta"
+  end
+  local cambiados = 0
+  local function revisar(deTSM, guardado)
+    if type(deTSM) == "number" then
+      deTSM = tostring(deTSM)
+    end
+    if type(deTSM) ~= "string" or type(guardado) ~= "string" or #deTSM > MAX_FORMULA then
+      return nil
+    end
+    if not string.find(string.lower(deTSM), "dbregionmarketavg", 1, true) then
+      return nil
+    end
+    local antes = recortar(deTSM)
+    if SNF.Formulas.traducir(antes, true) ~= guardado then
+      return nil
+    end
+    local nuevo = SNF.Formulas.traducir(antes)
+    if nuevo == guardado then
+      return nil
+    end
+    cambiados = cambiados + 1
+    return nuevo
+  end
+  local opsTSM = base.tablas.operaciones
+  for tipoTSM, tipo in pairs(TIPOS_TSM) do
+    local deTSM, nuestras, campos = opsTSM[tipoTSM], v2.operaciones[tipo], CAMPOS[tipoTSM]
+    if type(deTSM) == "table" and type(nuestras) == "table" and campos then
+      for nombre, op in pairs(nuestras) do
+        local suya = type(nombre) == "string" and (deTSM[nombre] or deTSM[string.match(nombre, "^(.-) %d+$") or ""])
+        if type(suya) == "table" and type(op) == "table" and type(op.valores) == "table" then
+          for campoTSM, def in pairs(campos) do
+            if def[2] == "formula" or def[2] == "interruptor" then
+              local nuevo = revisar(suya[campoTSM], op.valores[def[1]])
+              if nuevo then
+                op.valores[def[1]] = nuevo
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  if type(v2.fuentes) == "table" then
+    for nombre, texto in pairs(base.tablas.fuentes) do
+      local clave = type(nombre) == "string" and string.lower(nombre)
+      if clave then
+        local nuevo = revisar(texto, v2.fuentes[clave])
+        if nuevo then
+          v2.fuentes[clave] = nuevo
+        end
+      end
+    end
+  end
+  v2.regionalActualizado = true
+  return cambiados
+end
+
+SNF.Eventos.escuchar("PLAYER_ENTERING_WORLD", function()
+  local _, v2 = cuentaComercio(false)
+  if not v2 or v2.regionalActualizado == true then
+    return
+  end
+  local ok, cambiados = pcall(ImportarTSM.actualizarRegional)
+  if ok and type(cambiados) == "number" and cambiados > 0 then
+    print(msg("COMERCIO_REGIONAL_ACTUALIZADO", cambiados))
+  end
+end)

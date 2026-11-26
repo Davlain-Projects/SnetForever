@@ -42,6 +42,25 @@
 --                                           Precios.consultar: F6, nunca la de otra facción con una subasta abierta).
 --                                           poco es booleano. nil si no hay precios, ni casa, o la ranura no trae esa
 --                                           casa u objeto: la ventana trabaja solo con el escaneo.
+-- Precios.historico(item, casa?) -> datos | nil, razon, cobertura   Fase 2: el histórico propio de la app (otra serie,
+--                                           no `normal`), de la misma casa que Precios.de. item es el id del objeto (la
+--                                           app no distingue variantes). datos = {valor, dias, muestras, desde, hasta,
+--                                           maxDiasSinDato,
+--                                           ventana, minDias, casa, edad}: desde y hasta en segundos (inicio del primer y
+--                                           del último día que cuenta) y edad la de la foto (Precios.edad()). Sin dato,
+--                                           nil, la razón y, si la fila la trae, la cobertura (la misma tabla sin valor):
+--                                           "sin-precios" (no hay ranura cargada), "sin-casa" (la casa no se conoce),
+--                                           "casa-sin-datos" (la ranura no trae esa casa), "formato-anterior" (la ranura
+--                                           es de una app de antes de la fase 2), "no-cabe" (la app lo quitó para que
+--                                           cupieran los precios), "sin-datos" (el objeto no tiene días), "pocos-dias" o
+--                                           "vencido" (lo dice la app, o el último día que cuenta tiene más de
+--                                           maxDiasSinDato días frente a la hora del servidor).
+-- Precios.regional(item) -> cobre, info | nil, razon   el precio regional de la app (el DBRegionMarketAvg de TSM: la media
+--                                           de mercado de las casas de toda la región, app/src/comercio/regional.mjs).
+--                                           No depende de la casa. info = {casas, desde, hora, edad}: cuántas casas de la
+--                                           región cuentan y la hora (segundos) de su foto más vieja y más nueva. Sin
+--                                           dato: "sin-precios", "formato-anterior" (ranura de una app de antes),
+--                                           "no-cabe" (la app lo quitó para que cupieran los precios) o "sin-datos".
 -- Precios.consultar() -> boolean, motivo?   Task 20d: lectura de solo consulta sin la subasta abierta (el tooltip de
 --                                           los objetos): carga la ranura de la hora anterior, la apunta como gastada y
 --                                           calcula la casa. Una sola vez; en combate espera. Ver su comentario
@@ -119,6 +138,7 @@ local floor = math.floor
 
 local cargadas = {} -- [i] = true: ranura ya cargada en esta sesión (aceptada o no)
 local actual = nil -- los precios aceptados
+local coberturas = {} -- [casa]: recuento de la ranura actual, pendiente o completo
 local recargar = false -- lo que decidió el último cargar()
 local avisado = false
 -- La casa calculada al abrir la subasta (Precios.alAbrir); F6: false = la abierta no tiene casa conocida.
@@ -239,7 +259,7 @@ function Precios.cargar()
   if tarde then
     local t = probar(estaHora, region)
     if t and horaDe(t.generado) == h and masNueva(t) then
-      actual, aceptada = t, true
+      actual, aceptada, coberturas = t, true, {}
     end
   end
   -- La ranura de h - 1 solo puede traer algo más nuevo si lo cargado es de antes de h - 1 (si no, cargarla la gastaría
@@ -247,7 +267,7 @@ function Precios.cargar()
   if not aceptada and (actual == nil or horaDe(actual.generado) < h - 1) then
     local t = probar(horaAntes, region)
     if t and masNueva(t) then
-      actual, aceptada = t, true
+      actual, aceptada, coberturas = t, true, {}
     end
   end
   -- La foto que aceptó la consulta, si sigue siendo la que tenemos, vale como aceptada: sin consulta previa alAbrir
@@ -525,6 +545,163 @@ function Precios.de(item, casa)
   }
 end
 
+-- Fase 2: el histórico (ver la cabecera). La fila trae h = {valor, dias, muestras, desde, hasta, razon} con desde y hasta
+-- en días UTC; razon 0 si se da, 1 pocos días, 2 vencido (precios-lua.mjs).
+Precios.DIA = 86400
+local RAZONES_HISTORICO = {[1] = "pocos-dias", [2] = "vencido"}
+
+function Precios.historico(item, casa)
+  if casa == nil then
+    if casaAbierta ~= nil then
+      casa = casaAbierta
+    else
+      casa = casaConsulta
+    end
+  end
+  if not actual then
+    return nil, "sin-precios"
+  end
+  if not casa then
+    return nil, "sin-casa"
+  end
+  local objetos = actual.casas[casa]
+  if type(objetos) ~= "table" then
+    return nil, "casa-sin-datos"
+  end
+  local meta = actual.historico
+  if type(meta) ~= "table" then
+    return nil, "formato-anterior"
+  end
+  if meta.omitido == true then
+    return nil, "no-cabe"
+  end
+  local f = objetos[item]
+  local h = type(f) == "table" and f.h
+  if type(h) ~= "table" then
+    return nil, "sin-datos"
+  end
+  local valor, dias, muestras, desde, hasta, razon = numero(h[1]), numero(h[2]), numero(h[3]), numero(h[4]),
+    numero(h[5]), numero(h[6])
+  if not (valor and dias and muestras and desde and hasta and razon) then
+    return nil, "sin-datos"
+  end
+  local datos = {dias = dias, muestras = muestras, desde = desde > 0 and desde * Precios.DIA or nil,
+    hasta = hasta > 0 and hasta * Precios.DIA or nil, ventana = numero(meta.ventana), minDias = numero(meta.minDias),
+    maxDiasSinDato = numero(meta.maxDiasSinDato), casa = casa, edad = Precios.edad()}
+  if razon ~= 0 then
+    return nil, RAZONES_HISTORICO[razon] or "sin-datos", datos
+  end
+  -- La ranura puede ser vieja (una sesión larga sin /reload): se vuelve a mirar contra la hora del servidor.
+  local ahora = SNF.API.horaServidor()
+  local maximo = numero(meta.maxDiasSinDato)
+  if datos.hasta and maximo and type(ahora) == "number" and floor(ahora / Precios.DIA) - hasta > maximo then
+    return nil, "vencido", datos
+  end
+  if valor <= 0 then
+    return nil, "sin-datos", datos
+  end
+  datos.valor = valor
+  return datos
+end
+
+function Precios.regional(item)
+  if not actual then
+    return nil, "sin-precios"
+  end
+  local info = actual.regionalInfo
+  if type(info) ~= "table" then
+    return nil, "formato-anterior"
+  end
+  if info.omitido == true then
+    return nil, "no-cabe"
+  end
+  local tabla = actual.regional
+  local valor = type(tabla) == "table" and numero(tabla[item])
+  if not valor or valor <= 0 then
+    return nil, "sin-datos"
+  end
+  return valor, {casas = numero(info.casas), desde = numero(info.desde), hora = numero(info.hora), edad = Precios.edad()}
+end
+
+-- Precios.cobertura(casa) -> datos | nil, razon   Fase 2: cuánto de la ranura cargada sirve para cada serie, por casa,
+--   para «Estado del comercio». Solo cuenta lo que ya leen Precios.historico y las filas: no calcula precios nuevos.
+--   datos = {objetos, salen, historico = {conValor, pocosDias, vencido, sinDatos, minDias} | nil, historicoRazon}
+--   · objetos: filas de la casa; salen: filas con salidas locales al día (vendidosDia >= 0, las mismas que enseña el
+--     tooltip: desapariciones de lotes estimadas, nunca ventas confirmadas);
+--   · historico: por objeto, lo que dice Precios.historico (con su comprobación de «vencido» frente a la hora del
+--     servidor); historicoRazon ("formato-anterior" o "no-cabe") cuando la ranura no trae el histórico y entonces
+--     historico es nil.
+--   La app solo baja fotos de cada casa (objetos y mercancías de esa casa): no hay serie regional ni de ventas
+--   confirmadas que contar. nil y la razón de Precios.historico sin precios, sin casa o con la casa fuera de la ranura.
+--   Se guarda por ranura cargada, casa y día del servidor (el «vencido» cambia con el día). Las casas grandes se
+--   recorren por trozos y devuelven nil, "calculando" hasta terminar.
+local FILAS_COBERTURA_POR_FOTOGRAMA = 128
+local function diaServidor()
+  local ahora = SNF.API.horaServidor()
+  return type(ahora) == "number" and floor(ahora / Precios.DIA) or -1
+end
+
+function Precios.cobertura(casa)
+  if not actual then return nil, "sin-precios" end
+  if not casa then return nil, "sin-casa" end
+  local objetos = actual.casas[casa]
+  if type(objetos) ~= "table" then return nil, "casa-sin-datos" end
+  local dia = diaServidor()
+  local guardada = coberturas[casa]
+  if guardada and guardada.dia == dia then
+    if guardada.datos then return guardada.datos end
+    return nil, "calculando"
+  end
+  local datos = {objetos = 0, salen = 0}
+  local meta = actual.historico
+  if type(meta) ~= "table" then
+    datos.historicoRazon = "formato-anterior"
+  elseif meta.omitido == true then
+    datos.historicoRazon = "no-cabe"
+  else
+    datos.historico = {conValor = 0, pocosDias = 0, vencido = 0, sinDatos = 0, minDias = numero(meta.minDias)}
+  end
+  local h = datos.historico
+  local calculo = {dia = dia}
+  coberturas[casa] = calculo
+  local item, fila = next(objetos)
+  local function contar()
+    if coberturas[casa] ~= calculo then return end
+    if diaServidor() ~= dia then
+      coberturas[casa] = nil
+      return
+    end
+    for _ = 1, FILAS_COBERTURA_POR_FOTOGRAMA do
+      if item == nil then break end
+      if type(fila) == "table" then
+        datos.objetos = datos.objetos + 1
+        if type(fila[6]) == "number" and fila[6] >= 0 then datos.salen = datos.salen + 1 end
+        if h then
+          local valor, razon = Precios.historico(item, casa)
+          if valor then
+            h.conValor = h.conValor + 1
+          elseif razon == "pocos-dias" then
+            h.pocosDias = h.pocosDias + 1
+          elseif razon == "vencido" then
+            h.vencido = h.vencido + 1
+          else
+            h.sinDatos = h.sinDatos + 1
+          end
+        end
+      end
+      item, fila = next(objetos, item)
+    end
+    if item == nil then
+      calculo.datos = datos
+    else
+      C_Timer.After(0, contar)
+    end
+  end
+  contar()
+  if calculo.datos then return calculo.datos end
+  return nil, "calculando"
+end
+
 -- Precios.consultar() -> boolean, motivo?   Task 20d: lectura de solo consulta para quien necesita los precios sin que
 --   la subasta esté abierta (el tooltip de los objetos). Si aún no hay precios, lee la ranura de la HORA ANTERIOR (la
 --   foto completa más reciente; la de la hora actual se deja libre para alAbrir, que es quien decide cuándo cargarla) y
@@ -566,7 +743,7 @@ function Precios.consultar()
       cargadas[ranura] = true
       horaConsulta = leida
       if valida(t, region) then
-        actual, tablaConsulta = t, t
+        actual, tablaConsulta, coberturas = t, t, {}
       end
     end
     SNF_PRECIOS = actual

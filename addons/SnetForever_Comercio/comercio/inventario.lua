@@ -593,14 +593,20 @@ local function hayBancoCuenta()
   return hayCuenta
 end
 
--- Shopping counts the selected, observed sources. A missing snapshot is not zero stock.
-function Inv.shoppingStock(item, sources)
+local function bolsasVivas(item)
   local items = rawget(_G, "C_Item")
   local getCount = type(items) == "table" and rawget(items, "GetItemCount") or rawget(_G, "GetItemCount")
   if type(getCount) ~= "function" then return nil end
   local ok, count = pcall(getCount, item, false)
   if not ok or API.esSecreto(count) or type(count) ~= "number" or count ~= floor(count)
     or count < 0 or count == math.huge then return nil end
+  return count
+end
+
+-- Shopping counts the selected, observed sources. A missing snapshot is not zero stock.
+function Inv.shoppingStock(item, sources)
+  local count = bolsasVivas(item)
+  if count == nil then return nil end
   if not (sources.alters or sources.banco) then return count end
   local inv = inventario()
   local pj = inv and inv.pj
@@ -629,6 +635,101 @@ function Inv.shoppingStock(item, sources)
     end
   end
   return count
+end
+
+-- Artesanía (paridad con TSM): the units seen for the restock count, source by source. TSM counts bags, bank, warband
+-- bank, mail, auctions, alts and guild. Here only what has been seen counts: a bank or mailbox never opened is listed in
+-- `unseen` instead of being taken as empty. -> total | nil, unseen = {"banco" | "bancoCuenta" | "correo" | "alters"}
+-- nil only when the game gives no count for the bags of the character playing now.
+function Inv.craftingStock(item)
+  local count = bolsasVivas(item)
+  if count == nil then return nil end
+  local unseen, marked = {}, {}
+  local function mark(source)
+    if not marked[source] then marked[source] = true; unseen[#unseen + 1] = source end
+  end
+  local inv = inventario()
+  local pj = inv and inv.pj
+  local keys = pj and ordenadas(pj)
+  if not keys then
+    mark("banco")
+    mark("correo")
+    if hayBancoCuenta() then mark("bancoCuenta") end
+    mark("alters")
+    return count, unseen
+  end
+  local mine = pj[claveMia]
+  if type(mine) == "table" and type(mine.banco) == "table" then
+    count = count + unidades(mine.banco, item)
+  else
+    mark("banco")
+  end
+  if type(mine) == "table" and type(mine.correo) == "table" then
+    count = count + unidades(mine.correo, item)
+  else
+    mark("correo")
+  end
+  if hayBancoCuenta() then
+    local account = inv.bancoCuenta
+    if type(account) == "table" and type(account.objetos) == "table" then
+      count = count + unidades(account.objetos, item)
+    else
+      mark("bancoCuenta")
+    end
+  end
+  for _, key in ipairs(keys) do
+    local character = pj[key]
+    if key ~= claveMia and type(character) == "table" then
+      if type(character.bolsas) == "table" then count = count + unidades(character.bolsas, item) else mark("alters") end
+      if type(character.banco) == "table" then count = count + unidades(character.banco, item) else mark("alters") end
+      if type(character.correo) == "table" then count = count + unidades(character.correo, item) else mark("alters") end
+    end
+  end
+  return count, unseen
+end
+
+-- Correo (paridad con TSM): lo que ya tiene el destinatario de una operación de Correo que repone, como
+-- GetMailingTargetQuantity de TSM 4.15.9: bolsas + correo (+ banco si se pide) de ESE personaje propio del reino de ahora.
+-- Sus subastas y la hermandad las suma quien llama (MisSubastas solo ve las del personaje de ahora). Para el de ahora, las
+-- bolsas son las del juego en el momento. -> total | nil, unseen = {"bolsas" | "correo" | "banco" | "personaje"}
+-- nil si el juego no da la cuenta de las bolsas del de ahora. "personaje": no hay ficha de ese personaje (nunca ha entrado
+-- con SnetForever ni se importó de TSM): su total es 0 y solo puede subir.
+function Inv.mailingTargetStock(nombre, item, conBanco)
+  local unseen = {}
+  local inv = inventario()
+  local pj = inv and inv.pj
+  local keys = pj and ordenadas(pj)
+  local mio, reino = yo()
+  if type(nombre) ~= "string" or not keys or not mio then
+    return 0, {"personaje"}
+  end
+  local clave = nombre .. "-" .. reino
+  local ficha = pj[clave]
+  local count
+  if clave == claveMia then
+    count = bolsasVivas(item)
+    if count == nil then return nil end
+  elseif type(ficha) ~= "table" then
+    return 0, {"personaje"}
+  elseif type(ficha.bolsas) == "table" then
+    count = unidades(ficha.bolsas, item)
+  else
+    count = 0
+    unseen[#unseen + 1] = "bolsas"
+  end
+  if type(ficha) == "table" and type(ficha.correo) == "table" then
+    count = count + unidades(ficha.correo, item)
+  else
+    unseen[#unseen + 1] = "correo"
+  end
+  if conBanco then
+    if type(ficha) == "table" and type(ficha.banco) == "table" then
+      count = count + unidades(ficha.banco, item)
+    else
+      unseen[#unseen + 1] = "banco"
+    end
+  end
+  return count, unseen
 end
 
 function Inv.de(objeto)

@@ -217,9 +217,9 @@ test('cada ajuste de la tabla de la tarea 3 tiene control, salvo las posiciones,
     table.sort(f)
     return f
   end)()`);
-  // openmap.ficha (fase 5, tarea 2) ya tiene su casilla (PANEL_OPENMAP_FICHA). Los del comercio (tarea 13) no van en el
-  // panel de la guía (tarea 14: el sonido del sniper tiene su casilla en la pestaña Sniper de la ventana de comercio).
-  assert.deepEqual(sin, ['comercioAvisoOro', 'comercioSiguienteSola', 'comercioSniperCada', 'comercioSniperSonido', 'comercioTope', 'comercioVista', 'guide.details', 'minimapa.angulo', 'principal.pestana', 'version']);
+  // Los ajustes de Comercio tienen sus controles en su propia ventana. El sonido y el modo de Sniper están en el engranaje.
+  assert.deepEqual(sin, ['comercioAvisoOro', 'comercioSiguienteSola', 'comercioSniperCada', 'comercioSniperModo',
+    'comercioSniperSonido', 'comercioTope', 'comercioVista', 'guide.details', 'minimapa.angulo', 'principal.pestana', 'version']);
   assert.equal(m.lua(`${C}["ventana.pos"]`), undefined);
   assert.equal(m.lua(`${C}["flecha.pos"]`), undefined);
   // La casilla de minimapa.boton va en «Ventana».

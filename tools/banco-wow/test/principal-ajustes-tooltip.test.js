@@ -226,14 +226,14 @@ test('las líneas «llega con…» se ven apagadas con su motivo y pulsarlas no 
     -- Apagar y encender Activar no las enciende.
     t.general.no:Click("LeftButton")
     t.general.si:Click("LeftButton")
-    out.siguen = {t.lineas.contaCompras.snfApagado, t.lineas.historico.snfApagado, t.lineas.grupo.snfApagado}
+    out.siguen = {t.lineas.contaVentas.snfApagado, t.lineas.coste.snfApagado, t.lineas.grupo.snfApagado}
     return out
   end)()`);
-  assert.equal(r.llegan.length, 15);
+  assert.equal(r.llegan.length, 13); // fase 2: el precio histórico y el coste medio de compra ya tienen datos
   for (const x of r.llegan) assert.deepEqual(x, [true, false, true, false]);
   assert.equal(r.nada, true, 'no se guarda nada');
-  assert.equal(r.textos.contaCompras, 'Compras (llega con Contabilidad)');
-  assert.equal(r.textos.historico, 'Precio histórico (llega más adelante)');
+  assert.equal(r.textos.contaCompras, undefined, 'fase 2: el coste medio de compra ya tiene datos');
+  assert.equal(r.textos.contaVentas, 'Ventas (llega con Contabilidad)');
   assert.equal(r.textos.cantidadPublicar, 'Cantidad que se publica (llega con Vender)');
   assert.equal(r.textos.costeDetallado, 'Coste detallado (llega con Fabricación)');
   assert.deepEqual(r.siguen, [true, true, false]);
@@ -644,10 +644,14 @@ const EJEMPLO_DEFECTO = [
   ['  Banco de cuenta', '1', false],
   // F2: lo que el total no cuenta, como en el tooltip de verdad.
   ['Sin contar: 1 banco, 1 buzón y los personajes sin entrar', '-', false],
+  // fase 2: apagado por defecto
+  ['Coste medio de compra', '8g 75s 00c 23 uds. en 3 partidas', true],
   [T_SUBASTA, '-', false],
   ['A la venta', '400 unidades, 37 subastas (app, hace 17 min)', false],
   ['Compra mínima', '9g 50s 00c', false],
   ['Valor de mercado', '[^12%] 10g 00s 00c', false],
+  // fase 2: apagado por defecto
+  ['Precio histórico', '9g 80s 00c 12 días, 288 lecturas', true],
   [SALEN, 'hasta 2.054', false],
   [PARTE, '61 %', false],
   ['El precio cumple tu regla · rotación sin confirmar (a 9g 50s 00c)', '-', false],
@@ -822,7 +826,7 @@ end
   m.lua(`BANCO.tick = BANCO.tick + ${Math.round((40 * 60 - (AHORA - H * 3600) + 0.5) * 20)}`);
   m.lua('SnetForever.Ajustes.set("idioma", "es")');
   m.lua('SnetForever.Precios.alAbrir()');
-  m.itemInfo(2589, { nombre: 'Paño de lino', calidad: 1, precio: 250 });
+  m.itemInfo(2589, { nombre: 'Paño de lino', calidad: 1, precio: 250, apilado: 20 });
   m.lua('BANCO.iconosItem[2589] = 132889');
   return m;
 }
@@ -954,7 +958,7 @@ test('las líneas «llega con…» no salen en el ejemplo', necesitaComercio, ()
     for _, f in ipairs(leerEjemplo()) do filas[#filas + 1] = f.izq end
     return {llegan = llegan, filas = filas}
   end)()`);
-  assert.equal(r.llegan.length, 15);
+  assert.equal(r.llegan.length, 13);
   for (const x of r.llegan) assert.ok(!r.filas.includes(x) && !r.filas.some((f) => f.includes('llega')), `${x}: ${JSON.stringify(r.filas)}`);
   sinErrores(m);
 });

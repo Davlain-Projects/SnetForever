@@ -1382,7 +1382,7 @@ local ORDENES_EN = {
   trade = "comercio",
   import = "importar",
 }
-local RESTO_EN = {["end"] = "fin", activate = "activar"}
+local RESTO_EN = {["end"] = "fin", activate = "activar", warehouse = "almacen", vendor = "vendedor", crafting = "artesania", mailing = "correo"}
 -- 0.7.0: una letra para las órdenes que más se usan («/snet muestrario» es largo y se olvida). «ia» ya es corta;
 -- «reiniciar» y «prueba» no llevan letra, para que no se pulsen sin querer. La ayuda enseña cada letra.
 local ORDENES_CORTAS = {
@@ -1447,6 +1447,18 @@ local function orden(argumentos)
         print(L.t("TRADE_MATERIALS_LINE", info and info.nombre or tostring(row.id), row.needed,
           row.missing and tostring(row.missing) or "?"))
       end
+    elseif (resto == "almacen" or resto == "almacén") and type(rawget(SNF, "UIAlmacen")) == "table" then
+      -- Fase 4 de la paridad con TSM: la vista previa de solo lectura del banco (ui/almacen.lua del comercio).
+      SNF.UIAlmacen.alternar()
+    elseif resto == "vendedor" and type(rawget(SNF, "UIVendedor")) == "table" then
+      -- Fase 4 de la paridad con TSM: la vista previa de solo lectura del comerciante (ui/vendedor.lua del comercio).
+      SNF.UIVendedor.alternar()
+    elseif (resto == "artesania" or resto == "artesanía") and type(rawget(SNF, "UIArtesania")) == "table" then
+      -- Fase 4 de la paridad con TSM: la vista previa de solo lectura de la reposición de Artesanía (ui/artesania.lua).
+      SNF.UIArtesania.alternar()
+    elseif resto == "correo" and type(rawget(SNF, "UICorreo")) == "table" then
+      -- Fase 4 de la paridad con TSM: la vista previa de solo lectura de los envíos de Correo (ui/correo.lua).
+      SNF.UICorreo.alternar()
     elseif resto == "tooltip" and type(rawget(SNF, "TooltipComercio")) == "table" then
       -- Task 20d: enciende o apaga nuestras líneas en el tooltip de los objetos (la casilla llegará con la página Ajustes).
       SNF.TooltipComercio.alternar()

@@ -848,11 +848,324 @@ local function readItemList(source)
   return {v = VERSION, g = groups, p = {}}, unread
 end
 
+---------------------------------------------------------------------------------------------------
+-- Exportaciones de grupos de TSM (la cadena que se copia de la web o de «Exportar» en TSM).
+--
+-- La cadena es LibDeflate:EncodeForPrint(LibDeflate:CompressDeflate(LibSerialize:Serialize(...))). Aquí se deshace todo
+-- sin librerías ni código ajeno: el alfabeto de 64 caracteres se descodifica a mano, la descompresión la hace el cliente
+-- (C_EncodingUtil.DecompressString, deflate sin cabecera) y el formato de LibSerialize (versión 1) se lee con un lector
+-- propio que nunca ejecuta nada, con topes de nodos, anidado y largo, y comprueba cada tipo.
+-- Los valores son, en orden: «TSM_EXPORT», la versión (1), el nombre del grupo exportado, {clave de objeto = ruta relativa},
+-- {ruta relativa = true}, las operaciones de cada grupo, las operaciones y las fuentes propias. SOLO se usan los grupos y
+-- los objetos: SnetForever usa sus propias operaciones (Alain, 26-11). La ruta «» es el grupo exportado.
+-- Medido con una exportación real de «WoW Forever» (26-11): 42.340 caracteres, 102.724 bytes descomprimidos, 193 grupos,
+-- 8.701 objetos.
+---------------------------------------------------------------------------------------------------
+
+local TSM_ALFABETO = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789()"
+local TSM_VALOR = {}
+for i = 1, #TSM_ALFABETO do
+  TSM_VALOR[string.byte(TSM_ALFABETO, i)] = i - 1
+end
+local TSM_BYTES = 4000000 -- descomprimidos
+local TSM_NODOS = 400000
+local TSM_PROFUNDIDAD = 12
+
+local function pareceExportacionTSM(texto)
+  return #texto >= 16 and string.find(texto, "^[%w%(%)]+$") ~= nil
+end
+
+-- LibDeflate:DecodeForPrint: de 4 en 4 caracteres, 3 bytes (6 bits por carácter, el primero el más bajo).
+local function deImprimible(texto)
+  local partes, n, i = {}, #texto, 1
+  local byte, char, floor = string.byte, string.char, math.floor
+  while i + 3 <= n do
+    local a, b, c, d = TSM_VALOR[byte(texto, i)], TSM_VALOR[byte(texto, i + 1)], TSM_VALOR[byte(texto, i + 2)],
+      TSM_VALOR[byte(texto, i + 3)]
+    if not (a and b and c and d) then
+      return nil
+    end
+    local v = a + b * 64 + c * 4096 + d * 262144
+    partes[#partes + 1] = char(v % 256, floor(v / 256) % 256, floor(v / 65536))
+    i = i + 4
+  end
+  local cache, bits = 0, 0
+  while i <= n do
+    local x = TSM_VALOR[byte(texto, i)]
+    if not x then
+      return nil
+    end
+    cache = cache + x * 2 ^ bits
+    bits = bits + 6
+    i = i + 1
+  end
+  while bits >= 8 do
+    partes[#partes + 1] = char(cache % 256)
+    cache = floor(cache / 256)
+    bits = bits - 8
+  end
+  return table.concat(partes)
+end
+
+local function descomprimirTSM(binario)
+  local util = rawget(_G, "C_EncodingUtil")
+  if type(util) ~= "table" or type(util.DecompressString) ~= "function" then
+    return nil
+  end
+  -- Enum.CompressionMethod.Deflate es 0 (deflate sin cabecera) en wow-ui-source; si el cliente no trae el Enum, 0.
+  local enum = rawget(_G, "Enum")
+  local metodos = type(enum) == "table" and rawget(enum, "CompressionMethod")
+  local metodo = type(metodos) == "table" and metodos.Deflate or 0
+  local ok, crudo = pcall(util.DecompressString, binario, metodo)
+  if ok and type(crudo) == "string" and #crudo <= TSM_BYTES then
+    return crudo
+  end
+  return nil
+end
+
+-- Un double de 8 bytes en orden de red (big-endian), sin operaciones de bits.
+local function dobleDe(s, p)
+  local b1, b2, b3, b4, b5, b6, b7, b8 = string.byte(s, p, p + 7)
+  local signo = b1 >= 128 and -1 or 1
+  local exponente = (b1 % 128) * 16 + math.floor(b2 / 16)
+  local mantisa = ((((((b2 % 16) * 256 + b3) * 256 + b4) * 256 + b5) * 256 + b6) * 256 + b7) * 256 + b8
+  if exponente == 0 then
+    return signo * mantisa * 2 ^ -1074
+  elseif exponente == 2047 then
+    error("numero")
+  end
+  return signo * (1 + mantisa / 2 ^ 52) * 2 ^ (exponente - 1023)
+end
+
+-- Lector de LibSerialize (versión 1). Lanza error si algo no cuadra (lo recoge un pcall).
+local function leerLibSerialize(s)
+  local p, nodos = 1, 0
+  local cadenas, tablas = {}, {}
+  local byte, sub, floor = string.byte, string.sub, math.floor
+  local function uno()
+    local v = byte(s, p)
+    if not v then
+      error("corto")
+    end
+    p = p + 1
+    return v
+  end
+  local function entero(n)
+    local v = 0
+    for _ = 1, n do
+      v = v * 256 + uno()
+    end
+    return v
+  end
+  local function texto(n)
+    if n > LIMITES.cadena * 50 or p + n - 1 > #s then
+      error("cadena")
+    end
+    local v = sub(s, p, p + n - 1)
+    p = p + n
+    if n > 2 then
+      cadenas[#cadenas + 1] = v
+    end
+    return v
+  end
+  local objeto
+  local function tabla(nPares, nLista, nivel, t)
+    if not t then
+      t = {}
+      tablas[#tablas + 1] = t
+    end
+    if nivel > TSM_PROFUNDIDAD then
+      error("hondo")
+    end
+    for i = 1, nLista do
+      t[i] = objeto(nivel + 1)
+    end
+    for _ = 1, nPares do
+      local k = objeto(nivel + 1)
+      local v = objeto(nivel + 1)
+      if k == nil or type(k) == "table" or k ~= k then
+        error("clave")
+      end
+      t[k] = v
+    end
+    return t
+  end
+  objeto = function(nivel)
+    nodos = nodos + 1
+    if nodos > TSM_NODOS then
+      error("grande")
+    end
+    local v = uno()
+    if v % 2 == 1 then
+      return (v - 1) / 2
+    end
+    if v % 4 == 2 then
+      local tipo = (v - 2) / 4
+      local cuenta = floor(tipo / 4)
+      tipo = tipo % 4
+      if tipo == 0 then
+        return texto(cuenta)
+      elseif tipo == 1 then
+        return tabla(cuenta, 0, nivel)
+      elseif tipo == 2 then
+        return tabla(0, cuenta, nivel)
+      end
+      return tabla(floor(cuenta / 4) + 1, cuenta % 4 + 1, nivel)
+    end
+    if v % 8 == 4 then
+      local junto = uno() * 256 + v
+      if v % 16 == 12 then
+        return -(junto - 12) / 16
+      end
+      return (junto - 4) / 16
+    end
+    local t = v / 8
+    if t == 0 then
+      return nil
+    elseif t <= 8 then
+      local largo = ({2, 2, 3, 3, 4, 4, 7, 7})[t]
+      local x = entero(largo)
+      return t % 2 == 1 and x or -x
+    elseif t == 9 then
+      if p + 7 > #s then
+        error("corto")
+      end
+      local x = dobleDe(s, p)
+      p = p + 8
+      return x
+    elseif t == 10 or t == 11 then
+      local x = tonumber(texto(uno()))
+      if not x then
+        error("numero")
+      end
+      return t == 10 and x or -x
+    elseif t == 12 then
+      return true
+    elseif t == 13 then
+      return false
+    elseif t >= 14 and t <= 16 then
+      return texto(entero(t - 13))
+    elseif t >= 17 and t <= 19 then
+      return tabla(entero(t - 16), 0, nivel)
+    elseif t >= 20 and t <= 22 then
+      return tabla(0, entero(t - 19), nivel)
+    elseif t >= 23 and t <= 25 then
+      local nLista = entero(t - 22)
+      return tabla(entero(t - 22), nLista, nivel)
+    elseif t >= 26 and t <= 28 then
+      local x = cadenas[entero(t - 25)]
+      if x == nil then
+        error("ref")
+      end
+      return x
+    elseif t >= 29 and t <= 31 then
+      local x = tablas[entero(t - 28)]
+      if x == nil then
+        error("ref")
+      end
+      return x
+    end
+    error("tipo")
+  end
+  if uno() ~= 1 then
+    error("version")
+  end
+  local valores = {}
+  while p <= #s do
+    valores[#valores + 1] = objeto(1)
+    if #valores > 16 then
+      error("grande")
+    end
+  end
+  return valores
+end
+
+-- La exportación de TSM a nuestros datos ({v, g, p = {}}) y cuántos objetos no se entendieron; nil si no es una.
+local function readTsmExport(source)
+  if not pareceExportacionTSM(source) then
+    return nil
+  end
+  local binario = deImprimible(source)
+  local crudo = binario and descomprimirTSM(binario)
+  if not crudo then
+    return nil
+  end
+  local ok, v = pcall(leerLibSerialize, crudo)
+  if not ok or type(v) ~= "table" or v[1] ~= "TSM_EXPORT" or type(v[3]) ~= "string" or type(v[4]) ~= "table" then
+    return nil
+  end
+  local nombre = recortar(string.gsub(v[3], SEP, " "))
+  if nombre == "" then
+    nombre = msg("TEXTOGRUPOS_IMPORTED_GROUP")
+  end
+  local grupos, rutas = {}, {}
+  local function grupoEn(relativa)
+    local completa = relativa == "" and nombre or (nombre .. SEP .. relativa)
+    local partes = niveles(completa)
+    if not partes then
+      return nil
+    end
+    local unida = ""
+    for _, parte in ipairs(partes) do
+      unida = unida == "" and parte or (unida .. SEP .. parte)
+      if not rutas[unida] then
+        if #grupos >= LIMITES.grupos then
+          return nil
+        end
+        local g = {r = unida, o = {}}
+        rutas[unida], grupos[#grupos + 1] = g, g
+      end
+    end
+    return rutas[unida]
+  end
+  if not grupoEn("") then
+    return nil
+  end
+  -- Los grupos vacíos también (ordenados, así cada padre va antes que sus hijos).
+  local lista = {}
+  if type(v[5]) == "table" then
+    for ruta in pairs(v[5]) do
+      if type(ruta) == "string" then
+        lista[#lista + 1] = ruta
+      end
+    end
+  end
+  table.sort(lista)
+  for _, ruta in ipairs(lista) do
+    grupoEn(ruta) -- una ruta que no vale se salta: sus objetos irán al grupo exportado
+  end
+  local claves, unread, total = {}, 0, 0
+  for clave in pairs(v[4]) do
+    if type(clave) == "string" then
+      claves[#claves + 1] = clave
+    else
+      unread = unread + 1
+    end
+  end
+  table.sort(claves)
+  for _, clave in ipairs(claves) do
+    total = total + 1
+    if total > LIMITES.objetos then
+      return nil
+    end
+    local key = plainItemKey(clave)
+    local relativa = v[4][clave]
+    local g = key and (type(relativa) == "string" and grupoEn(relativa) or rutas[nombre])
+    if g then
+      g.o[#g.o + 1] = key
+    else
+      unread = unread + 1
+    end
+  end
+  return {v = VERSION, g = grupos, p = {}}, unread
+end
+
 -- Recognize opaque formats so the UI can explain which input it accepts.
 local function pareceTSM(texto)
   return string.sub(texto, 1, 1) == "^" or string.find(texto, "^[ip]:%d") ~= nil or string.find(texto, "[,%^][ip]:%d") ~= nil
     or string.find(texto, "^!TSM:") ~= nil or string.find(texto, "^group:") ~= nil
     or string.find(texto, "^return%s*[%{%(]") ~= nil or string.find(texto, "^[%[%{]") ~= nil
+    or pareceExportacionTSM(texto)
 end
 
 function TextoGrupos.leer(texto)
@@ -872,6 +1185,9 @@ function TextoGrupos.leer(texto)
   local version = string.match(texto, "^SNF(%d+):")
   if not version then
     local raw, unread = readItemList(texto)
+    if not raw then
+      raw, unread = readTsmExport(texto)
+    end
     if raw then
       local groups, code = validar(raw)
       if not groups then return fallar(code) end

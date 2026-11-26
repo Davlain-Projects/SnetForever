@@ -13,6 +13,7 @@ import { crearEstadoComercio, leerCuentas } from '../src/comercio/estado.mjs';
 import { arranqueConWindows, ponerArranqueConWindows, SCRIPT_INICIO } from '../src/inicio.mjs';
 import { POWERSHELL } from '../src/captura.mjs';
 import { ARCHIVOS_POR_RANURA } from '../src/comercio/precios-lua.mjs';
+import { crearHistorial, MIN_DIAS_HISTORICO } from '../src/comercio/historial.mjs';
 
 const MIN = 60_000;
 const H = 60 * MIN;
@@ -368,6 +369,28 @@ test('si los precios de las tres casas no caben, va solo la casa propia con sus 
   assert.ok(m.escritos[0].textos[0].includes('{clave="mezcla", nombre={es="M", en="M"}, tipo="auto", objetos={5}}'));
   assert.ok(!m.escritos[0].textos[0].includes('ajeno'), 'el grupo que se queda vacío no va');
   assert.ok(m.registros.some((r) => /no caben/.test(r.texto)));
+});
+
+// Fase 2: la ruta normal con el historial de verdad. La foto que baja el programador entra en el resumen diario de su
+// casa y la ranura lleva el histórico de esa casa (campo h de la fila) y sus umbrales; lo de siempre no cambia.
+test('fase 2: la ranura lleva el histórico de cada casa, de sus propias fotos, sin cambiar la fila de siempre', async () => {
+  const reloj = relojFalso(en(10, 30));
+  const historial = crearHistorial({ fs: nodeFs, carpeta: join(carpetaTemporal(), 'comercio') });
+  const desde = Date.UTC(2026, 10, 7) / 1000;
+  for (let hora = desde; hora <= en(9, 0) / 1000; hora += 3600) historial.anadirFoto(114, hora, [subasta(hora, 2589, 100)], []);
+  const { e } = estadoCon({ desde: en(9, 21) });
+  const m = montar({ reloj, estado: e, historial });
+  await m.p.ahora();
+  assert.equal(m.escritos.length, 1);
+  const todo = m.escritos[0].textos.join('');
+  const dia = (ms) => Math.floor(ms / 86400000);
+  // 114: del 7 al 12 enteros (24 fotos) y el 13 con 10 del relleno más la de las 10:21. La fila de siempre: subasta y
+  // mercancía del servidor falso (10 unidades en 2 subastas), con ritmo y salidas de las fotos seguidas.
+  assert.ok(todo.includes(`c[2589]={100,10,100,0,1,120,0,2,1,1,h={100,7,155,${dia(Date.UTC(2026, 10, 7))},${dia(Date.UTC(2026, 10, 13))},0}}`), 'histórico de la 114');
+  // 111 y 117 solo tienen la foto de ahora: un día con una foto no cuenta (pocos días)
+  const sinDias = todo.split('\n').filter((l) => l === 'c[2589]={100,10,100,0,-1,-1,1,2,0,1,h={-1,0,0,0,0,1}}');
+  assert.equal(sinDias.length, 2, 'las casas sin días que cuenten (111 y 117) dicen por qué');
+  assert.ok(m.escritos[0].textos[0].includes(`historico = {v = 1, ventana = 30, minDias = ${MIN_DIAS_HISTORICO}, minMuestras = 3, maxDiasSinDato = 3}`));
 });
 
 // ---------- casas en uso ----------

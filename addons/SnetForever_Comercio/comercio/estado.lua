@@ -86,6 +86,19 @@ local function sample(now)
     if not prices.hayRitmo(house) then
       add("COMERCIO_SIN_RITMO", "acento")
     end
+    -- Fase 2: la cobertura de las series de esta casa. Informativa (sin color): pocos días es lo normal al empezar.
+    local coverage = prices.cobertura and prices.cobertura(house)
+    if coverage then
+      local n = SNF.Texto.numero
+      local daily = coverage.historico
+      if daily then
+        add("COMMERCE_STATUS_DAILY", nil, n(daily.conValor), n(coverage.objetos), n(daily.minDias or 0))
+      elseif coverage.historicoRazon then
+        add("COMMERCE_STATUS_DAILY_NO", nil, L.t(coverage.historicoRazon == "no-cabe" and "COMERCIO_TT_HIST_NO_CABE"
+          or "COMERCIO_TT_HIST_FORMATO_ANTERIOR"))
+      end
+    end
+    add("COMMERCE_STATUS_SCOPE")
     if prices.hayQueRecargar() or (contactAge and contactAge < CONTACT_TIMEOUT and age >= NEWER_SNAPSHOT_AGE) then
       add("COMMERCE_STATUS_RELOAD", "acento")
     end

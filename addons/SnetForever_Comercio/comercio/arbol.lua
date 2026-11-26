@@ -68,6 +68,7 @@ local ROTO = "_roto" -- lo que deja Guardado.preparar (y este módulo) con lo qu
 -- Índice inverso en memoria: porRuta[ruta] = {[clave] = true}. Es de la tabla `objetos` que indexa (si la cuenta se
 -- sustituye, se rehace solo).
 local indice = {fuente = nil, porRuta = nil}
+local indiceVariantes = {fuente = nil, porBase = nil}
 
 ---------------------------------------------------------------------------------------------------
 -- Rutas. Todo con búsquedas literales (el nombre puede traer %, ( ), [ ], |c…|r, etc.).
@@ -174,6 +175,7 @@ end
 
 local function olvidar()
   indice.fuente, indice.porRuta = nil, nil
+  indiceVariantes.fuente, indiceVariantes.porBase = nil, nil
 end
 
 local function copiaRegla(regla)
@@ -480,6 +482,10 @@ local function porRutas(v2)
   return indice.porRuta
 end
 
+local function baseVariante(clave)
+  return string.match(clave, "^(i:%d+):") or (string.sub(clave, 1, 2) == "p:" and "p" or nil)
+end
+
 -- Apunta un objeto en una ruta («» = Base) o, con nil, lo borra del árbol; mantiene el índice si ya está hecho.
 local function apuntar(v2, clave, ruta)
   local actual = v2.objetos[clave]
@@ -497,6 +503,10 @@ local function apuntar(v2, clave, ruta)
     end
   end
   v2.objetos[clave] = ruta
+  -- Mover una variante conserva su clave en el índice: la ruta se lee del árbol al consultar.
+  if (actual == nil or ruta == nil) and indiceVariantes.fuente == v2.objetos and baseVariante(clave) then
+    indiceVariantes.fuente, indiceVariantes.porBase = nil, nil
+  end
   if porRuta and ruta ~= nil then
     local set = porRuta[ruta]
     if not set then
@@ -878,6 +888,50 @@ function Arbol.objeto(clave)
     return ruta
   end
   return nil
+end
+
+-- Solo las variantes del objeto consultado. «p» agrupa las claves de mascotas que el banco solo ve como una jaula.
+local function variantesDe(base)
+  local v2 = datos()
+  if not v2 then return nil end
+  local objetos = v2.objetos
+  if indiceVariantes.fuente ~= objetos then
+    local porBase = {}
+    for clave in pairs(objetos) do
+      local id = type(clave) == "string" and baseVariante(clave)
+      if id then
+        local variantes = porBase[id] or {}
+        variantes[#variantes + 1] = clave
+        porBase[id] = variantes
+      end
+    end
+    indiceVariantes.fuente, indiceVariantes.porBase = objetos, porBase
+  end
+  return indiceVariantes.porBase[base], objetos
+end
+
+-- La búsqueda general no distingue los bonus de TSM. Comprueba la ruta actual de las variantes de ese objeto.
+function Arbol.varianteEnOtraRuta(base, ruta)
+  local variantes, objetos = variantesDe(base)
+  if variantes then
+    for _, clave in ipairs(variantes) do
+      if objetos[clave] ~= ruta then return true end
+    end
+  end
+  return false
+end
+
+-- En Almacén permite mostrar la fila ambigua solo si su variante o mascota pertenece a un grupo elegido.
+function Arbol.rutaVariante(base, rutas)
+  local variantes, objetos = variantesDe(base)
+  local elegida
+  if variantes then
+    for _, clave in ipairs(variantes) do
+      local ruta = objetos[clave]
+      if type(ruta) == "string" and rutas[ruta] and (not elegida or ruta < elegida) then elegida = ruta end
+    end
+  end
+  return elegida
 end
 
 function Arbol.objetos(ruta)

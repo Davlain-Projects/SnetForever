@@ -316,7 +316,9 @@ test('auctionID en la app: en disco solo los de la última foto, sin vendedor ni
   });
   const numeros = (c) => Array.from({ length: c.n }, (_, i) => (c.tipo === 'f64' ? c.datos.readDoubleLE(i * 8) : c.tipo === 'u32' ? c.datos.readUInt32LE(i * 4) : c.datos[i]));
   assert.deepEqual(columnas.map((c) => c.nombre), ['items', 'filas', 'cantidad', 'subastas', 'horas', 'precios', 'conVentas', 'ventas',
-    'ultimaIds', 'ultimaItems', 'ultimaCant', 'ultimaCorta', 'minimo', 'ultimaPrecio', 'mercancia'], 'ninguna columna de vendedores ni de nombres');
+    'ultimaIds', 'ultimaItems', 'ultimaCant', 'ultimaCorta', 'minimo', 'ultimaPrecio', 'mercancia',
+    // fase 2: el resumen diario (días, valores y fotos por día), sin identificadores
+    'diaFilas', 'diaDias', 'diaValores', 'diaMuestras'], 'ninguna columna de vendedores ni de nombres');
   // F5: el precio de la última foto, solo de la mercancía (la 900004, a 3); las subastas de objetos sueltos van a 0.
   assert.deepEqual(numeros(columnas.find((c) => c.nombre === 'ultimaPrecio')), [0, 0, 3]);
   assert.deepEqual(numeros(columnas.find((c) => c.nombre === 'ultimaIds')), [900002, 900003, 900004], 'solo la última foto');

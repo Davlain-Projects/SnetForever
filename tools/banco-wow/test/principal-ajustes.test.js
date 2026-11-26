@@ -379,8 +379,8 @@ test('Ajustes › Tooltip: cada casilla apaga y enciende su línea, y el radio A
   // Task 37: la lista plana de las líneas con datos, en el orden de los grupos de TSM (la página por grupos, Task 39, en
   // principal-ajustes-tooltip.test.js).
   assert.deepEqual(r.orden, ['grupo', 'operacion', 'operacionArtesania', 'operacionCorreo', 'operacionCompras', 'operacionSniper',
-    'operacionVendedor', 'operacionAlmacen', 'vendedor', 'inventario', 'inventarioSimple', 'aLaVenta', 'minima', 'mercadoSolo', 'mercado',
-    'salen', 'parte', 'preciosSubasta', 'maximoPublicar', 'maximoCompras', 'regla', 'maximoSniper', 'ids']);
+    'operacionVendedor', 'operacionAlmacen', 'vendedor', 'inventario', 'inventarioSimple', 'contaCompras', 'aLaVenta', 'minima', 'mercadoSolo', 'mercado',
+    'historico', 'salen', 'parte', 'preciosSubasta', 'maximoPublicar', 'maximoCompras', 'regla', 'maximoSniper', 'ids']);
   assert.ok(r.textos.every(Boolean), 'cada casilla con el texto de su línea');
   for (const c of r.cambia) assert.deepEqual(c, [true, true, true]);
   assert.deepEqual(r.general, ['Activar las líneas de SnetForever', true]);

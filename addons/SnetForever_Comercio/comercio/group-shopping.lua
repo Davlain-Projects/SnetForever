@@ -23,24 +23,13 @@ local function option(job, field)
   return SNF.Operaciones.valor("compras", job.operation, field)
 end
 
+-- The shared rules of Operaciones: group inheritance and the ignore lists for this character and house.
 local function effectiveOperation(route)
-  local operations = SNF.Operaciones
-  local name = operations.deGrupo(route, "compras")[1]
-  local realm, faction = SNF.Precios.identidad().reino, SNF.Precios.faccionActual()
-  local character = SNF.Personaje.clave()
-  local characterKey = realm and character and (character .. "-" .. realm)
-  local house = realm and faction and (realm .. "|" .. faction)
-  if name and not operations.ignorada("compras", name, characterKey, house) then
-    return name
-  end
+  return (SNF.Operaciones.aplicable(route, "compras"))
 end
 
 local function evaluate(job, field)
-  local formula = option(job, field)
-  local value = formula and SNF.Formulas.valor(formula, job.item)
-  if not SNF.API.esSecreto(value) and type(value) == "number" and value >= 0 and value < math.huge then
-    return SNF.Formulas.cobre(value)
-  end
+  return SNF.Operaciones.cobre("compras", job.operation, field, job.item)
 end
 
 local function inventorySources(job)
@@ -111,12 +100,8 @@ local function appendResults(scan, job, lines)
         end
       elseif line.mercancia then
         available = available + line.comprables
+        -- Every tier taken is at or under the cap. Checkout confirms only a quote equal to these tiers.
         local take = math.min(job.remaining - units, line.comprables)
-        -- With a one-copper floor, the quote total minus quantity plus one bounds the cost of any unit.
-        if price > 1 then
-          local headroom = job.threshold - (total - units) - 1
-          take = math.min(take, math.floor(headroom / (price - 1)))
-        end
         if take > 0 then
           units, total, highest = units + take, total + take * price, price
         end
@@ -293,8 +278,10 @@ end
 
 function Shopping.quoteWithinCap(id, item, quantity, total, price)
   if not positive(quantity) or not positive(total) or not positive(price) then return false end
+  -- SNF.Compra requires the quote to equal the current tiers at or under the row price, so each unit is bounded
+  -- there. This keeps the quantity within the restock and the average within the cap.
   local row, remaining, cap = recommendation(id, item, price)
-  return row ~= nil and quantity <= remaining and total - quantity + 1 <= cap
+  return row ~= nil and quantity <= remaining and total <= cap * quantity
 end
 
 function Shopping.prepare(id)

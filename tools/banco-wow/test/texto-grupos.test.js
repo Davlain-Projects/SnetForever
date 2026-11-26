@@ -203,8 +203,8 @@ test('texto roto, de otra versión o de TSM: mensaje claro y nada cambia', () =>
     ['SNF2:' + bueno.slice(5), 'otraVersion', 'Ese texto es de otra versión de SnetForever y no se puede leer.'],
     ['SNF12:AAAA', 'otraVersion', 'Ese texto es de otra versión de SnetForever y no se puede leer.'],
     [texto({ v: 2, g: [] }), 'otraVersion', 'Ese texto es de otra versión de SnetForever y no se puede leer.'],
-    ['^1^T^opaque', 'tsm', 'Formato de TSM no compatible. Pega una lista de IDs de objetos.'],
-    ['return {"Hierbas"}', 'tsm', 'Formato de TSM no compatible. Pega una lista de IDs de objetos.'],
+    ['^1^T^opaque', 'tsm', 'No se pudo leer este texto de TSM. Pega la exportación de grupos de TSM completa o una lista de IDs de objetos.'],
+    ['return {"Hierbas"}', 'tsm', 'No se pudo leer este texto de TSM. Pega la exportación de grupos de TSM completa o una lista de IDs de objetos.'],
     ['SNF1:' + 'A'.repeat(500000), 'grande', 'El texto es demasiado grande.'],
   ];
   for (const [t, codigo, mensaje] of casos) {

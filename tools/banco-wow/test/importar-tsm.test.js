@@ -104,7 +104,7 @@ test('importar copia todo y la comprobación da las mismas cuentas', () => {
   assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'rebaja'), '1c');
   assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioMinimo'), 'max(80% snfmercado, 1.5 * vendorsell)');
   assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioMaximo'), '200% snfhistorico');
-  assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioNormal'), 'first(snfmercado, minprecio, 50s)');
+  assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioNormal'), 'first(snfregional(), minprecio, 50s)');
   assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'bajoMinimo'), 'minimo');
   assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'sobreMaximo'), 'normal');
   assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'cancelarRebajadas'), true);
@@ -114,7 +114,7 @@ test('importar copia todo y la comprobación da las mismas cuentas', () => {
   assert.equal(valor(m, 'subasta', 'Raras caras', 'bajoMinimo'), 'ignorar');
   assert.equal(valor(m, 'subasta', 'Raras caras', 'sobreMaximo'), 'noPublicar');
   assert.equal(valor(m, 'subasta', '#Default', 'precioMinimo'),
-    'check(first(crafting,snfmercado,snfmercado),max(0.25*avg(crafting,snfmercado,snfmercado),1.5*vendorsell))');
+    'check(first(crafting,snfmercado,snfregional()),max(0.25*avg(crafting,snfmercado,snfregional()),1.5*vendorsell))');
   // Vínculos: el campo enlazado enseña el de la otra operación.
   assert.equal(vinculo(m, 'subasta', 'Raras caras', 'precioMinimo'), 'Hierbas 5x20');
   assert.equal(vinculo(m, 'subasta', 'Raras caras', 'rebaja'), 'Hierbas 5x20');
@@ -142,7 +142,7 @@ test('importar copia todo y la comprobación da las mismas cuentas', () => {
   assert.equal(valor(m, 'correo', 'A otro', 'destinatario'), '');
   assert.deepEqual(inf.quitados, { personajes: 2, casas: 1, destinatarios: 1 });
   // Compras, sniper, vendedor y almacén.
-  assert.equal(valor(m, 'compras', 'Compra barata', 'precioMaximo'), '90% snfmercado');
+  assert.equal(valor(m, 'compras', 'Compra barata', 'precioMaximo'), '90% snfregional()');
   assert.equal(valor(m, 'compras', 'Compra barata', 'mostrarSobreMaximo'), false);
   assert.equal(valor(m, 'compras', 'Compra barata', 'reponerCantidad'), '200');
   assert.deepEqual(valor(m, 'compras', 'Compra barata', 'fuentesReponer'), ['alters', 'banco']);
@@ -173,7 +173,7 @@ test('importar copia todo y la comprobación da las mismas cuentas', () => {
   assert.deepEqual(deGrupo(m, `Minerales${S}Barras`, 'vendedor'), [['Chatarra']]);
   assert.deepEqual(deGrupo(m, `Minerales${S}Barras`, 'artesania'), [['Fabricar']]);
   // La fuente propia.
-  assert.equal(m.lua(`${F}.fuentes().minprecio`), 'max(min(snfhistorico, snfmercado, snfhistorico), vendorsell)');
+  assert.equal(m.lua(`${F}.fuentes().minprecio`), 'max(min(snfhistorico, snfregional(), snfhistorico), vendorsell)');
   sinErrores(m);
 });
 
@@ -308,7 +308,7 @@ test('juntar y reemplazar (lo anterior queda en _antes); mover objetos o no', ()
   assert.equal(m.lua(`${O}.existe("subasta", "Mía")`), false);
   assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'tope'), '100');
   assert.deepEqual(deGrupo(m, 'Hierbas', 'subasta'), [['Hierbas 5x20']]);
-  assert.equal(m.lua(`${F}.fuentes().minprecio`), 'max(min(snfhistorico, snfmercado, snfhistorico), vendorsell)');
+  assert.equal(m.lua(`${F}.fuentes().minprecio`), 'max(min(snfhistorico, snfregional(), snfhistorico), vendorsell)');
   assert.equal(m.lua('SnetForeverCuenta.comercio.reglas["propio:Hierbas"]'), undefined, 'el grupo nuevo no hereda la regla del viejo');
   const antes = m.lua('SnetForeverCuenta.comercio.v2._antes');
   assert.equal(antes.length, 1);
@@ -583,7 +583,7 @@ test('renombrar una fuente propia la cambia también en las fórmulas que la usa
   importar(m);
   assert.equal(m.lua(`${F}.ponerFuente("precioMin", "max(min(snfhistorico, snfmercado, snfhistorico), vendorsell)", "minprecio")`), true);
   assert.equal(m.lua(`${F}.fuentes().minprecio`), undefined);
-  assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioNormal'), 'first(snfmercado, preciomin, 50s)');
+  assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioNormal'), 'first(snfregional(), preciomin, 50s)');
   assert.equal(valor(m, 'artesania', 'Fabricar', 'valorFabricado'), 'preciomin * 1.1');
   assert.equal(m.lua(`${F}.ponerFuente("doble", "2 * PrecioMin")`), true);
   assert.equal(m.lua(`${F}.ponerFuente("otra", "vendorsell", "preciomin")`), true);
@@ -804,7 +804,7 @@ test('datos reales raros: una fórmula vacía no se guarda como vacía, y dos fu
     TradeSkillMasterDB["g@ @userData@customPriceSources"].crafting = "1g"` });
   const inf = importar(m);
   assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioMinimo'),
-    'max(1.5 * vendorsell, 0.25 * first(snfmercado, snfmercado, snfhistorico))', 'vacía: queda el valor por defecto');
+    'max(1.5 * vendorsell, 0.25 * first(snfmercado, snfregional(), snfhistorico))', 'vacía: queda el valor por defecto');
   assert.equal(m.lua(`${F}.fuentes().minprecio`), 'vendorsell', 'la primera en orden («MinPrecio») se queda');
   assert.deepEqual(inf.fuentesTuyas, ['minprecio']);
   assert.equal(m.lua('SnetForeverCuenta.comercio.v2.fuentes.crafting'), undefined, 'un nombre que ya es una fuente nuestra no se escribe');
@@ -1046,4 +1046,33 @@ test('ronda 1: un fallo al importar el inventario queda apuntado en importarFall
   assert.equal(fallos.length, 1);
   assert.deepEqual([fallos[0].fase, fallos[0].modo, fallos[0].texto], ['inventario', 'inventario', 'fallo inventado']);
   assert.equal(typeof fallos[0].cuando, 'number');
+});
+
+test('actualizarRegional: lo importado con la traducción de antes (DBRegionMarketAvg -> snfmercado) pasa a snfregional(); lo editado a mano no', () => {
+  const m = maquina();
+  assert.equal(importar(m).estado, 'hecho');
+  assert.equal(valor(m, 'compras', 'Compra barata', 'precioMaximo'), '90% snfregional()', 'una importación nueva ya traduce al regional');
+  // Como lo dejó una importación de antes del precio regional, y un campo que el jugador cambió a mano.
+  m.lua(`local v2 = SnetForeverCuenta.comercio.v2
+    v2.operaciones.compras["Compra barata"].valores.precioMaximo = "90% snfmercado"
+    v2.operaciones.subasta["Hierbas 5x20"].valores.precioNormal = "first(snfmercado, minprecio, 50s)"
+    v2.operaciones.subasta["#Default"].valores.precioMinimo = "max(1g, 2g)"
+    v2.fuentes.minprecio = "max(min(snfhistorico, snfmercado, snfhistorico), vendorsell)"
+    v2.regionalActualizado = nil`);
+  assert.equal(m.lua(`${I}.actualizarRegional()`), 3);
+  assert.equal(valor(m, 'compras', 'Compra barata', 'precioMaximo'), '90% snfregional()');
+  assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioNormal'), 'first(snfregional(), minprecio, 50s)');
+  assert.equal(valor(m, 'subasta', '#Default', 'precioMinimo'), 'max(1g, 2g)', 'lo editado a mano no se toca');
+  assert.equal(valor(m, 'subasta', 'Hierbas 5x20', 'precioMinimo'), 'max(80% snfmercado, 1.5 * vendorsell)', 'sin DBRegionMarketAvg no cambia');
+  assert.equal(m.lua('SnetForeverCuenta.comercio.v2.fuentes.minprecio'), 'max(min(snfhistorico, snfregional(), snfhistorico), vendorsell)');
+  assert.equal(m.lua('SnetForeverCuenta.comercio.v2.regionalActualizado'), true);
+  assert.equal(m.lua(`${I}.actualizarRegional()`), 0, 'una segunda vez no cambia nada');
+  sinErrores(m);
+});
+
+test('actualizarRegional sin TSM cargado no hace nada y se reintentará', () => {
+  const m = maquina({ tsm: false });
+  assert.equal(m.lua(`(function() local n = ${I}.actualizarRegional(); return n == nil end)()`), true);
+  assert.notEqual(m.lua('SnetForeverCuenta and SnetForeverCuenta.comercio and SnetForeverCuenta.comercio.v2 and SnetForeverCuenta.comercio.v2.regionalActualizado'), true);
+  sinErrores(m);
 });

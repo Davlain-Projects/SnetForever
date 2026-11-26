@@ -242,6 +242,34 @@ test('the cancel scan keeps one owned auction and the first operation that permi
   }
 });
 
+test('the cancel queue keeps a listing whose reset price would repost it unchanged', () => {
+  const m = nuevaMaquina();
+  try {
+    m.lua(fixture);
+    m.lua(`
+      local s = SnetForever
+      for field, value in pairs({precioMinimo = "400c", precioNormal = "500c", precioMaximo = "600c",
+          bajoMinimo = "minimo"}) do
+        assert(s.Operaciones.poner("subasta", "Test", field, value))
+      end
+      assert(s.Operaciones.ponerDeGrupo("", "subasta", {"Test"}))
+      s.Busqueda.subastas = function()
+        return {{precioUnidad = 350, cantidad = 3}}, {completa = true, pendiente = false}
+      end`);
+    scanAll(m, 'cancel');
+    const decision = m.lua(`(function()
+      local task, row = SnetForever.AuctionOrders.estado()
+      return {#task.rows, row.auctionID, row.blocked, row.issue, row.draft.masBarata, row.draft.nuevo}
+    end)()`);
+    assert.deepEqual(decision, [1, 59, true, 'bien', 350, 400]);
+    assert.equal(m.lua('SnetForever.AuctionOrders.confirmAction()'), false);
+    assert.equal(m.lua('BANCO.orders.cancels'), 0);
+    sinErrores(m);
+  } finally {
+    m.cerrar();
+  }
+});
+
 test('changed posting rules invalidate existing confirmation even under the same operation name', () => {
   const m = nuevaMaquina();
   try {

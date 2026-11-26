@@ -22,8 +22,12 @@
 -- línea del chat cómo activarlo; con TSM sale ya, con «Leyendo TSM: N %» mientras lee TSM en pasos (Ronda 1: sin tirón al
 -- abrirla; Importar sigue apagado), y al acabar enseña el resumen («N grupos, N objetos, N operaciones») y, en la caja (solo para
 -- leer), las operaciones por tipo, las fuentes propias, los grupos que ya existen, los objetos que están en otro grupo y las
--- fórmulas que se traducen o quedan marcadas. Si ya hay grupos pregunta «¿juntar o reemplazar?» y si se mueven los objetos que
--- están en otro grupo. Al importar, el aviso enseña el avance («Importando: N %», un número que solo crece; en combate, que
+-- fórmulas que se traducen o quedan marcadas; encima de todo, el diagnóstico de precios (plan de paridad, entrega 1:
+-- TSM.diagnostico, entero y sin recortar) y, al importar, la huella de esa lectura (si TSM cambió, no se escribe nada).
+-- El diagnóstico que se ve es el del modo elegido (Juntar conserva tus fuentes y tus listas; Reemplazar las aparta): al cambiar
+-- la respuesta se cambia en el mismo paso, e Importar está apagado si lo que se ve no es el del modo elegido (TSM.revisado).
+-- Si ya hay grupos pregunta «¿juntar o reemplazar?» y si se mueven los objetos que están en otro grupo. Al importar, el aviso
+-- enseña el avance («Importando: N %», un número que solo crece; en combate, que
 -- está en pausa) y, al terminar, la misma ventanita dice «Importados N grupos, N objetos y N operaciones», la comprobación y
 -- la lista de fórmulas traducidas y marcadas (y lo mismo en el chat). En combate no empieza. Cerrarla no para la importación.
 -- Esconderla por donde sea (Cerrar, Cancelar o el Escape general, que solo la esconde) limpia su estado y para la lectura
@@ -491,7 +495,7 @@ end
 
 local function cerrarTexto()
   textoModo, textoExportado, textoDatos, textoMover = nil, nil, nil, false
-  TSM.resumen, TSM.juntar = nil, true
+  TSM.resumen, TSM.juntar, TSM.revisado = nil, true, nil
   TSM.olvidarLectura()
   local t = Grupos.texto
   if t then
@@ -631,7 +635,10 @@ local function crearTexto()
   t.preguntaModo = Tema.letra(t:CreateFontString(nil, "OVERLAY"), "texto")
   t.preguntaModo:SetPoint("BOTTOMLEFT", t, "BOTTOMLEFT", 12, 76)
   t.preguntaModo:SetJustifyH("LEFT")
-  t.radioModo = Piezas.radio(t, function() return TSM.juntar end, function(valor) TSM.juntar = valor == true end,
+  t.radioModo = Piezas.radio(t, function() return TSM.juntar end, function(valor)
+    TSM.juntar = valor == true
+    TSM.cambiarModo()
+  end,
     {si = L.t("PRINCIPAL_GRUPOS_TSM_JUNTAR"), no = L.t("PRINCIPAL_GRUPOS_TSM_REEMPLAZAR")})
   t.radioModo:SetPoint("LEFT", t.preguntaModo, "RIGHT", 12, 0)
   t.preguntaModo:Hide()
@@ -684,7 +691,7 @@ local function abrirTexto(modo, titulo, ayuda, texto)
   cerrarMenu()
   local exportar = modo == "exportar"
   textoModo, textoExportado, textoDatos, textoMover = nil, nil, nil, false
-  TSM.resumen, TSM.juntar = nil, true
+  TSM.resumen, TSM.juntar, TSM.revisado = nil, true, nil
   TSM.olvidarLectura()
   -- Lo que pudo dejar el modo de TSM (Task 25): su alto, su segunda pregunta, los radios apagados y el aviso sin rojo.
   t:SetHeight(TEXTO_ALTO)
@@ -808,12 +815,102 @@ function TSM.quitados(lineas, q)
   end
 end
 
--- Lo que se enseña antes de importar.
+-- Plan de paridad, entrega 1: el diagnóstico de precios (ImportarTSM.analizar/leer -> resumen.diagnostico), arriba del todo
+-- y entero (sin recortar: lo que se revisa es todo lo que se importará). Solo texto quieto en la caja que se lee.
+local function nombreCampo(tipo, campo)
+  return L.t("PRINCIPAL_EDITOR_C_" .. string.upper(tipo) .. "_" .. string.upper(campo))
+end
+
+local function clase(c)
+  return L.t("PRINCIPAL_GRUPOS_TSM_DIAG_C_" .. string.upper(c))
+end
+
+-- El diagnóstico es de un modo (d.modo): la segunda línea dice cuál, para que no haya duda de qué se está revisando.
+function TSM.diagnostico(lineas, d)
+  if not d then
+    return
+  end
+  local c = d.cuentas
+  lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_TITULO")
+  lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_MODO_" .. string.upper(d.modo))
+  if c.campos.aproximada + c.campos.faltante == 0 and #d.propias == 0 then
+    lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_NADA")
+  end
+  lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_CAMPOS", c.campos.equivalente, c.campos.aproximada, c.campos.faltante)
+  lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_OPS", c.operaciones.bien, c.operaciones.aproximada, c.operaciones.faltante)
+  lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_ACTIVAS", c.activas.bien, c.activas.aproximada, c.activas.faltante)
+  if c.conservan > 0 then
+    lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_EFECTIVAS", c.efectivas.bien, c.efectivas.aproximada,
+      c.efectivas.faltante)
+  end
+  if c.vinculosCortados > 0 then
+    lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_CORTADOS", c.vinculosCortados)
+  end
+  if #d.fuentes > 0 then
+    lineas[#lineas + 1] = ""
+    lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_FUENTES")
+    for _, f in ipairs(d.fuentes) do
+      local pasa = f.traduce and L.t("PRINCIPAL_GRUPOS_TSM_DIAG_PASA", f.traduce) or ""
+      local porque = f.motivo and L.t("PRINCIPAL_GRUPOS_TSM_DIAG_X_" .. string.upper(f.motivo)) or ""
+      lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_FUENTE", TSM.seguro(f.visible), pasa, clase(f.clase), f.campos, porque)
+    end
+  end
+  if #d.propias > 0 then
+    lineas[#lineas + 1] = ""
+    lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_PROPIAS")
+    for _, p in ipairs(d.propias) do
+      local motivo = string.upper(p.motivo or p.clase)
+      local tuya = p.tuya and L.t("PRINCIPAL_GRUPOS_TSM_DIAG_TUYA") or ""
+      lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_PROPIA", TSM.seguro(p.nombre), tuya,
+        L.t("PRINCIPAL_GRUPOS_TSM_DIAG_P_" .. motivo))
+    end
+  end
+  if #d.operaciones > 0 then
+    lineas[#lineas + 1] = ""
+    lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_OPERACIONES")
+    for _, op in ipairs(d.operaciones) do
+      lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_OP", L.t("PRINCIPAL_GRUPOS_OPS_TIPO_" .. string.upper(op.tipo)),
+        TSM.seguro(op.nombre), op.grupos, op.objetos, op.conBase and L.t("PRINCIPAL_GRUPOS_TSM_DIAG_BASE") or "",
+        L.t("PRINCIPAL_GRUPOS_TSM_DIAG_E_" .. string.upper(op.estado)))
+      if op.conservan > 0 then
+        local e = op.efectivo
+        lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_CONSERVA", op.conservan, e.grupos, e.objetos,
+          e.conBase and L.t("PRINCIPAL_GRUPOS_TSM_DIAG_BASE") or "")
+      end
+      for _, campo in ipairs(op.campos) do
+        local partes = {}
+        for _, f in ipairs(campo.fuentes) do
+          if f.clase ~= "equivalente" then
+            local texto = TSM.seguro(f.nombre) .. " (" .. clase(f.clase) .. ")"
+            partes[#partes + 1] = f.via and L.t("PRINCIPAL_GRUPOS_TSM_DIAG_VIA", texto, TSM.seguro(f.via)) or texto
+          end
+        end
+        if campo.error then
+          partes[#partes + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_ERROR")
+        end
+        lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_CAMPO", nombreCampo(op.tipo, campo.campo),
+          campo.vinculo and L.t("PRINCIPAL_GRUPOS_TSM_DIAG_VINCULO", TSM.seguro(campo.vinculo)) or "", table.concat(partes, ", "))
+      end
+    end
+  end
+  lineas[#lineas + 1] = ""
+end
+
+-- El modo que se usará al pulsar Importar (sin grupos en SnetForever no se pregunta: Juntar).
+function TSM.modoElegido(r)
+  return (r and r.hayGrupos and not TSM.juntar) and "reemplazar" or "juntar"
+end
+
+-- Lo que se enseña antes de importar: el diagnóstico del modo elegido. TSM.revisado apunta de qué modo es lo que se enseña;
+-- Importar solo se puede pulsar si coincide con el elegido.
 function TSM.detalle(r)
-  local lineas = {
-    L.t("PRINCIPAL_GRUPOS_TSM_D_OPERACIONES", TSM.tipos(r.operaciones)),
-    L.t("PRINCIPAL_GRUPOS_TSM_D_FUENTES", r.fuentes),
-  }
+  local lineas = {}
+  local modo = TSM.modoElegido(r)
+  local d = r.diagnosticos and r.diagnosticos[modo]
+  TSM.revisado = d and modo or nil
+  TSM.diagnostico(lineas, d)
+  lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_D_OPERACIONES", TSM.tipos(r.operaciones))
+  lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_D_FUENTES", r.fuentes)
   if r.hayGrupos then
     lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_D_CHOCAN", r.chocan)
     lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_D_OTRO", r.enOtroGrupo)
@@ -826,6 +923,12 @@ end
 -- Lo que se enseña al terminar.
 function TSM.final(inf)
   local lineas = {inf.comprobacion.mensaje or inf.mensaje or ""}
+  -- El diagnóstico de la importación hecha: el de su modo (ImportarTSM lo calcula con el modo de la importación).
+  local d = inf.esperado and inf.esperado.diagnostico
+  if d and d.modo == inf.modo then
+    lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_DIAG_FINAL_" .. string.upper(d.modo), d.cuentas.operaciones.aproximada,
+      d.cuentas.operaciones.faltante)
+  end
   if inf.quedan > 0 then
     lineas[#lineas + 1] = L.t("PRINCIPAL_GRUPOS_TSM_QUEDAN", inf.quedan)
   end
@@ -883,7 +986,7 @@ function TSM.terminado(inf)
 end
 
 function TSM.pintarHecho(t, inf)
-  TSM.resumen = nil -- ya no se enseña el análisis: la ventanita queda con el informe
+  TSM.resumen, TSM.revisado = nil, nil -- ya no se enseña el análisis: la ventanita queda con el informe
   t.preguntaModo:Hide()
   t.radioModo:Hide()
   t.pregunta:Hide()
@@ -917,9 +1020,12 @@ function TSM.empezar()
     return
   end
   local r = TSM.resumen
-  local modo = (r and r.hayGrupos and not TSM.juntar) and "reemplazar" or "juntar"
+  local modo = TSM.modoElegido(r)
+  if not r or TSM.revisado ~= modo then
+    return -- lo que se ve no es el diagnóstico de este modo (el botón está apagado)
+  end
   local inf, motivo = I.importar({
-    modo = modo, moverObjetos = textoMover, alAvanzar = TSM.avance, alTerminar = TSM.terminado,
+    modo = modo, moverObjetos = textoMover, huella = r and r.huella, alAvanzar = TSM.avance, alTerminar = TSM.terminado,
   })
   if not inf then
     Piezas.interno.colorTexto(t.aviso, "error")
@@ -949,6 +1055,9 @@ function TSM.repintar()
     t.resumen:SetText(L.t("PRINCIPAL_GRUPOS_TEXTO_RESUMEN", r.grupos, r.objetos, r.totalOperaciones))
     t.botonCerrar:ponerTexto(L.t("PRINCIPAL_GRUPOS_CANCELAR"))
     TSM.caja(t, TSM.detalle(r))
+    if not enMarcha(inf) then
+      t.botonImportar:ponerApagado(TSM.revisado ~= TSM.modoElegido(r))
+    end
   elseif lec then
     t.botonCerrar:ponerTexto(L.t("PRINCIPAL_GRUPOS_CANCELAR"))
     TSM.leyendo(lec)
@@ -959,6 +1068,18 @@ function TSM.repintar()
     t.botonCerrar:ponerTexto(L.t("PRINCIPAL_GRUPOS_TEXTO_CERRAR"))
     TSM.avance(inf)
   end
+end
+
+-- Al cambiar «¿juntar o reemplazar?»: el diagnóstico pasa a ser el del modo nuevo en el mismo paso (texto quieto, sin
+-- parpadeo); si no lo hay, Importar se apaga.
+function TSM.cambiarModo()
+  local t, I = Grupos.texto, importador()
+  local r = TSM.resumen
+  if not t or textoModo ~= "tsm" or not r or (I and enMarcha(I.estado())) then
+    return
+  end
+  TSM.caja(t, TSM.detalle(r))
+  t.botonImportar:ponerApagado(TSM.revisado ~= TSM.modoElegido(r))
 end
 
 -- Ronda 1: mientras se lee TSM en pasos (ImportarTSM.leer), «Leyendo TSM: N %», un número que solo crece.
@@ -999,7 +1120,7 @@ function TSM.abrir(r)
   Grupos.cancelarNuevo()
   cerrarMenu()
   textoModo, textoExportado, textoDatos, textoMover = nil, nil, nil, false
-  TSM.resumen, TSM.juntar = r, true
+  TSM.resumen, TSM.juntar, TSM.revisado = r, true, nil
   local inf = I.estado()
   local marcha = enMarcha(inf)
   t:SetHeight(TSM.ALTO)
