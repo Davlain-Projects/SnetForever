@@ -32,6 +32,12 @@ local function evaluate(job, field)
   return SNF.Operaciones.cobre("compras", job.operation, field, job.item)
 end
 
+-- The prudent cap: «Precio máximo», never above the lower of the house market value and the regional price. The second
+-- value says which one lowered it ("mercado" or "regional"), or nil when the formula decides.
+local function cap(job)
+  return SNF.Operaciones.topeCompra("compras", job.operation, job.item)
+end
+
 local function inventorySources(job)
   local flags = {}
   for _, source in ipairs(option(job, "fuentesReponer") or {}) do flags[source] = true end
@@ -81,7 +87,7 @@ local function addRow(scan, job, price, available, quantity, total, overLimit, a
   nextID = nextID + 1
   local row = {id = nextID, item = job.item, key = job.key, route = job.route, operation = job.operation,
     name = SNF.Datos.nombreItem(job.item), price = price, available = available, quantity = quantity,
-    total = total, threshold = job.threshold, overLimit = overLimit, auctionID = auctionID, mercancia = not auctionID}
+    total = total, threshold = job.threshold, clip = job.clip, overLimit = overLimit, auctionID = auctionID, mercancia = not auctionID}
   scan.rows[#scan.rows + 1] = row
   scan.index[row.id] = {row = row, job = job}
 end
@@ -145,7 +151,8 @@ local function advance(scan)
     if job.target == nil then
       local makeKey = C_AuctionHouse.MakeItemKey
       job.key = type(makeKey) == "function" and makeKey(job.item) or {itemID = job.item}
-      job.threshold, job.target = evaluate(job, "precioMaximo"), evaluate(job, "reponerCantidad")
+      job.threshold, job.clip = cap(job)
+      job.target = evaluate(job, "reponerCantidad")
       if job.target and job.target > 0 and inventorySources(job).subastas and not scan.ownedRequested then
         scan.ownedRequested = true
         if SNF.MisSubastas.pedir() then
@@ -256,7 +263,7 @@ local function recommendation(id, item, price)
   local row, job = found.row, found.job
   if row.overLimit or row.item ~= item or price > row.price or SNF.Arbol.objeto("i:" .. item) ~= job.route
     or effectiveOperation(job.route) ~= job.operation then return nil, 0 end
-  local threshold, target = evaluate(job, "precioMaximo"), evaluate(job, "reponerCantidad")
+  local threshold, target = (cap(job)), evaluate(job, "reponerCantidad")
   if not threshold or price > threshold or target == nil then return nil, 0 end
   return row, math.min(row.quantity, job.remaining, restockLimit(job, target) or 0), math.min(row.threshold, threshold)
 end

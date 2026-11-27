@@ -211,3 +211,48 @@ test('sniper: el tooltip de la fila dice que el tope se recortó al precio de tu
   assert.ok(lineas.includes(esperado), `tooltip: ${lineas}`);
   sinErrores(m);
 });
+
+// ---------- Compras (operaciones de compra por grupo) ----------
+
+const SHOP = 'SnetForever.GroupShopping';
+
+// Como group-shopping.test.js: «Restock» (máx. 800c, reponer hasta 8) sobre el lino, con 2 en las bolsas y tres tramos
+// de mercancía a 100, 120 y 900.
+function comprasLino(m) {
+  m.lua(`local S = SnetForever
+    assert(S.Arbol.crear("", "Supplies"))
+    assert(S.Arbol.poner("i:2589", "Supplies"))
+    assert(S.Operaciones.crear("compras", "Restock"))
+    assert(S.Operaciones.poner("compras", "Restock", "precioMaximo", "800c"))
+    assert(S.Operaciones.poner("compras", "Restock", "reponerCantidad", "8"))
+    assert(S.Operaciones.ponerDeGrupo("Supplies", "compras", {"Restock"}))
+    BANCO.jugador.dinero = 100000
+    BANCO.ponerSubasta({mercancias={[2589]={{quantity=4,unitPrice=100},{quantity=9,unitPrice=120},{quantity=2,unitPrice=900}}}})`);
+  m.objeto(2589, 2);
+  assert.equal(m.lua(`return ${SHOP}.start({Supplies=true})`), true);
+  for (let n = 0; n < 16 && m.lua(`return ${SHOP}.state().status`) === 'scanning'; n++) m.avanzar(0.25);
+  assert.equal(m.lua(`return ${SHOP}.state().status`), 'complete');
+  return m.lua(`return ${SHOP}.state().rows`);
+}
+
+test('compras: el tope baja al precio de tu casa y el tramo de 120 ya no se compra', () => {
+  const m = maquina({ normal: 110 });
+  const rows = comprasLino(m);
+  const eligible = rows.filter((r) => !r.overLimit);
+  assert.equal(eligible.length, 1, `filas: ${JSON.stringify(rows)}`);
+  assert.equal(eligible[0].price, 100);
+  assert.equal(eligible[0].quantity, 4);
+  assert.equal(eligible[0].threshold, 110);
+  assert.equal(eligible[0].clip, 'mercado');
+  sinErrores(m);
+});
+
+test('compras con el tope prudente apagado: el tope es el de la operación', () => {
+  const m = maquina({ normal: 110 });
+  m.lua('SnetForever.Ajustes.set("comercioTopePrudente", false)');
+  const rows = comprasLino(m);
+  const eligible = rows.find((r) => !r.overLimit);
+  assert.equal(eligible.threshold, 800);
+  assert.equal(eligible.clip, undefined);
+  sinErrores(m);
+});
