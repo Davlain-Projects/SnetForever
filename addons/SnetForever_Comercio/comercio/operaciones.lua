@@ -1052,6 +1052,49 @@ function Operaciones.cobre(tipo, nombre, campo, item)
   return nil
 end
 
+-- Un precio de referencia en cobre entero, o nil si no hay (o es 0: un precio de mercado de 0 no es un tope).
+local function referencia(fn, item)
+  if type(fn) ~= "function" then
+    return nil
+  end
+  local ok, v = pcall(fn, item)
+  if ok and type(v) == "table" then
+    v = v.normal
+  end
+  if not ok or SNF.API.esSecreto(v) or type(v) ~= "number" or v <= 0 or v >= math.huge then
+    return nil
+  end
+  local c = SNF.Formulas.cobre(v)
+  return c and c > 0 and c or nil
+end
+
+-- Operaciones.topeCompra(tipo, nombre, item) -> cobre entero | nil, recorte   el «Precio máximo» de una operación de
+--   compra (Sniper o Compras) con el tope prudente: nunca más que el menor entre el precio de mercado de tu casa
+--   (snfmercado, Precios.de(item).normal) y el regional (snfregional(), Precios.regional). Con uno solo, ese; sin
+--   ninguno, la fórmula sola. `recorte` es "mercado" o "regional" cuando ese precio bajó el tope (en un empate,
+--   "mercado"); nil si manda la fórmula. Sin valor de la fórmula no hay tope (nil), como Operaciones.cobre. Con el
+--   ajuste comercioTopePrudente apagado es Operaciones.cobre tal cual.
+function Operaciones.topeCompra(tipo, nombre, item)
+  local tope = Operaciones.cobre(tipo, nombre, "precioMaximo", item)
+  if not tope or SNF.Ajustes.get("comercioTopePrudente") == false then
+    return tope, nil
+  end
+  local precios = rawget(SNF, "Precios")
+  if type(precios) ~= "table" then
+    return tope, nil
+  end
+  local mercado = referencia(precios.de, item)
+  local regional = referencia(precios.regional, item)
+  local menor, recorte = mercado, "mercado"
+  if regional and (not menor or regional < menor) then
+    menor, recorte = regional, "regional"
+  end
+  if menor and menor < tope then
+    return menor, recorte
+  end
+  return tope, nil
+end
+
 ---------------------------------------------------------------------------------------------------
 -- Operaciones de cada grupo.
 ---------------------------------------------------------------------------------------------------
