@@ -1,16 +1,15 @@
 // Pruebas del lector del .toc de QuestieDB y del decodificador CBOR.
-import { test, describe, before } from 'node:test';
+import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { deflateSync } from 'node:zlib';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { leerToc } from '../src/questie/toc.js';
 import { decodificarCbor, valorCbor } from '../src/questie/cbor.js';
 import { rutaQuestieToc } from '../src/config.js';
 
-const aqui = dirname(fileURLToPath(import.meta.url));
-const rutaMini = join(aqui, 'fixtures', 'mini.toc');
+const miniFixture = new URL('./fixtures/mini.toc', import.meta.url);
+const incompleteFixture = new URL('./fixtures/mini-roto.toc', import.meta.url);
 
 // ---- codificador CBOR mínimo (solo para fabricar datos de prueba) ----
 const cab = (mayor, n) => {
@@ -28,31 +27,18 @@ const mapa = (...pares) => [...cab(5, pares.length / 2), ...pares.flat()];
 const NULO = [0xf6];
 const entero = (n) => cab(0, n);
 
-const aBase64 = (b) => Buffer.from(b).toString('base64');
-
 describe('leerToc', () => {
   let toc;
-  let rutaRota;
+  let tempDirectory;
   before(() => {
-    mkdirSync(dirname(rutaMini), { recursive: true });
-    const ids = bytesDe(array(entero(10), entero(20), entero(30)));
-    const b64 = aBase64(deflateSync(ids));
-    const tercio = Math.ceil(b64.length / 3);
-    const lineas = [
-      '## Interface: 16001',
-      '## X-Contract-Version: 4',
-      '## Titulo: con: dos puntos  ',
-      'Archivo.lua',
-      `## X-Quest-IDS: ~3~`,
-      `## X-Quest-IDS-1: ${b64.slice(0, tercio)}`,
-      `## X-Quest-IDS-2: ${b64.slice(tercio, 2 * tercio)}`,
-      `## X-Quest-IDS-3: ${b64.slice(2 * tercio)}`,
-    ];
-    const roto = ['## X-Roto: ~2~', '## X-Roto-1: AAAA']; // falta X-Roto-2
-    writeFileSync(rutaMini, lineas.join('\r\n') + '\r\n');
-    rutaRota = join(aqui, 'fixtures', 'mini-roto.toc');
-    writeFileSync(rutaRota, roto.join('\n') + '\n');
-    toc = leerToc(rutaMini);
+    tempDirectory = mkdtempSync(join(tmpdir(), 'snf-questie-toc-'));
+    const crlfPath = join(tempDirectory, 'mini.toc');
+    const fixture = readFileSync(miniFixture, 'utf8');
+    writeFileSync(crlfPath, fixture.replace(/\r?\n/g, '\r\n'));
+    toc = leerToc(crlfPath);
+  });
+  after(() => {
+    if (tempDirectory) rmSync(tempDirectory, { recursive: true, force: true });
   });
 
   test('corta en el primer ":" y quita espacios', () => {
@@ -66,7 +52,7 @@ describe('leerToc', () => {
   });
 
   test('parte que falta da error', () => {
-    assert.throws(() => leerToc(rutaRota), /parte 2 de X-Roto/);
+    assert.throws(() => leerToc(incompleteFixture), /parte 2 de X-Roto/);
   });
 
   test('clave inexistente devuelve undefined', () => {

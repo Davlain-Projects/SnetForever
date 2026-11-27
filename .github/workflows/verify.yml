@@ -1,0 +1,57 @@
+name: Pull request verification
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Linux
+            runner: ubuntu-24.04
+          - platform: Windows
+            runner: windows-2025
+    steps:
+      - name: Check out with LF line endings
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Require the Inno Setup compiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $iscc = Get-Command ISCC.exe -CommandType Application -ErrorAction SilentlyContinue
+          if ($iscc) {
+            $compiler = $iscc.Source
+          } else {
+            $compiler = @(
+              "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+              "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+              "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
+            ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+          }
+          if (-not $compiler) {
+            throw 'ISCC.exe is required for Windows packaging tests.'
+          }
+          "SNF_ISCC=$compiler" >> $env:GITHUB_ENV
+      - run: npm run verify

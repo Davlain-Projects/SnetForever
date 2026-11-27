@@ -211,7 +211,7 @@ Daily departures estimate how many units disappeared early in snapshots of the l
 | Price series | Local history, average purchase cost and per-house coverage are measured and shown in Trade status. Forever's Blizzard API path gives no regional or confirmed-sale series (measured 2026-11-26). Verify a real Forever purchase receipt (unit count and item link). A regional source needs a verified Forever origin first. |
 | Packed group strings | Validate a real exported group and its operations against its source. Plain-text lists and saved profiles have separate readers. |
 | Live auction behavior | Verify posting, cancellation, repricing and quantity selection in a controlled session, including closing the window mid-scan. In Forever, check whether the client supports copper prices, whether a listing with a bid can be cancelled, the maximum allowed price, and a bid percentage below 100% on a non-commodity. |
-| Broader economy tools | Plan the crafting queue, mailing, warehousing and vendoring workflows independently of the auction window. |
+| Broader economy tools | Validate the read-only [Crafting](artesania.md#forever-client-checks), [Mailing](correo.md#forever-client-checks), and [Vendoring](vendedor.md#forever-client-checks) previews and the one-stack-per-click [Warehousing](almacen.md#forever-client-checks) flow in the Forever client. Record a design decision before adding player-confirmed crafting, mail sending, or merchant transactions. |
 
 ### Economy workflow acceptance criteria
 
