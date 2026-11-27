@@ -6,7 +6,7 @@
 
 A World of Warcraft Forever addon and Windows companion for leveling, quest guidance, in-game AI chat, and auction management.
 
-[Design gallery](docs/design/) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
+[Design gallery](docs/design/) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md) · [Report a bug or propose a feature](https://github.com/Davlain-Projects/SnetForever/issues/new/choose) · [Security](SECURITY.md)
 
 ## What it does
 

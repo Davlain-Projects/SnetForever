@@ -1,0 +1,26 @@
+name: Feature proposal
+description: Suggest a change to SnetForever.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Search [existing issues](https://github.com/Davlain-Projects/SnetForever/issues) before proposing a change.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Describe what you are trying to do and where the current workflow falls short.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the behavior you would like to see and which part of SnetForever it affects.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      description: Mention any approaches you have tried or considered.

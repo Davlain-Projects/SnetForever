@@ -6,12 +6,20 @@
 
 ## Verification
 
-<!-- List commands and results. Mention Windows or in-game checks still needed. -->
+<!-- Add a result or check link for each platform. List pending checks explicitly. -->
+
+- Linux `npm run verify`
+- Windows `npm run verify`
+- In-game testing, if applicable
 
 ## OpenAI Codex review
 
-- [ ] Wait for Codex to finish reviewing the latest commit before merging. If automatic review has not started, post `@codex review` as a separate PR comment.
-- [ ] Address or explain each finding in its review thread. After pushing fixes, request another review and wait for its result.
+- [ ] Codex finished reviewing the current head commit. If a review is missing or covers an older commit, post `@codex review` as a separate PR comment and wait for the result.
+- [ ] Each finding has been addressed or explained in its review thread.
+
+## Maintainer approval
+
+<!-- David or Alain records approval in the verification run using Review deployments > maintainer-approval > Approve and deploy. -->
 
 ## Related issue
 
