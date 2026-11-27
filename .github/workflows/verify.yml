@@ -13,6 +13,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  maintainer-approval:
+    name: Maintainer approval
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    environment: maintainer-approval
+    steps:
+      - name: Record approval
+        run: echo "The protected environment recorded maintainer approval."
+
   verify:
     name: Verify (${{ matrix.platform }})
     runs-on: ${{ matrix.runner }}

@@ -65,7 +65,9 @@ node --import ./test/aislar.mjs --test test/ordenRutaIA.test.js
 
 Push your branch to your fork and open a pull request against `Davlain-Projects/SnetForever:main`. Write the title, description, and verification notes in English. Describe the affected component and why the change is needed, link the issue if there is one, and list any remaining checks.
 
-Pull requests require maintainer approval, passing verification, and resolved review conversations. A maintainer's own change needs review by a different person. An authorized maintainer uses squash merge, which records the pull request as one commit on `main` while preserving the discussion on GitHub.
+Pull requests require passing verification, resolved review conversations, and approval from David or Alain. Either maintainer can approve and squash merge a pull request they opened. Contributions from outside the maintainer team need approval from either maintainer.
+
+To record approval, open the pull request's verification run, choose **Review deployments**, select **maintainer-approval**, and choose **Approve and deploy**. This job records approval only. Use squash merge to record the pull request as one commit on `main` while preserving the discussion on GitHub.
 
 For every new pull request, the person merging must confirm that OpenAI Codex finished reviewing the current head commit. Read the review comments and address or explain each finding. If the review is missing, pending, or covers an older commit, post `@codex review` in the PR conversation and wait for completion. If Codex is unavailable, leave the PR open. Record local verification results separately.
 

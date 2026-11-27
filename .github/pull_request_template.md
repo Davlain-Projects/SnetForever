@@ -17,6 +17,10 @@
 - [ ] Codex finished reviewing the current head commit. If a review is missing or covers an older commit, post `@codex review` as a separate PR comment and wait for the result.
 - [ ] Each finding has been addressed or explained in its review thread.
 
+## Maintainer approval
+
+<!-- David or Alain records approval in the verification run using Review deployments > maintainer-approval > Approve and deploy. -->
+
 ## Related issue
 
 <!-- Link the issue if there is one. -->
