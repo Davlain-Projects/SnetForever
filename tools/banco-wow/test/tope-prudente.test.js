@@ -24,7 +24,7 @@ function ponerRanura(dir, { normal = 100000, regional } = {}) {
   const carpeta = join(dir, nombre(i));
   mkdirSync(carpeta, { recursive: true });
   writeFileSync(join(carpeta, `${nombre(i)}.toc`), `## Interface: 16001\n## LoadOnDemand: 1\n## Dependencies: SnetForever\n\np1.lua\n`);
-  const filas = [2589, 2592].map((item) => `[${item}] = {98000, 400, ${normal}, 0, 0.6, 85, 0}`).join(', ');
+  const filas = [2589, 2592, 4306].map((item) => `[${item}] = {98000, 400, ${normal}, 0, 0.6, 85, 0}`).join(', ');
   const reg = regional === undefined ? ''
     : `, regional = {[2589] = ${regional}}, regionalInfo = {casas = 3, desde = ${H * 3600 - 7200}, hora = ${H * 3600}}`;
   writeFileSync(join(carpeta, 'p1.lua'), `SNF_PRECIOS = {v = 1, seq = 1, generado = ${H * 3600 + 1357}, region = "us", conocidas = {["Normal|Horde"] = 114},
@@ -40,6 +40,10 @@ function maquina(precios) {
   const m = crearMaquina({ addonsDir: dir, jugador: { nombre: 'Comprador', reino: 'Normal', faccion: 'Horde' } });
   m.lua(`BANCO.tick = BANCO.tick + ${Math.round((40 * 60 - (AHORA - H * 3600) + 0.5) * 20)}`);
   m.lua('SnetForever.Ajustes.set("idioma", "es")');
+  m.lua('BANCO.jugador.dinero = 10000000');
+  m.itemInfo(2589, { nombre: 'Paño de lino', calidad: 1 });
+  m.itemInfo(2592, { nombre: 'Paño de lana', calidad: 1 });
+  m.itemInfo(4306, { nombre: 'Paño de seda', calidad: 2 });
   // Sniper y Compras van con la subasta abierta: Precios.de lee entonces la casa de esa subasta.
   m.disparar('AUCTION_HOUSE_SHOW');
   m.avanzar(0.5);
@@ -116,5 +120,94 @@ test('fórmula sin valor: sin tope', () => {
 test('el tope prudente viene encendido', () => {
   const m = maquina();
   assert.equal(m.lua('return SnetForever.Ajustes.get("comercioTopePrudente")'), true);
+  sinErrores(m);
+});
+
+// ---------- Sniper en modo operaciones ----------
+
+const S = 'SnetForever.Sniper';
+const hallazgos = (m) => m.lua(`return ${S}.hallazgos()`) || [];
+const navegaciones = (m) => m.llamadas('C_AuctionHouse.SendBrowseQuery').length;
+const pulsar = (m) => m.lua('SnetForever.UIComercio.marco().pie.comprar:Click()');
+
+// Telas (lino, lana y seda) con la operación de Sniper «Telas», y el sniper en modo operaciones.
+function sniperTelas(m, formula) {
+  operacion(m, formula);
+  m.lua(`local S = SnetForever
+    assert(S.Arbol.crear("", "Telas"))
+    assert(S.Arbol.poner("i:2589", "Telas"))
+    assert(S.Arbol.poner("i:2592", "Telas"))
+    assert(S.Arbol.poner("i:4306", "Telas"))
+    assert(S.Operaciones.ponerDeGrupo("Telas", "sniper", {"Telas"}))
+    S.Ajustes.set("comercioSniperModo", "operaciones")`);
+}
+
+// Las ofertas de la búsqueda general (y, con `objetos`, las subastas sueltas que se compran), y una vuelta del sniper.
+function vigilar(m, filas, objetos = '') {
+  const lua = Object.entries(filas).map(([item, p]) => `{itemID = ${item}, totalQuantity = 10, minPrice = ${p}}`);
+  m.lua(`BANCO.ponerSubasta({navegar = {${lua.join(', ')}}, porPagina = 50${objetos}})`);
+  m.disparar('AUCTION_HOUSE_SHOW');
+  for (let i = 0; i < 400 && m.lua('return SnetForever.Escaneo.estado()') !== 'completo'; i++) m.avanzar(0.05);
+  assert.equal(m.lua(`return ${S}.empezar()`), true);
+  const n = navegaciones(m);
+  for (let i = 0; i < 200 && navegaciones(m) === n; i++) m.avanzar(0.1);
+  m.avanzar(0.2);
+}
+
+test('sniper: no ofrece lo que pasa del precio de tu casa aunque la fórmula lo permita', () => {
+  const m = maquina({ normal: 100000 });
+  sniperTelas(m, '200000c');
+  vigilar(m, { 2589: 120000, 2592: 90000 });
+  const h = hallazgos(m);
+  assert.deepEqual(h.map((x) => x.item), [2592]);
+  assert.equal(h[0].tope, 100000);
+  assert.equal(h[0].recorte, 'mercado');
+  sinErrores(m);
+});
+
+test('sniper: lo que queda por debajo del tope recortado se compra con los dos clics de siempre', () => {
+  const m = maquina({ normal: 100000 });
+  sniperTelas(m, '200000c');
+  vigilar(m, { 4306: 90000 }, ', objetos = {[4306] = {{quantity = 1, buyoutAmount = 90000}}}');
+  assert.deepEqual(hallazgos(m).map((x) => x.item), [4306]);
+  m.lua(`${S}.elegir(1)`);
+  m.avanzar(0.05);
+  m.avanzar(0.6);
+  pulsar(m);
+  m.avanzar(0.6);
+  pulsar(m);
+  assert.deepEqual(m.llamadas('C_AuctionHouse.PlaceBid'), [[4306 * 1000 + 1, 90000]]);
+  sinErrores(m);
+});
+
+test('sniper con el tope prudente apagado: manda la fórmula sola', () => {
+  const m = maquina({ normal: 100000 });
+  m.lua('SnetForever.Ajustes.set("comercioTopePrudente", false)');
+  sniperTelas(m, '200000c');
+  vigilar(m, { 2589: 120000, 2592: 90000 });
+  const h = hallazgos(m);
+  assert.deepEqual(h.map((x) => x.item).sort(), [2589, 2592]);
+  assert.equal(h[0].recorte, undefined);
+  sinErrores(m);
+});
+
+test('sniper: el tooltip de la fila dice que el tope se recortó al precio de tu casa', () => {
+  const m = maquina({ normal: 100000 });
+  sniperTelas(m, '200000c');
+  m.lua('BANCO.ponerSubasta({navegar = {{itemID = 2592, totalQuantity = 10, minPrice = 90000}}, porPagina = 50})');
+  m.disparar('AUCTION_HOUSE_SHOW');
+  for (let i = 0; i < 400 && m.lua('return SnetForever.Escaneo.estado()') !== 'completo'; i++) m.avanzar(0.05);
+  const P = 'SnetForever.SubastaSniper.marcos';
+  m.lua('SnetForever.UIComercio.elegirPestana("sniper")');
+  m.lua(`${P}.grande:Click()`);
+  m.avanzar(0.6);
+  const i = m.lua(`(function() for i, h in ipairs(${P}.tabla.huecos) do
+    if h:IsShown() and h.celdas.objeto:GetText() == "Paño de lana" then return i end end end)()`);
+  assert.ok(i, 'la lana sale en la tabla');
+  m.lua(`${P}.tabla.huecos[${i}]:GetScript("OnEnter")(${P}.tabla.huecos[${i}])`);
+  const sinColores = (t) => (t || '').replace(/\|c[0-9a-fA-F]{8}/g, '').replace(/\|r/g, '');
+  const lineas = (m.lua('BANCO.lineasTooltip()') || []).map(sinColores);
+  const esperado = sinColores(m.lua('SnetForever.L.t("SUBASTA_SNIPER_TOPE_MERCADO", SnetForever.Tema.dinero(100000))'));
+  assert.ok(lineas.includes(esperado), `tooltip: ${lineas}`);
   sinErrores(m);
 });

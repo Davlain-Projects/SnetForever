@@ -303,7 +303,7 @@ local function filaSuelta(g, h)
   return {
     clave = g.clave, item = g.item, nombre = g.nombre, calidad = g.calidad, icono = g.icono, hijos = {h},
     claveH = h.claveH, itemKey = h.itemKey, nivel = h.nivel, cantidad = h.cantidad, precio = h.precio, pct = h.pct,
-    hora = h.hora, rotacionSinConfirmar = h.rotacionSinConfirmar,
+    hora = h.hora, rotacionSinConfirmar = h.rotacionSinConfirmar, tope = h.tope, recorte = h.recorte,
   }
 end
 
@@ -330,7 +330,7 @@ local function filasDeAhora()
       clave = "h:" .. claveH, claveH = claveH, sub = true, item = h.item, itemKey = k,
       nivel = (nivel and nivel > 0) and nivel or g.nivelObjeto, cantidad = tonumber(h.cantidad) or 0,
       precio = tonumber(h.precio), pct = pctDe(h.item, tonumber(h.precio)), orden = #g.hijos + 1, hora = tonumber(h.hora),
-      rotacionSinConfirmar = h.rotacionSinConfirmar,
+      rotacionSinConfirmar = h.rotacionSinConfirmar, tope = tonumber(h.tope), recorte = h.recorte,
     }
   end
   local filas = {}
@@ -703,6 +703,12 @@ local function alEntrar(f, hueco)
     end
     if f.rotacionSinConfirmar then
       UI.lineaSinConfirmar(tt)
+    end
+    -- Tope prudente: el tope de la operación se bajó al precio de tu casa o al regional.
+    if f.recorte and f.tope then
+      local clave = f.recorte == "regional" and "SUBASTA_SNIPER_TOPE_REGIONAL" or "SUBASTA_SNIPER_TOPE_MERCADO"
+      local c = Tema.color("texto")
+      tt:AddLine(L.t(clave, Tema.dinero(f.tope)), c[1], c[2], c[3])
     end
   end})
 end

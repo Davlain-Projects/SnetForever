@@ -73,7 +73,8 @@
 -- Sniper.hallazgos()             copia de la lista: {item, precio (cobre por unidad, el más bajo), cantidad (todas las
 --                                unidades a la venta de ese objeto, a cualquier precio: la búsqueda general no dice
 --                                cuántas hay al más bajo), pct (% de lo normal), hora (segundos del servidor en que se
---                                encontró), itemKey, grupo}, los más nuevos arriba, como mucho MAX. De cada objeto
+--                                encontró), itemKey, grupo; en modo operaciones también operacion, ruta, tope y
+--                                recorte ("mercado" o "regional" si el tope prudente bajó el tope de la fórmula)}, los más nuevos arriba, como mucho MAX. De cada objeto
 --                                (itemKey) solo queda el último; el mismo precio no se repite. Si el precio más bajo
 --                                sube (alguien compró las baratas), se vuelve a mirar con la regla: si sigue siendo
 --                                buena compra se actualiza en su sitio (sin sonar ni subirlo); si no, sale. Sale
@@ -376,15 +377,16 @@ local function evaluarOperacion(item, k, precio, cantidad, ops)
   if not o.nombre then
     return {buena = false, motivo = o.motivo, ruta = ruta}
   end
-  local tope = SNF.Operaciones.cobre("sniper", o.nombre, "precioMaximo", item)
+  -- Tope prudente: el «Precio máximo» nunca pasa del menor entre el precio de tu casa y el regional (recorte dice cuál).
+  local tope, recorte = SNF.Operaciones.topeCompra("sniper", o.nombre, item)
   if not tope then
     return {buena = false, motivo = "sin_valor", ruta = ruta, operacion = o.nombre}
   end
   local pct = pctMercado(item, precio)
   if precio > tope then
-    return {buena = false, pct = pct, motivo = "caro", ruta = ruta, operacion = o.nombre, tope = tope}
+    return {buena = false, pct = pct, motivo = "caro", ruta = ruta, operacion = o.nombre, tope = tope, recorte = recorte}
   end
-  return {buena = true, pct = pct, motivo = "ok", ruta = ruta, operacion = o.nombre, tope = tope}
+  return {buena = true, pct = pct, motivo = "ok", ruta = ruta, operacion = o.nombre, tope = tope, recorte = recorte}
 end
 
 -- El veredicto de la vuelta en su modo.
@@ -465,7 +467,8 @@ local function leerFilas(filas, desde)
         local ev = juzgar(item, k, precio, cantidad)
         if ev.buena and not precioDudoso(item, precio) and anadir({item = item, precio = precio, cantidad = cantidad,
           pct = ev.pct, hora = hora, clave = clave, itemKey = copiaClave(k), grupo = grupo,
-          rotacionSinConfirmar = ev.rotacionSinConfirmar, operacion = ev.operacion, ruta = ev.ruta, tope = ev.tope}) then
+          rotacionSinConfirmar = ev.rotacionSinConfirmar, operacion = ev.operacion, ruta = ev.ruta, tope = ev.tope,
+          recorte = ev.recorte}) then
           nuevos = nuevos + 1
         end
       elseif recheck then
@@ -476,10 +479,10 @@ local function leerFilas(filas, desde)
           local ev = juzgar(item, k, precio, cantidad)
           if ev.buena and not precioDudoso(item, precio) then
             local igual = h.precio == precio and h.cantidad == cantidad and h.pct == ev.pct and h.operacion == ev.operacion
-              and h.tope == ev.tope
+              and h.tope == ev.tope and h.recorte == ev.recorte
             h.precio, h.cantidad, h.pct, h.hora = precio, cantidad, ev.pct, hora -- en su sitio, sin sonar (F1: con su hora nueva)
             h.rotacionSinConfirmar = ev.rotacionSinConfirmar -- F9p
-            h.operacion, h.ruta, h.tope = ev.operacion, ev.ruta, ev.tope
+            h.operacion, h.ruta, h.tope, h.recorte = ev.operacion, ev.ruta, ev.tope, ev.recorte
             if not igual then
               cambiados = cambiados + 1
             end
@@ -922,7 +925,7 @@ function Sniper.hallazgos()
   for i, h in ipairs(lista) do
     copia[i] = {item = h.item, precio = h.precio, cantidad = h.cantidad, pct = h.pct, hora = h.hora,
       itemKey = copiaClave(h.itemKey), grupo = h.grupo, rotacionSinConfirmar = h.rotacionSinConfirmar,
-      operacion = h.operacion, ruta = h.ruta, tope = h.tope}
+      operacion = h.operacion, ruta = h.ruta, tope = h.tope, recorte = h.recorte}
   end
   return copia
 end
