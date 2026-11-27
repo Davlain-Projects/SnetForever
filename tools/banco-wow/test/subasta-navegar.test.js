@@ -186,13 +186,13 @@ test('izquierda: buscador de grupos, árbol con barras en los elegidos y escaneo
   sinErrores(m);
 });
 
-function stockScan() {
-  const m = maquina({ sitio: '{x = 50, y = 50, ancho = 1000, alto = 600}' });
+function stockScan({ precios = false, precioMaximo = '25s' } = {}) {
+  const m = maquina({ sitio: '{x = 50, y = 50, ancho = 1000, alto = 600}', precios });
   m.jugador({ dinero: 50000 });
   m.lua(`local s = SnetForever
     assert(s.Arbol.poner("i:2589", "Telas"))
     assert(s.Operaciones.crear("compras", "Reponer tela"))
-    assert(s.Operaciones.poner("compras", "Reponer tela", "precioMaximo", "25s"))
+    assert(s.Operaciones.poner("compras", "Reponer tela", "precioMaximo", "${precioMaximo}"))
     assert(s.Operaciones.poner("compras", "Reponer tela", "reponerCantidad", "5"))
     assert(s.Operaciones.ponerDeGrupo("Telas", "compras", {"Reponer tela"}))
     BANCO.ponerSubasta({mercancias = {[2589] = {
@@ -212,6 +212,17 @@ function stockScan() {
   assert.equal(m.lua('SnetForever.GroupShopping.state().status'), 'complete');
   return m;
 }
+
+// Tope prudente: con «Precio máximo» de 50 de oro y el lino a 10 de oro en tu casa, la fila dice que el tope es el de tu casa.
+test('shopping says when the prudent cap lowered the operation limit to your house value', () => {
+  const m = stockScan({ precios: true, precioMaximo: '50g' });
+  const prices = m.lua(`(function() for _, r in ipairs(${N}.shopping.rows) do
+    if r:IsShown() and string.find(r.title:GetText(), "Comprar 3", 1, true) then return r.prices:GetText() end
+  end end)()`);
+  assert.equal(prices, m.lua('SnetForever.L.t("SUBASTA_SHOP_PRICES_CLIP_MERCADO", SnetForever.Tema.dinero(800), SnetForever.Tema.dinero(100000))'));
+  assert.match(prices, /\(tu casa\)$/);
+  sinErrores(m);
+});
 
 test('shopping shows selected operations, blocks over-limit listings and uses the normal quantity confirmation', () => {
   const m = stockScan();

@@ -1242,14 +1242,20 @@ local function componerSubasta(g)
   pendiente = nil
 end
 
--- El precio máximo de la operación de Compras o de Sniper del grupo (si la tiene y la fórmula no falla).
+-- Tope prudente: el texto del máximo cuando lo bajó el precio de tu casa, el regional o el de vendedor.
+local RECORTES_MAXIMO = {mercado = "COMERCIO_TT_MAX_RECORTE_MERCADO", regional = "COMERCIO_TT_MAX_RECORTE_REGIONAL",
+  vendedor = "COMERCIO_TT_MAX_RECORTE_VENDEDOR"}
+
+-- El precio máximo de la operación de Compras o de Sniper del grupo (si la tiene y la fórmula no falla; con el tope
+-- prudente, el que de verdad usan al comprar).
 local function lineaMaximo(tipo, texto, apagada)
   local nombres = D.operaciones(tipo)
   if type(nombres) == "table" and nombres[1] then
-    local valor, fallo = D.maximo(tipo)
+    local valor, fallo, recorte = D.maximo(tipo)
     local c = not fallo and cobreDe(valor)
     if c then
-      doble(etiqueta(texto), dinero(c), nil, apagada)
+      local clave = recorte and RECORTES_MAXIMO[recorte]
+      doble(etiqueta(texto), clave and L.t(clave, dinero(c)) or dinero(c), nil, apagada)
     end
   end
 end
@@ -1568,7 +1574,16 @@ function DATOS.maximo(tipo)
   if not nombre then
     return nil
   end
-  return formula(tipo .. " «" .. nombre .. "» precioMaximo", SNF.Operaciones.valor(tipo, nombre, "precioMaximo"))
+  local valor, fallo = formula(tipo .. " «" .. nombre .. "» precioMaximo", SNF.Operaciones.valor(tipo, nombre, "precioMaximo"))
+  -- Tope prudente: Sniper y Compras compran con Operaciones.topeCompra; el tooltip enseña ese mismo tope y de dónde sale.
+  local topeCompra = SNF.Operaciones.topeCompra
+  if not fallo and valor ~= nil and type(topeCompra) == "function" then
+    local ok, tope, recorte = pcall(topeCompra, tipo, nombre, actual)
+    if ok and tope and recorte then
+      return tope, nil, recorte
+    end
+  end
+  return valor, fallo
 end
 
 function DATOS.regla()
