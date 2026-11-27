@@ -36,9 +36,13 @@ Sniper operations and Shopping operations never pay more than the lower of two m
 
 The operation's **Maximum price** still applies when it is lower. If only one reference has a value, that one is the cap. If neither does, the formula alone decides, as before. A reference of zero is ignored, so it never hides every offer. The cap is the full reference value. Any discount belongs in the formula.
 
-The same capped value is used when a finding appears, when a shopping scan reads offers and before each purchase click. A Sniper finding's tooltip says when the cap was lowered and to which reference. A shopping row shows the reference after its cap, for example `cap 10g (your house)`.
+The cap never goes below the item's vendor price, because buying under it is a sure profit. When the formula allows more, the cap stays at the vendor price.
+
+The same capped value is used when a finding appears, when a shopping scan reads offers and before each purchase click. A Sniper finding's tooltip says when the cap was lowered and to which reference. A shopping row shows the reference after its cap, for example `cap 10g (your house)`. The item tooltip's **Maximum price (Shopping)** and **Maximum price (Sniper)** lines show the same capped value with the same note.
 
 The cap is on by default. Turn it off with **Never pay above market value** in the settings cog. When it is off, the formula alone decides.
+
+Sniper checks gear variants against the base item's market and regional prices, because the browse scan reports the base item.
 
 Sniper's rule mode does not use this cap: it already pays at most its percentage of the house's normal price. Posting minimums are not affected.
 

@@ -706,7 +706,8 @@ local function alEntrar(f, hueco)
     end
     -- Tope prudente: el tope de la operación se bajó al precio de tu casa o al regional.
     if f.recorte and f.tope then
-      local clave = f.recorte == "regional" and "SUBASTA_SNIPER_TOPE_REGIONAL" or "SUBASTA_SNIPER_TOPE_MERCADO"
+      local clave = f.recorte == "regional" and "SUBASTA_SNIPER_TOPE_REGIONAL"
+        or f.recorte == "vendedor" and "SUBASTA_SNIPER_TOPE_VENDEDOR" or "SUBASTA_SNIPER_TOPE_MERCADO"
       local c = Tema.color("texto")
       tt:AddLine(L.t(clave, Tema.dinero(f.tope)), c[1], c[2], c[3])
     end

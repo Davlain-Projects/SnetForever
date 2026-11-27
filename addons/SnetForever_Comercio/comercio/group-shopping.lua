@@ -33,7 +33,8 @@ local function evaluate(job, field)
 end
 
 -- The prudent cap: «Precio máximo», never above the lower of the house market value and the regional price. The second
--- value says which one lowered it ("mercado" or "regional"), or nil when the formula decides.
+-- value says which price set it ("mercado", "regional" or "vendedor": never below the vendor price), or nil when the
+-- formula decides.
 local function cap(job)
   return SNF.Operaciones.topeCompra("compras", job.operation, job.item)
 end

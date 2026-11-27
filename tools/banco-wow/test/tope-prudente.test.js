@@ -273,3 +273,29 @@ test('la casilla del engranaje enciende y apaga el tope prudente', () => {
   assert.ok(m.lua(`return ${g}.largeText:GetBottom() >= ${g}:GetBottom()`), 'la última casilla cabe');
   sinErrores(m);
 });
+
+// Revisión final: comprar por debajo del precio de vendedor es ganancia segura, así que el tope prudente no baja de ahí
+// (si la fórmula lo permite).
+test('el tope prudente no baja del precio de vendedor', () => {
+  const m = maquina({ normal: 50000 });
+  m.itemInfo(2589, { nombre: 'Paño de lino', calidad: 1, precio: 100000 });
+  operacion(m, '200000c');
+  assert.deepEqual(tope(m), [100000, 'vendedor']);
+  sinErrores(m);
+});
+
+test('con la fórmula por debajo del precio de vendedor, manda la fórmula', () => {
+  const m = maquina({ normal: 50000 });
+  m.itemInfo(2589, { nombre: 'Paño de lino', calidad: 1, precio: 100000 });
+  operacion(m, '80000c');
+  assert.deepEqual(tope(m), [80000]);
+  sinErrores(m);
+});
+
+test('con el precio de vendedor por debajo del mercado, recorta al mercado como siempre', () => {
+  const m = maquina({ normal: 100000 });
+  m.itemInfo(2589, { nombre: 'Paño de lino', calidad: 1, precio: 30000 });
+  operacion(m, '200000c');
+  assert.deepEqual(tope(m), [100000, 'mercado']);
+  sinErrores(m);
+});

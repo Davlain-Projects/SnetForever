@@ -1071,9 +1071,11 @@ end
 -- Operaciones.topeCompra(tipo, nombre, item) -> cobre entero | nil, recorte   el «Precio máximo» de una operación de
 --   compra (Sniper o Compras) con el tope prudente: nunca más que el menor entre el precio de mercado de tu casa
 --   (snfmercado, Precios.de(item).normal) y el regional (snfregional(), Precios.regional). Con uno solo, ese; sin
---   ninguno, la fórmula sola. `recorte` es "mercado" o "regional" cuando ese precio bajó el tope (en un empate,
---   "mercado"); nil si manda la fórmula. Sin valor de la fórmula no hay tope (nil), como Operaciones.cobre. Con el
---   ajuste comercioPrudente apagado es Operaciones.cobre tal cual.
+--   ninguno, la fórmula sola. Nunca baja del precio de vendedor (vendorsell): comprar por debajo de él es ganancia
+--   segura, así que con la fórmula por encima el tope se queda en ese precio. `recorte` es "mercado", "regional" o
+--   "vendedor" según el precio que bajó el tope (en un empate entre casa y región, "mercado"); nil si manda la fórmula.
+--   Sin valor de la fórmula no hay tope (nil), como Operaciones.cobre. Con el ajuste comercioPrudente apagado es
+--   Operaciones.cobre tal cual.
 function Operaciones.topeCompra(tipo, nombre, item)
   local tope = Operaciones.cobre(tipo, nombre, "precioMaximo", item)
   if not tope or SNF.Ajustes.get("comercioPrudente") == false then
@@ -1089,10 +1091,17 @@ function Operaciones.topeCompra(tipo, nombre, item)
   if regional and (not menor or regional < menor) then
     menor, recorte = regional, "regional"
   end
-  if menor and menor < tope then
-    return menor, recorte
+  if not menor or menor >= tope then
+    return tope, nil
   end
-  return tope, nil
+  local vendedor = referencia(function(id) return (SNF.Formulas.valor("vendorsell", id)) end, item)
+  if vendedor and vendedor > menor then
+    if vendedor >= tope then
+      return tope, nil
+    end
+    return vendedor, "vendedor"
+  end
+  return menor, recorte
 end
 
 ---------------------------------------------------------------------------------------------------

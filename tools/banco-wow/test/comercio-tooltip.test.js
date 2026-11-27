@@ -1332,6 +1332,24 @@ test('el precio máximo de Compras y de Sniper sale de su operación', () => {
   sinErrores(m);
 });
 
+// Tope prudente: el tooltip enseña el tope con el que Sniper y Compras compran de verdad. El lino vale 10 de oro en tu casa.
+test('el precio máximo de Compras y de Sniper sale con el tope prudente y dice de dónde sale', () => {
+  const m = maquina({ escaneo: false });
+  m.lua(`${GRUPO_LINO}
+    assert(O.crear("compras", "Comprar lino")); assert(O.poner("compras", "Comprar lino", "precioMaximo", "50g"))
+    assert(O.crear("sniper", "Vigilar")); assert(O.poner("sniper", "Vigilar", "precioMaximo", "2g 50s"))
+    assert(O.ponerDeGrupo(r2, "compras", {"Comprar lino"})); assert(O.ponerDeGrupo(r1, "sniper", {"Vigilar"}))`);
+  m.lua(`${TT}.ponerLinea("maximoCompras", true); ${TT}.ponerLinea("maximoSniper", true)`);
+  const d = ver(m, 2589);
+  const t = d.findIndex((x) => x.izq === OPS);
+  const recortado = sinColores(m.lua('SnetForever.L.t("COMERCIO_TT_MAX_RECORTE_MERCADO", SnetForever.Tema.dinero(100000))'));
+  assert.deepEqual(d.slice(t + 1).map((x) => [x.izq, sinColores(x.der)]), [
+    ['Precio máximo (Compras)', recortado], ['Precio máximo (Sniper)', '2g 50s 00c'],
+  ], JSON.stringify(d));
+  assert.match(recortado, /^10g 00s 00c \(tu casa\)$/);
+  sinErrores(m);
+});
+
 test('las líneas «llega con…» no se pueden encender (ponerLinea da false) y no salen en el tooltip', () => {
   const m = maquina({ escaneo: false });
   m.lua(GRUPO_LINO);

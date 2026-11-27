@@ -549,6 +549,7 @@ paintShopping = function()
       or L.t("SUBASTA_SHOP_ROW", name, offer.quantity))
     -- Prudent cap: say when the house value or the regional price lowered the operation's limit.
     local pricesKey = offer.clip == "regional" and "SUBASTA_SHOP_PRICES_CLIP_REGIONAL"
+      or offer.clip == "vendedor" and "SUBASTA_SHOP_PRICES_CLIP_VENDEDOR"
       or offer.clip == "mercado" and "SUBASTA_SHOP_PRICES_CLIP_MERCADO" or "SUBASTA_SHOP_PRICES"
     row.prices:SetText(L.t(pricesKey, price, cap))
     row.detail:SetText(L.t(offer.overLimit and "SUBASTA_SHOP_ROW_OVER" or "SUBASTA_SHOP_ROW_DETAIL", route, operation))
