@@ -1,7 +1,7 @@
 // Tope prudente: en modo operaciones, Sniper y Compras no pagan más que el menor entre el precio de mercado de tu casa
 // (snfmercado, Precios.de(item).normal) y el regional (snfregional(), Precios.regional). La fórmula de «Precio máximo» de
 // la operación sigue mandando cuando es más baja; sin ninguno de los dos precios manda ella sola. Se apaga con el ajuste
-// comercioTopePrudente.
+// comercioPrudente.
 import { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
@@ -103,7 +103,7 @@ test('un precio de mercado de 0 no deja el tope en 0', () => {
 
 test('apagado: el tope es la fórmula, como antes', () => {
   const m = maquina({ normal: 100000, regional: 80000 });
-  m.lua('SnetForever.Ajustes.set("comercioTopePrudente", false)');
+  m.lua('SnetForever.Ajustes.set("comercioPrudente", false)');
   operacion(m, '200000c');
   assert.deepEqual(tope(m), [200000]);
   sinErrores(m);
@@ -119,7 +119,7 @@ test('fórmula sin valor: sin tope', () => {
 
 test('el tope prudente viene encendido', () => {
   const m = maquina();
-  assert.equal(m.lua('return SnetForever.Ajustes.get("comercioTopePrudente")'), true);
+  assert.equal(m.lua('return SnetForever.Ajustes.get("comercioPrudente")'), true);
   sinErrores(m);
 });
 
@@ -182,7 +182,7 @@ test('sniper: lo que queda por debajo del tope recortado se compra con los dos c
 
 test('sniper con el tope prudente apagado: manda la fórmula sola', () => {
   const m = maquina({ normal: 100000 });
-  m.lua('SnetForever.Ajustes.set("comercioTopePrudente", false)');
+  m.lua('SnetForever.Ajustes.set("comercioPrudente", false)');
   sniperTelas(m, '200000c');
   vigilar(m, { 2589: 120000, 2592: 90000 });
   const h = hallazgos(m);
@@ -249,10 +249,27 @@ test('compras: el tope baja al precio de tu casa y el tramo de 120 ya no se comp
 
 test('compras con el tope prudente apagado: el tope es el de la operación', () => {
   const m = maquina({ normal: 110 });
-  m.lua('SnetForever.Ajustes.set("comercioTopePrudente", false)');
+  m.lua('SnetForever.Ajustes.set("comercioPrudente", false)');
   const rows = comprasLino(m);
   const eligible = rows.find((r) => !r.overLimit);
   assert.equal(eligible.threshold, 800);
   assert.equal(eligible.clip, undefined);
+  sinErrores(m);
+});
+
+test('la casilla del engranaje enciende y apaga el tope prudente', () => {
+  const m = maquina({ normal: 100000 });
+  m.lua('SnetForever.UIComercio.elegirPestana("sniper")');
+  const casilla = 'SnetForever.UIComercio.marco().ajustes.topePrudente';
+  assert.equal(m.lua(`return type(${casilla})`), 'table');
+  m.lua('SnetForever.UIComercio.alternarAjustes(SnetForever.SubastaSniper.marcos.engranaje)');
+  assert.equal(m.lua(`return ${casilla}.marca:IsShown()`), true, 'encendida por defecto');
+  m.lua(`${casilla}:Click()`);
+  assert.equal(m.lua('return SnetForever.Ajustes.get("comercioPrudente")'), false);
+  m.lua(`${casilla}:Click()`);
+  assert.equal(m.lua('return SnetForever.Ajustes.get("comercioPrudente")'), true);
+  // Cabe en la ventanita: la casilla de debajo (letra grande) sigue dentro.
+  const g = 'SnetForever.UIComercio.marco().ajustes';
+  assert.ok(m.lua(`return ${g}.largeText:GetBottom() >= ${g}:GetBottom()`), 'la última casilla cabe');
   sinErrores(m);
 });

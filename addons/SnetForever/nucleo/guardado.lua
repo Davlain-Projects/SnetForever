@@ -169,7 +169,7 @@ Ajustes.DEFECTO = {
   ["comercioSniperModo"] = "regla",
   -- Tope prudente: en modo operaciones, Sniper y Compras no pagan más que el menor entre el precio de mercado de tu casa
   -- y el regional, aunque la fórmula del «Precio máximo» permita más (Operaciones.topeCompra). Casilla en el engranaje.
-  ["comercioTopePrudente"] = true,
+  ["comercioPrudente"] = true,
   -- Comercio, ventana de compra (tarea 6): tras comprar, la ventana elige sola la fila buena siguiente (casilla en el
   -- engranaje de la barra de abajo). Con false se queda en «hecho» hasta que el jugador pulse otra fila.
   ["comercioSiguienteSola"] = true,

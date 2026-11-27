@@ -1073,10 +1073,10 @@ end
 --   (snfmercado, Precios.de(item).normal) y el regional (snfregional(), Precios.regional). Con uno solo, ese; sin
 --   ninguno, la fórmula sola. `recorte` es "mercado" o "regional" cuando ese precio bajó el tope (en un empate,
 --   "mercado"); nil si manda la fórmula. Sin valor de la fórmula no hay tope (nil), como Operaciones.cobre. Con el
---   ajuste comercioTopePrudente apagado es Operaciones.cobre tal cual.
+--   ajuste comercioPrudente apagado es Operaciones.cobre tal cual.
 function Operaciones.topeCompra(tipo, nombre, item)
   local tope = Operaciones.cobre(tipo, nombre, "precioMaximo", item)
-  if not tope or SNF.Ajustes.get("comercioTopePrudente") == false then
+  if not tope or SNF.Ajustes.get("comercioPrudente") == false then
     return tope, nil
   end
   local precios = rawget(SNF, "Precios")

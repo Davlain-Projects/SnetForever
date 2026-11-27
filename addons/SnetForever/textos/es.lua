@@ -1749,6 +1749,7 @@ es.COMERCIO_PESTANA_SNIPER = "Sniper"
 es.COMERCIO_SNIPER_EMPEZAR = "Empezar"
 es.COMERCIO_SNIPER_SONIDO = "Sonido al encontrar algo" -- tarea S2: la casilla está en el engranaje de abajo
 es.COMERCIO_SNIPER_OPERACIONES = "Sniper con las operaciones de Sniper" -- fase 3 de la paridad: casilla del engranaje
+es.COMERCIO_TOPE_PRUDENTE = "No pagar por encima del mercado" -- tope prudente: casilla del engranaje
 es.COMERCIO_SNIPER_VACIO = "Aún no hay hallazgos: aquí sale lo nuevo o más barato que cumple tu regla de sniper."
 es.COMERCIO_SNIPER_AVISO_BLIZZARD = "Mientras el sniper corre, la lista de «Comprar» de la subasta de Blizzard cambia sola."
 es.COMERCIO_LISTA_SNIPER = "El sniper está en marcha: esta lista enseña la última lectura del escaneo."

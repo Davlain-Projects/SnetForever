@@ -217,8 +217,9 @@ test('cada ajuste de la tabla de la tarea 3 tiene control, salvo las posiciones,
     table.sort(f)
     return f
   end)()`);
-  // Los ajustes de Comercio tienen sus controles en su propia ventana. El sonido y el modo de Sniper están en el engranaje.
-  assert.deepEqual(sin, ['comercioAvisoOro', 'comercioSiguienteSola', 'comercioSniperCada', 'comercioSniperModo',
+  // Los ajustes de Comercio tienen sus controles en su propia ventana. El sonido, el modo de Sniper y el tope prudente están
+  // en el engranaje.
+  assert.deepEqual(sin, ['comercioAvisoOro', 'comercioPrudente', 'comercioSiguienteSola', 'comercioSniperCada', 'comercioSniperModo',
     'comercioSniperSonido', 'comercioTope', 'comercioVista', 'guide.details', 'minimapa.angulo', 'principal.pestana', 'version']);
   assert.equal(m.lua(`${C}["ventana.pos"]`), undefined);
   assert.equal(m.lua(`${C}["flecha.pos"]`), undefined);

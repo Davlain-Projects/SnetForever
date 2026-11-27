@@ -1748,6 +1748,7 @@ en.COMERCIO_PESTANA_SNIPER = "Sniper"
 en.COMERCIO_SNIPER_EMPEZAR = "Start"
 en.COMERCIO_SNIPER_SONIDO = "Sound when something turns up" -- tarea S2: la casilla está en el engranaje de abajo
 en.COMERCIO_SNIPER_OPERACIONES = "Snipe with Sniper operations" -- fase 3 de la paridad: casilla del engranaje
+en.COMERCIO_TOPE_PRUDENTE = "Never pay above market value" -- tope prudente: casilla del engranaje
 en.COMERCIO_SNIPER_VACIO = "Nothing found yet: new or cheaper listings that meet your sniper rule show up here."
 en.COMERCIO_SNIPER_AVISO_BLIZZARD = "While the sniper runs, the Blizzard auction house Buy list changes on its own."
 en.COMERCIO_LISTA_SNIPER = "The sniper is running: this list shows the last scan reading."

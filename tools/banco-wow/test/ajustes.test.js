@@ -164,7 +164,7 @@ test('Ajustes: tabla de valores por defecto y de claves de cuenta, tal como el d
     comercioSniperCada: 5, // comercio, tarea 14: segundos entre dos vueltas del sniper
     comercioSniperSonido: true, // comercio, tarea 14: suena al encontrar algo
     comercioSniperModo: 'regla', // paridad TSM, fase 3: la regla de sniper hasta que el jugador elija las operaciones
-    comercioTopePrudente: true, // tope prudente: Sniper y Compras no pagan más que el precio de mercado (casa o regional)
+    comercioPrudente: true, // tope prudente: Sniper y Compras no pagan más que el precio de mercado (casa o regional)
     comercioSiguienteSola: true, // ventana de compra, tarea 6: tras comprar se elige sola la fila siguiente
     comercioVista: 'snet', // ventana de compra, tarea 9: la última vista de la subasta ('snet' o 'blizzard')
     // 0.7.0: comercioActivo (la casilla de la 0.6.4) ya no está: el comercio es el addon SnetForever_Comercio.

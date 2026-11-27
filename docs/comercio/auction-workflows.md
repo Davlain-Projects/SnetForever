@@ -27,6 +27,28 @@ The group's own spending limits for units and gold still apply when you buy. Sel
 
 The scan reads only the lowest price and the total quantity of each item from the browse results. Exact item levels, suffixes and cheaper tiers below that price are not visible until you select a finding.
 
+## Prudent buy cap
+
+Sniper operations and Shopping operations never pay more than the lower of two market references:
+
+- The item's market value in the open auction house (`snfmercado`).
+- The regional price (`snfregional()`).
+
+The operation's **Maximum price** still applies when it is lower. If only one reference has a value, that one is the cap. If neither does, the formula alone decides, as before. A reference of zero is ignored, so it never hides every offer. The cap is the full reference value. Any discount belongs in the formula.
+
+The same capped value is used when a finding appears, when a shopping scan reads offers and before each purchase click. A Sniper finding's tooltip says when the cap was lowered and to which reference. A shopping row shows the reference after its cap, for example `cap 10g (your house)`.
+
+The cap is on by default. Turn it off with **Never pay above market value** in the settings cog. When it is off, the formula alone decides.
+
+Sniper's rule mode does not use this cap: it already pays at most its percentage of the house's normal price. Posting minimums are not affected.
+
+The reason is that a formula source can be wrong for some items. For example, on 27 November 2026 a comparison of 11,630 items found these caps more than 10% above TSM's:
+
+- Sniper: 563 caps. The regional price had only two or three snapshots per house.
+- Shopping: 859 caps. `snfmercado` is not computed like TSM's `DBMarket`.
+
+Capping at the lower reference trades some missed deals for not overpaying.
+
 ## Posting with multiple operations
 
 Applicable Auctioning operations run in the order saved on the group. Each operation evaluates its prices, posting limit and bag reserve. Active listings and inventory already allocated in the scan count toward later limits. For example, with no active listings and sufficient stock, a first limit of 20 followed by a limit of 50 allows up to 20 units under the first rule and 30 more under the second. Each posting and cancellation requires a player action. A cancellation scan proposes at most one row for an owned auction ID. Changing a pricing or cancellation rule can require a fresh scan. If a posting acknowledgement is interrupted, check My Auctions before retrying. When the server cannot identify a unique matching new listing, the queue keeps posting locked. After checking the actual listings, reload the UI and run a new scan.
